@@ -12,7 +12,7 @@ export function HeroCtas() {
   const router = useRouter()
 
   return (
-    <div className="mt-6 flex w-full max-w-md flex-col items-stretch justify-center gap-3 sm:mx-auto sm:mt-8 sm:max-w-none sm:flex-row sm:items-center sm:gap-4">
+    <div className="mt-6 flex w-full max-w-md flex-col items-stretch justify-start gap-3 sm:mt-8 sm:max-w-none sm:flex-row sm:items-center sm:justify-start sm:gap-4">
       <MotionPrimary
         type="button"
         whileHover={{ scale: 1.05 }}
