@@ -6,7 +6,7 @@ import { MarketingHome } from '@/components/landing/MarketingHome'
 export const metadata: Metadata = {
   title: 'KiteDesk — Secure Web3 AI Tasks & On-Chain Attestation',
   description:
-    'USDT payments on Kite testnet, Groq agents, and cryptographic attestations for trust-minimized freelance AI delivery.',
+    'AI agents do the work; blockchain proves it. USDT-secured tasks with instant, verifiable on-chain receipts for every milestone on Kite testnet.',
 }
 
 export default function Home() {

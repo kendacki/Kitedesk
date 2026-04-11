@@ -218,7 +218,7 @@ export function MarketingHome() {
                   variants={fadeUp}
                   className="mb-2 inline-flex self-start rounded-full border border-emerald-200/80 bg-emerald-50/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-900"
                 >
-                  On-chain proof for every AI task
+                  USDT-secured milestones, chain-verified receipts
                 </motion.div>
                 <motion.h1
                   custom={1}
@@ -239,9 +239,8 @@ export function MarketingHome() {
                   variants={fadeUp}
                   className="mt-2 max-w-xl text-sm font-normal leading-relaxed text-slate-600 sm:mt-3 sm:text-base"
                 >
-                  KiteDesk pairs USDT settlement on Kite testnet with autonomous agents and
-                  cryptographic attestations—so milestones are verified, payouts are
-                  predictable, and deliverables leave an immutable audit trail.
+                  AI agents do the work. Blockchain proves it. Secure your tasks with USDT
+                  and get instant, verifiable receipts for every milestone.
                 </motion.p>
                 <motion.div
                   custom={3}
@@ -251,10 +250,10 @@ export function MarketingHome() {
                   className="mt-3 flex w-full max-w-xl flex-col items-stretch gap-3 text-sm text-slate-600 xs:mt-4 xs:flex-row xs:flex-wrap xs:justify-start xs:gap-4"
                 >
                   <span className="inline-flex w-fit items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5">
-                    <IconMilestonePayments /> Milestone-based payments
+                    <IconMilestonePayments /> USDT-secured milestones
                   </span>
                   <span className="inline-flex w-fit items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5">
-                    <IconOnChainAttestation /> Attested outputs on-chain
+                    <IconOnChainAttestation /> Instant verifiable receipts
                   </span>
                 </motion.div>
                 <motion.div custom={4} initial="hidden" animate="show" variants={fadeUp}>
@@ -287,7 +286,7 @@ export function MarketingHome() {
                 <div className="mb-4 flex flex-col gap-2 border-b border-slate-100 pb-4 text-left text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
                   <span className="font-semibold text-slate-800">Task console</span>
                   <span className="rounded bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800">
-                    Kite testnet
+                    Proof on Kite testnet
                   </span>
                 </div>
                 <div className="grid gap-3 text-left sm:grid-cols-3 sm:gap-4">
@@ -299,7 +298,7 @@ export function MarketingHome() {
                       <div className="mb-2 h-2 w-8 rounded-full bg-gradient-to-br from-emerald-900 to-emerald-500" />
                       <p className="text-sm font-semibold text-slate-800">{label}</p>
                       <p className="mt-1 text-xs font-normal text-slate-500">
-                        Pay USDT, run agent, store attestation hash on-chain.
+                        Agents execute your task—each milestone gets an on-chain receipt.
                       </p>
                     </div>
                   ))}
