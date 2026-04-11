@@ -68,6 +68,24 @@ export function TaskTypeIcon({ taskType, className = '' }: Props) {
           />
         </svg>
       )
+    case 'goal':
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+          className={cn}
+          aria-hidden
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 0v-3m0-12V3m9 9h-3M6 12H3m12.364-6.364l2.121 2.121M7.515 16.485l2.122 2.122m0-12.728l-2.122 2.122m11.314 11.314l-2.121-2.121"
+          />
+        </svg>
+      )
     default:
       return null
   }

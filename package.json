@@ -15,10 +15,14 @@
     "verify:backend": "node scripts/verify-backend.cjs",
     "simulate": "npm run verify:chain && npm run verify:backend",
     "validate": "npm run format:check && npm run lint && npm run simulate && npm run build",
-    "logo:assets": "node scripts/generate-logo-assets.cjs"
+    "logo:assets": "node scripts/generate-logo-assets.cjs",
+    "test:goal": "tsx scripts/test-goal-agent.ts",
+    "test:goal:cjs": "node scripts/test-goal-agent.cjs"
   },
   "dependencies": {
     "@stitches/react": "^1.2.8",
+    "@supabase/supabase-js": "^2.103.0",
+    "@tavily/core": "^0.7.2",
     "axios": "^1.15.0",
     "ethers": "^6.16.0",
     "framer-motion": "^12.38.0",
@@ -27,10 +31,11 @@
     "next": "14.2.35",
     "react": "^18",
     "react-dom": "^18",
+    "swr": "^2.4.1",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^7.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^6.1.2",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
@@ -38,11 +43,12 @@
     "dotenv": "^17.4.1",
     "eslint": "^8",
     "eslint-config-next": "14.2.35",
-    "hardhat": "^3.3.0",
+    "hardhat": "^2.28.4",
     "postcss": "^8",
     "prettier": "^3.8.2",
     "sharp": "^0.34.5",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

@@ -1,6 +1,6 @@
-// KiteDesk | shared TypeScript types for tasks and attestations
+// KiteDesk | agent goal and tool types
 
-export type TaskType = 'research' | 'code_review' | 'content_gen'
+export type TaskType = 'research' | 'code_review' | 'content_gen' | 'goal'
 
 export interface Task {
   id: string
@@ -35,4 +35,51 @@ export interface TaskHistoryEntry {
   promptPreview: string
   attestationUrl: string
   completedAt: number
+}
+
+export type ToolName =
+  | 'web_search'
+  | 'price_check'
+  | 'competitor_analysis'
+  | 'summarize'
+  | 'news_fetch'
+  | 'deep_read'
+
+export interface ToolCall {
+  toolName: ToolName
+  input: string
+  output: string
+  costUsdt: number
+  durationMs: number
+  x402TxHash?: string
+  paymentStatus?: 'paid_via_x402' | 'budget_exceeded' | 'free'
+}
+
+export interface AgentStep {
+  stepNumber: number
+  description: string
+  toolCall?: ToolCall
+  reasoning: string
+  completedAt: number
+  stepKind?: 'tool' | 'x402_payment'
+}
+
+export interface GoalResult {
+  taskId: string
+  goal: string
+  budgetUsdt: number
+  steps: AgentStep[]
+  totalSpentUsdt: number
+  remainingBudget: number
+  finalOutput: string
+  txHash: string
+  attestationHash: string
+  attestationUrl: string
+  completedAt: number
+  planReasoning?: string
+  skippedTools?: string[]
+  /** Steps where toolCall.paymentStatus === paid_via_x402 */
+  x402PaymentsCount: number
+  /** Sum of toolCall.costUsdt for paid_via_x402 steps */
+  x402TotalPaidUsdt: number
 }

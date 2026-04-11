@@ -1,135 +1,84 @@
-# KiteDesk
+# KiteDesk — Autonomous Agentic Commerce on Kite AI
 
-Pay-per-task autonomous AI on [Kite AI](https://docs.gokite.ai/) testnet: connect a wallet, pay USDT for a task, run the Groq-powered agent, and record an on-chain attestation as proof of work.
+**One-liner:** KiteDesk deploys an AI agent that autonomously discovers services, encounters HTTP 402 paywalls, decides whether to pay within budget constraints, settles USDT micro-payments via the x402 protocol on Kite testnet (through a facilitator), and attests the complete execution trace on-chain.
 
----
+## Why This Matters
 
-## What it does
+Agents that can transact are fundamentally different from agents that only generate text. When an agent holds economic constraints and can choose to pay for access, it participates in real markets—not a simulated chat. The x402 cycle—**402 received → cost evaluated against budget → payment authorized → request retried with proof**—is observable agentic commerce: the same pattern HTTP 402 was designed for, now wired to programmatic settlement on-chain. KiteDesk makes that loop concrete for judges: live budget enforcement, real facilitator settlement, and a chain record of what ran and what was paid.
 
-1. User connects MetaMask on **Kite AI Testnet** (chain ID **2368**).
-2. User picks a task (research, code review, content generation) and pays **USDT** to the platform wallet.
-3. The **Groq** API runs the agent (`openai/gpt-oss-120b` by default).
-4. The backend writes a **KiteDeskAttestations** contract attestation (result hash on-chain).
-5. The UI shows the output plus links to the payment and attestation transactions on the explorer.
+## Live Demo
 
----
+**Production:** [http://kitedesk.agiwithai.com/](http://kitedesk.agiwithai.com/)
 
-## Routes
+Product console: `/` (marketing) and `/desk` (wallet, tasks, goal agent).
 
-| Path        | Purpose                                                                                                |
-| ----------- | ------------------------------------------------------------------------------------------------------ |
-| **`/`**     | Marketing landing (white UI, Poppins, deep green gradient, Framer Motion, Stitches button primitives). |
-| **`/desk`** | Product console: MetaMask, USDT payment, Groq agent, on-chain attestation (original KiteDesk shell).   |
+## Critical setup (manual, before judging)
 
----
+1. **Fund the agent wallet** — The wallet for **`ATTESTATION_SIGNER_PRIVATE_KEY`** needs **testnet KITE** (gas) and **testnet USDT** on the same asset used for x402 (see **`KITE_X402_TOKEN`**). Use [Kite faucet](https://faucet.gokite.ai) for KITE, then obtain USDT via the Kite portal or docs.
+2. **Configure x402 env** in `.env.local` (see `.env.example`):
+   - **`KITE_X402_TOKEN`** — USDT contract for x402 payment lines in challenges (default matches Kite testnet USDT).
+   - **`KITE_FACILITATOR_URL`** — Pieverse facilitator base; the app posts to `{url}/v2/settle` unless you already include `/v2/settle`.
+   - **`KITE_X402_DEMO_API`** — Optional reference URL for Kite’s hosted x402 demo resource (e.g. weather); the shipped goal agent pays for **`/api/x402/search`** (Tavily-backed) on your deployment.
+3. **Redeploy attestations** after contract changes — `npm run deploy:contracts`, then set **`KITE_ATTESTATION_CONTRACT`** and **`NEXT_PUBLIC_KITE_ATTESTATION_CONTRACT`**.
+4. **Verify build** — Run **`npm run build`** and fix any TypeScript errors before Vercel deploy.
 
-## Tech stack
+**Platform `payTo`:** Set **`NEXT_PUBLIC_PLATFORM_WALLET`** to the address that should receive x402 payments advertised in the 402 challenge (must match your deployment).
 
-| Layer          | Choice                                                                     |
-| -------------- | -------------------------------------------------------------------------- |
-| App            | Next.js 14 (App Router), TypeScript, Tailwind CSS, Framer Motion, Stitches |
-| Wallet / chain | ethers.js v6, MetaMask                                                     |
-| Payments       | USDT (ERC-20) on Kite testnet                                              |
-| Agent          | Groq API                                                                   |
-| Contracts      | Solidity 0.8.20, Hardhat                                                   |
-| Deploy         | Vercel (recommended)                                                       |
+On **`/desk`**, the goal-agent trace shows the x402 step chips (402 → evaluate → pay → result), paid settlement links on Kitescan where applicable, budget skip when a call would exceed the envelope, the agentic-commerce banner when x402 settled, and a cost summary line with **x402 payment count** and **USDT paid autonomously**.
 
----
+## The x402 Flow (What Judges Will See)
 
-## Prerequisites
+1. **Goal and budget** — The user describes an outcome and sets a USDT budget for the run.
+2. **402 from the resource** — The agent calls the paid search API and receives **HTTP 402 Payment Required** with payment terms (e.g. amount and `payTo`).
+3. **Budget check** — The orchestrator compares the quoted cost to the remaining budget and proceeds or stops autonomously.
+4. **Settlement on Kite** — The agent wallet signs an **EIP-3009** USDT authorization; the **Pieverse facilitator** settles to the API provider’s `payTo` address on **Kite AI Testnet**.
+5. **Retry with X-Payment** — The agent retries the request with an **X-Payment** header; the API returns real search data.
+6. **Synthesis** — Further tools and a final summarization step produce the user-facing answer within budget.
+7. **Attestation** — **`attestGoal`** writes an on-chain record that includes **`x402PaymentsCount`** and **total paid via x402 in micro-USDT** (`x402TotalPaidMicro`), alongside the result and steps digests.
 
-- Node.js 20+
-- MetaMask with Kite testnet configured ([network info](https://docs.gokite.ai/kite-chain/1-getting-started/network-information))
-- Testnet **KITE** (gas) and **USDT** from the [faucet](https://faucet.gokite.ai/)
-- A **Groq API key** ([console.groq.com](https://console.groq.com/))
-- Deployed **KiteDeskAttestations** contract (or use your own address)
+## Tech Stack
 
----
+| Layer        | Choice                                                                 |
+| ------------ | ---------------------------------------------------------------------- |
+| Frontend     | Next.js 14 (App Router), TypeScript, Tailwind CSS, Framer Motion       |
+| Chain        | Kite AI Testnet (chain ID **2368**), ethers.js v6, MetaMask            |
+| User funding | Testnet USDT; gasless user transfers via Kite relayer (EIP-3009) where configured |
+| x402         | HTTP 402 challenges, **X-Payment** payloads, **Pieverse facilitator** settle |
+| Agent        | Groq (`groq-sdk`), planner + tool registry, server-side orchestration  |
+| Data         | Supabase (Postgres) for payment claim replay protection and history    |
+| Contracts    | Solidity 0.8.20, `KiteDeskAttestations` (Hardhat)                        |
+| Deploy       | Vercel (recommended)                                                   |
 
-## Local setup
+## x402 Integration Details
 
-```bash
-git clone https://github.com/kendacki/Kitedesk.git
-cd Kitedesk
-npm install
-```
+- **Token (Kite testnet USDT):** Configure with **`KITE_X402_TOKEN`** (defaults to `0x0fF5393387ad2f9f691FD6Fd28e07E3969e27e63` if unset); confirm on [Kite testnet explorer](https://testnet.kitescan.ai).
+- **Facilitator:** **`KITE_FACILITATOR_URL`** (default `https://facilitator.pieverse.io`); settle endpoint is **`/v2/settle`** appended automatically when needed.
+- **Chain:** Kite AI Testnet, **chainId 2368** (RPC and explorer URLs in `.env.example`).
+- **Agent wallet:** The server-side wallet backed by **`ATTESTATION_SIGNER_PRIVATE_KEY`** (contract owner / attestation signer) funds and signs x402-related USDT authorizations for per-call API payment, within the user’s verified budget envelope.
 
-Copy environment template and fill in **your** values (never commit real secrets):
+## Local Setup
 
-```bash
-cp .env.example .env.local
-```
+1. Clone the repository and open the project root.
+2. Copy environment template: `cp .env.example .env.local` and fill all variables (Groq, Tavily/Firecrawl if using those tools, Kite RPC, USDT and attestation contract addresses, platform wallet, relayer and EIP-712 token domain as needed, **`ATTESTATION_SIGNER_PRIVATE_KEY`**, Supabase URL and service role key, **`INTERNAL_API_BASE_URL`** or app URL for the goal agent calling `/api/x402/*`).
+3. Install dependencies: `npm install`.
+4. Run the Supabase migration `supabase/migrations/001_kitedesk_tasks.sql` in the SQL editor for replay-safe payment claims and history.
+5. Start the app: `npm run dev` and open `http://localhost:3000` (use `/desk` for the full console).
+6. Optional hardening before ship: `npm run validate`. Compile and deploy attestations: `npm run compile:contracts` and `npm run deploy:contracts`, then paste the contract address into `.env.local`.
 
-Required variables are documented in **`.env.example`**. At minimum:
+## On-Chain Attestation
 
-- `GROQ_API_KEY`
-- `KITE_USDT_CONTRACT` / `NEXT_PUBLIC_KITE_USDT_CONTRACT` (same address)
-- `KITE_ATTESTATION_CONTRACT` / `NEXT_PUBLIC_KITE_ATTESTATION_CONTRACT`
-- `ATTESTATION_SIGNER_PRIVATE_KEY` (contract owner — must match deployer if you deployed with the default script)
-- `NEXT_PUBLIC_PLATFORM_WALLET` (receives USDT payments)
+The **`KiteDeskAttestations`** contract records goal-mode runs with **`attestGoal`**. Besides the user, task id, **keccak256(final output)**, **keccak256(step trace digest)**, **total spend in micro-USDT**, **step count**, and a short **goal preview**, the attestation stores **how many tool steps completed a paid x402 path** (`x402PaymentsCount`) and **the sum of those payments in micro-USDT** (`x402TotalPaidMicro`). Together with the user’s funding transaction on-chain, that gives a compact, verifiable link between budget, autonomous API payment, and committed execution metadata.
 
-Run the app:
+## Built By
 
-```bash
-npm run dev
-```
+**Anand Vashishtha** — Kite AI Global Hackathon 2026, **Agentic Commerce** track (Encode Club).
 
-Open [http://localhost:3000](http://localhost:3000).
+[X / Twitter](https://twitter.com/Anandvashisht15) · [LinkedIn](https://linkedin.com/in/anandvashishtha)
 
----
-
-## Smart contract
-
-Compile and deploy to Kite testnet (fund `DEPLOYER_PRIVATE_KEY` with KITE):
-
-```bash
-npm run compile:contracts
-npm run deploy:contracts
-```
-
-Paste the deployed address into `.env.local` as both `KITE_ATTESTATION_CONTRACT` and `NEXT_PUBLIC_KITE_ATTESTATION_CONTRACT`.
-
----
-
-## Scripts
-
-| Command                  | Purpose                                      |
-| ------------------------ | -------------------------------------------- |
-| `npm run dev`            | Development server                           |
-| `npm run build`          | Production build                             |
-| `npm run lint`           | ESLint                                       |
-| `npm run format`         | Prettier (write)                             |
-| `npm run format:check`   | Prettier (check)                             |
-| `npm run verify:chain`   | RPC + contract bytecode smoke test           |
-| `npm run verify:backend` | Env + chain checks (optional: `--live-groq`) |
-| `npm run simulate`       | `verify:chain` + `verify:backend`            |
-| `npm run validate`       | Format check, lint, simulate, build          |
-
----
-
-## Deploy (Vercel)
-
-1. Push this repo to GitHub (secrets stay out of git — use **Vercel Environment Variables**).
-2. Import the project in Vercel and set the same keys as `.env.example` (use `NEXT_PUBLIC_*` where the browser needs the value).
-3. Production URL is required for hackathon judging if applicable.
-
----
-
-## Security
-
-- **Do not** commit `.env`, `.env.local`, or private keys.
-- Rotate any API key or private key that was ever exposed in chat, logs, or screenshots.
-- The attestation signer must be the **owner** of `KiteDeskAttestations` for `attestTask` to succeed.
+Official Kite docs: [docs.gokite.ai](https://docs.gokite.ai/).
 
 ---
 
 ## License
 
-MIT (or adjust to match your team’s preference).
-
----
-
-## Hackathon / credits
-
-Built for **Agentic Commerce** — **Kite AI Global Hackathon 2026** (Encode Club).  
-Kite chain docs: [docs.gokite.ai](https://docs.gokite.ai/).
+MIT.

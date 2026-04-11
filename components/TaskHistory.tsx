@@ -1,9 +1,9 @@
-// KiteDesk | recent tasks (light theme)
+// KiteDesk | recent tasks from Supabase via API (light theme)
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
+import useSWR from 'swr'
 import { TASK_CONFIG } from '@/lib/constants'
-import { readTaskHistory, TASK_HISTORY_KEY } from '@/lib/taskHistory'
 import type { TaskHistoryEntry, TaskType } from '@/types'
 
 function badgeClass(taskType: TaskType): string {
@@ -12,32 +12,80 @@ function badgeClass(taskType: TaskType): string {
       return 'border-emerald-200 bg-emerald-50 text-emerald-900'
     case 'code_review':
       return 'border-emerald-300 bg-emerald-50 text-emerald-900'
+    case 'goal':
+      return 'border-violet-200 bg-violet-50 text-violet-900'
     default:
       return 'border-slate-200 bg-slate-100 text-slate-800'
   }
 }
 
-export function TaskHistory() {
-  const [entries, setEntries] = useState<TaskHistoryEntry[]>([])
+async function fetchHistory(url: string): Promise<{ entries: TaskHistoryEntry[] }> {
+  let r: Response
+  try {
+    r = await fetch(url)
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Network error'
+    throw new Error(`Could not reach history API: ${msg}`)
+  }
+  if (!r.ok) {
+    const j = (await r.json().catch(() => ({}))) as { error?: string }
+    throw new Error(j.error || 'Failed to load history')
+  }
+  return r.json() as Promise<{ entries: TaskHistoryEntry[] }>
+}
+
+type TaskHistoryProps = {
+  userAddress: string | null
+  refreshSignal?: number
+}
+
+export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps) {
+  const key = userAddress
+    ? `/api/history?address=${encodeURIComponent(userAddress)}`
+    : null
+
+  const { data, error, isLoading, mutate } = useSWR(key, fetchHistory, {
+    revalidateOnFocus: true,
+    refreshInterval: 10_000,
+    dedupingInterval: 5_000,
+  })
 
   useEffect(() => {
-    setEntries(readTaskHistory())
-  }, [])
+    if (userAddress) void mutate()
+  }, [refreshSignal, userAddress, mutate])
 
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === null || e.key === TASK_HISTORY_KEY) {
-        setEntries(readTaskHistory())
-      }
-    }
-    const onLocal = () => setEntries(readTaskHistory())
-    window.addEventListener('storage', onStorage)
-    window.addEventListener('kitedesk-history', onLocal)
-    return () => {
-      window.removeEventListener('storage', onStorage)
-      window.removeEventListener('kitedesk-history', onLocal)
-    }
-  }, [])
+  if (!userAddress) {
+    return null
+  }
+
+  if (isLoading && !data) {
+    return (
+      <div className="mt-8">
+        <div className="mb-3 h-4 w-28 animate-pulse rounded bg-slate-200" aria-hidden />
+        <ul className="space-y-2" aria-busy="true" aria-label="Loading task history">
+          {[1, 2, 3].map((i) => (
+            <li
+              key={i}
+              className="h-[4.5rem] animate-pulse rounded-xl border border-slate-100 bg-slate-50"
+            />
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div
+        className="mt-8 rounded-xl border border-amber-200 bg-amber-50 p-4 font-sans text-sm text-amber-950"
+        role="alert"
+      >
+        Could not load task history. Check that Supabase is configured on the server.
+      </div>
+    )
+  }
+
+  const entries = data?.entries ?? []
 
   if (entries.length === 0) {
     return (
@@ -49,7 +97,9 @@ export function TaskHistory() {
 
   return (
     <div className="mt-8">
-      <h3 className="mb-3 font-sans text-sm font-semibold text-slate-900">Recent tasks</h3>
+      <h3 className="mb-3 font-sans text-sm font-semibold text-slate-900">
+        Recent tasks
+      </h3>
       <ul className="space-y-2">
         {entries.map((e) => (
           <li

@@ -8,12 +8,14 @@ import type { ExecutionStatus } from '@/hooks/useTaskExecution'
 
 type LoadingAgentProps = {
   status: ExecutionStatus
+  goalMode?: boolean
 }
 
 const STAGES: {
-  key: 'paying' | 'executing' | 'attesting'
+  key: 'paying' | 'planning' | 'executing' | 'attesting'
   label: string
   detail: string
+  goalExecutingDetail?: string
 }[] = [
   {
     key: 'paying',
@@ -21,9 +23,15 @@ const STAGES: {
     detail: 'Confirming payment on Kite chain…',
   },
   {
+    key: 'planning',
+    label: 'Planning',
+    detail: 'Agent is deciding which tools to use...',
+  },
+  {
     key: 'executing',
     label: 'Executing',
     detail: 'Agent is working…',
+    goalExecutingDetail: 'Agent running tool calls…',
   },
   {
     key: 'attesting',
@@ -32,12 +40,22 @@ const STAGES: {
   },
 ]
 
-export function LoadingAgent({ status }: LoadingAgentProps) {
+const STATUS_INDEX: Record<ExecutionStatus, number> = {
+  idle: -1,
+  error: -1,
+  done: -1,
+  paying: 0,
+  planning: 1,
+  executing: 2,
+  attesting: 3,
+}
+
+export function LoadingAgent({ status, goalMode = false }: LoadingAgentProps) {
   if (status === 'idle' || status === 'done' || status === 'error') {
     return null
   }
 
-  const activeIndex = status === 'paying' ? 0 : status === 'executing' ? 1 : 2
+  const activeIndex = STATUS_INDEX[status]
 
   return (
     <motion.div
@@ -58,6 +76,13 @@ export function LoadingAgent({ status }: LoadingAgentProps) {
         {STAGES.map((stage, i) => {
           const active = i === activeIndex
           const done = i < activeIndex
+          const detail =
+            goalMode &&
+            status === 'executing' &&
+            stage.key === 'executing' &&
+            stage.goalExecutingDetail
+              ? stage.goalExecutingDetail
+              : stage.detail
           return (
             <li
               key={stage.key}
@@ -73,8 +98,10 @@ export function LoadingAgent({ status }: LoadingAgentProps) {
                 }`}
               />
               <div>
-                <p className="font-sans text-sm font-medium text-slate-900">{stage.label}</p>
-                <p className="font-sans text-xs text-slate-600">{stage.detail}</p>
+                <p className="font-sans text-sm font-medium text-slate-900">
+                  {stage.label}
+                </p>
+                <p className="font-sans text-xs text-slate-600">{detail}</p>
               </div>
             </li>
           )

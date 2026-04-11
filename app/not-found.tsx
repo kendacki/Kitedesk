@@ -18,16 +18,10 @@ export default function NotFound() {
           That route does not exist. Head back to the landing page or open the console.
         </p>
         <div className="mt-10 flex w-full max-w-sm flex-col gap-3 sm:flex-row sm:justify-center">
-          <Link
-            href="/"
-            className={`${brandSecondaryCtaMarketing} w-full sm:w-auto`}
-          >
+          <Link href="/" className={`${brandSecondaryCtaMarketing} w-full sm:w-auto`}>
             Home
           </Link>
-          <Link
-            href="/desk"
-            className={`${brandPrimaryCtaMarketing} w-full sm:w-auto`}
-          >
+          <Link href="/desk" className={`${brandPrimaryCtaMarketing} w-full sm:w-auto`}>
             Open console
           </Link>
         </div>
