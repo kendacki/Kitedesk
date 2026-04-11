@@ -80,7 +80,7 @@ export function MarketingHome() {
   }, [menuOpen])
 
   return (
-    <div className="min-h-screen bg-white pb-[calc(4.5rem+env(safe-area-inset-bottom))] font-sans text-slate-900 antialiased md:pb-0">
+    <div className="min-h-screen bg-white/95 pb-[calc(4.5rem+env(safe-area-inset-bottom))] font-sans text-slate-900 antialiased backdrop-blur-[2px] md:pb-0">
       <header className="safe-t sticky top-0 z-50 border-b border-slate-100/80 bg-white/90 backdrop-blur-md">
         <div className="relative mx-auto flex min-h-[3.25rem] max-w-6xl items-center justify-between px-4 py-3 sm:min-h-[3.5rem] sm:px-6 sm:py-4 safe-x">
           <Link

@@ -1,5 +1,6 @@
 // KiteDesk | marketing landing at / — product console lives at /desk
 import type { Metadata } from 'next'
+import { LottieBackground } from '@/components/LottieBackground'
 import { MarketingHome } from '@/components/landing/MarketingHome'
 
 export const metadata: Metadata = {
@@ -9,5 +10,16 @@ export const metadata: Metadata = {
 }
 
 export default function Home() {
-  return <MarketingHome />
+  return (
+    <div className="relative min-h-screen text-kite-muted">
+      <div
+        className="pointer-events-none fixed inset-0 z-0 bg-kite-bg"
+        aria-hidden
+      />
+      <LottieBackground />
+      <div className="relative z-10">
+        <MarketingHome />
+      </div>
+    </div>
+  )
 }
