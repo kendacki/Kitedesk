@@ -312,9 +312,10 @@ export function MarketingHome() {
               </p>
             </div>
             <p className="text-sm font-normal leading-relaxed text-slate-600">
-              Every run produces a machine-checkable record: what was requested, what
-              the agent returned, and a transaction that anchors the result hash on
-              Kite—so disputes shrink and clients gain confidence.
+              Every completed task comes with a secure, permanent receipt. We
+              automatically log exactly what was requested and what was delivered
+              directly on the Kite network. No guesswork, no changing the story, just
+              complete confidence for both sides.
             </p>
           </div>
           <div className="mx-auto mt-10 grid max-w-6xl gap-4 sm:mt-14 sm:gap-6 md:grid-cols-2">
