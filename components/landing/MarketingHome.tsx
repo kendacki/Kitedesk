@@ -554,7 +554,14 @@ export function MarketingHome() {
               </p>
               <ul className="mt-3 space-y-2 text-sm font-normal text-slate-600">
                 <li>
-                  <span className="text-slate-400">MIT License</span>
+                  <a
+                    href="https://github.com/twbs/bootstrap/blob/main/LICENSE"
+                    className="text-slate-400 transition hover:text-emerald-700"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    MIT License
+                  </a>
                 </li>
               </ul>
             </div>
