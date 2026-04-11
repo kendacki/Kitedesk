@@ -266,7 +266,7 @@ export function MarketingHome() {
                 initial="hidden"
                 animate="show"
                 variants={fadeUp}
-                className="relative flex w-full justify-center lg:justify-end"
+                className="relative flex w-full justify-center bg-transparent lg:justify-end"
               >
                 <Image
                   src="/images/hero-delivery-robot.png"
@@ -274,7 +274,7 @@ export function MarketingHome() {
                   width={1024}
                   height={771}
                   priority
-                  className="h-auto w-[min(100%,22rem)] object-contain drop-shadow-lg sm:w-[min(100%,26rem)] lg:w-[min(100%,32rem)]"
+                  className="h-auto w-[min(100%,22rem)] bg-transparent object-contain drop-shadow-lg sm:w-[min(100%,26rem)] lg:w-[min(100%,32rem)]"
                 />
               </motion.div>
             </div>
