@@ -488,6 +488,8 @@ export function MarketingHome() {
               </a>
               <a
                 href="https://github.com/kendacki/Kitedesk"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="hover:text-emerald-700"
               >
                 GitHub
