@@ -320,10 +320,11 @@ export function MarketingHome() {
               whileHover={{ y: -4 }}
               className="rounded-2xl bg-gradient-to-br from-emerald-900 to-emerald-500 p-6 text-white shadow-lg shadow-emerald-900/20 sm:rounded-3xl sm:p-8"
             >
-              <h3 className="text-xl font-semibold">Settlement you can audit</h3>
+              <h3 className="text-xl font-semibold">Verifiable Proof of Payment</h3>
               <p className="mt-3 font-normal leading-relaxed text-white/90">
-                USDT moves on Kite testnet with explorer links for every payment—ideal
-                for demos, pilots, and hackathon judges who want receipts, not promises.
+                Watch your USDT move securely on the Kite testnet. Every milestone and
+                transaction generates an instant Proof giving you, your clients, and
+                evaluators cryptographic receipts, not just promises.
               </p>
             </motion.div>
             <motion.div
