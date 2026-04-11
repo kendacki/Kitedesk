@@ -210,13 +210,13 @@ export function MarketingHome() {
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.12)_0%,_transparent_55%)]" />
           <div className="relative mx-auto max-w-6xl">
             <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
-              <div className="flex w-full flex-col items-start text-left">
+              <div className="flex min-w-0 w-full max-w-full flex-col items-start gap-5 text-left sm:gap-6 lg:max-w-xl lg:pr-8">
                 <motion.div
                   custom={0}
                   initial="hidden"
                   animate="show"
                   variants={fadeUp}
-                  className="mb-2 inline-flex self-start rounded-full border border-emerald-200/80 bg-emerald-50/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-900"
+                  className="inline-flex max-w-full self-start rounded-full border border-emerald-200/80 bg-emerald-50/90 px-5 py-2.5 text-left text-xs font-semibold uppercase leading-snug tracking-wider text-emerald-900"
                 >
                   USDT-secured milestones, chain-verified receipts
                 </motion.div>
@@ -225,10 +225,10 @@ export function MarketingHome() {
                   initial="hidden"
                   animate="show"
                   variants={fadeUp}
-                  className="text-left text-[clamp(1.35rem,3.6vw+0.35rem,2.5rem)] font-semibold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.65rem]"
+                  className="flex w-full max-w-xl flex-col gap-2.5 text-left text-[clamp(1.35rem,3.6vw+0.35rem,2.5rem)] font-semibold leading-[1.15] tracking-tight text-slate-900 sm:gap-3 sm:text-4xl lg:text-[2.65rem]"
                 >
                   <span className="block">Escrow-grade trust for</span>
-                  <span className="mt-0.5 block bg-gradient-to-br from-emerald-900 to-emerald-500 bg-clip-text text-transparent sm:mt-1">
+                  <span className="block bg-gradient-to-br from-emerald-900 to-emerald-500 bg-clip-text text-transparent">
                     freelance AI work
                   </span>
                 </motion.h1>
@@ -237,7 +237,7 @@ export function MarketingHome() {
                   initial="hidden"
                   animate="show"
                   variants={fadeUp}
-                  className="mt-2 max-w-xl text-sm font-normal leading-relaxed text-slate-600 sm:mt-3 sm:text-base"
+                  className="max-w-xl text-sm font-normal leading-[1.65] text-slate-600 sm:text-base"
                 >
                   AI agents do the work. Blockchain proves it. Secure your tasks with USDT
                   and get instant, verifiable receipts for every milestone.
@@ -247,16 +247,22 @@ export function MarketingHome() {
                   initial="hidden"
                   animate="show"
                   variants={fadeUp}
-                  className="mt-3 flex w-full max-w-xl flex-col items-stretch gap-3 text-sm text-slate-600 xs:mt-4 xs:flex-row xs:flex-wrap xs:justify-start xs:gap-4"
+                  className="flex w-full max-w-xl flex-col gap-3 text-sm text-slate-600 xs:flex-row xs:flex-wrap xs:items-start xs:gap-x-4 xs:gap-y-3"
                 >
-                  <span className="inline-flex w-fit items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5">
+                  <span className="inline-flex w-fit max-w-full items-center gap-2.5 rounded-full bg-slate-50 px-4 py-2">
                     <IconMilestonePayments /> USDT-secured milestones
                   </span>
-                  <span className="inline-flex w-fit items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5">
+                  <span className="inline-flex w-fit max-w-full items-center gap-2.5 rounded-full bg-slate-50 px-4 py-2">
                     <IconOnChainAttestation /> Instant verifiable receipts
                   </span>
                 </motion.div>
-                <motion.div custom={4} initial="hidden" animate="show" variants={fadeUp}>
+                <motion.div
+                  custom={4}
+                  initial="hidden"
+                  animate="show"
+                  variants={fadeUp}
+                  className="w-full max-w-xl [&>div]:!mt-0"
+                >
                   <HeroCtas />
                 </motion.div>
               </div>
