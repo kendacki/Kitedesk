@@ -25,7 +25,7 @@ const STAGES: {
   {
     key: 'planning',
     label: 'Planning',
-    detail: 'Agent is deciding which tools to use…',
+    detail: 'Agent is deciding which tools to use...',
   },
   {
     key: 'executing',
@@ -77,7 +77,10 @@ export function LoadingAgent({ status, goalMode = false }: LoadingAgentProps) {
           const active = i === activeIndex
           const done = i < activeIndex
           const detail =
-            goalMode && stage.key === 'executing' && stage.goalExecutingDetail
+            goalMode &&
+            status === 'executing' &&
+            stage.key === 'executing' &&
+            stage.goalExecutingDetail
               ? stage.goalExecutingDetail
               : stage.detail
           return (
