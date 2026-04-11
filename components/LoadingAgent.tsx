@@ -1,6 +1,7 @@
 // KiteDesk | loading stages for pay / agent / attestation
 'use client'
 
+import { KitedeskLogoLoader } from '@/components/KitedeskLogoLoader'
 import type { ExecutionStatus } from '@/hooks/useTaskExecution'
 
 type LoadingAgentProps = {
@@ -42,9 +43,12 @@ export function LoadingAgent({ status }: LoadingAgentProps) {
       role="status"
       aria-live="polite"
     >
-      <p className="mb-4 font-mono text-xs uppercase tracking-widest text-kite-accent">
-        In progress
-      </p>
+      <div className="mb-4 flex items-center gap-3">
+        <KitedeskLogoLoader size={40} invert />
+        <p className="font-mono text-xs uppercase tracking-widest text-kite-accent">
+          In progress
+        </p>
+      </div>
       <ul className="space-y-4">
         {STAGES.map((stage, i) => {
           const active = i === activeIndex

@@ -1,7 +1,8 @@
 /**
- * KiteDesk | copy logo PNG into public/images/kitedesk-logo.png
+ * KiteDesk | copy logo PNG into public/images/kitedesk-logo.png (no processing)
+ * For white→transparent + favicons, use: npm run logo:assets
+ *   (or: node scripts/generate-logo-assets.cjs [path-to-source.png])
  * Usage: node scripts/process-logo.cjs <path-to-source.png>
- * For background removal, edit the asset in Figma/Photoshop or use a dedicated tool.
  */
 const fs = require('fs')
 const path = require('path')

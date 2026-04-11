@@ -14,7 +14,8 @@
     "verify:chain": "node scripts/verify-kitedesk.cjs",
     "verify:backend": "node scripts/verify-backend.cjs",
     "simulate": "npm run verify:chain && npm run verify:backend",
-    "validate": "npm run format:check && npm run lint && npm run simulate && npm run build"
+    "validate": "npm run format:check && npm run lint && npm run simulate && npm run build",
+    "logo:assets": "node scripts/generate-logo-assets.cjs"
   },
   "dependencies": {
     "@stitches/react": "^1.2.8",
@@ -39,6 +40,7 @@
     "hardhat": "^3.3.0",
     "postcss": "^8",
     "prettier": "^3.8.2",
+    "sharp": "^0.34.5",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }

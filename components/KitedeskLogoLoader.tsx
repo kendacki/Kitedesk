@@ -1,7 +1,8 @@
-// KiteDesk | brand mark (transparent PNG: public/images/kitedesk-logo.png)
+// KiteDesk | spinning logo for loading states
 'use client'
 
 import Image from 'next/image'
+import { motion } from 'framer-motion'
 
 type Props = {
   className?: string
@@ -10,20 +11,23 @@ type Props = {
   invert?: boolean
 }
 
-export function KitedeskLogoMark({ className = '', size = 40, invert = false }: Props) {
+export function KitedeskLogoLoader({ className = '', size = 48, invert = false }: Props) {
   return (
-    <span
+    <motion.div
       className={`inline-flex shrink-0 ${invert ? 'brightness-0 invert' : ''} ${className}`}
       style={{ width: size, height: size }}
+      animate={{ rotate: 360 }}
+      transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+      aria-hidden
     >
       <Image
         src="/images/kitedesk-logo.png"
-        alt="KiteDesk"
+        alt=""
         width={size}
         height={size}
         className="h-full w-full object-contain"
-        priority
+        priority={false}
       />
-    </span>
+    </motion.div>
   )
 }

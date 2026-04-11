@@ -42,3 +42,6 @@ typechain-types/
 
 # Cursor (local)
 .cursor/
+
+# Optional raw logo for npm run logo:assets (processed output is in public/ + app/)
+scripts/source-logo.png
