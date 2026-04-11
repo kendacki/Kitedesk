@@ -1,9 +1,11 @@
-// KiteDesk | MetaMask connect, USDT balance, Kite chain indicator, disconnect on hover
+// KiteDesk | MetaMask connect, USDT balance — brand buttons (landing-aligned)
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import type { ethers } from 'ethers'
 import { checkUsdtBalance } from '@/lib/payment'
+import { brandEase, brandLinkDark, brandPrimaryButton } from '@/lib/brand'
 
 function truncateAddress(address: string): string {
   if (address.length < 10) return address
@@ -72,17 +74,20 @@ export function WalletConnect({
 
   if (!address) {
     return (
-      <div className="flex flex-col items-end gap-2">
-        <button
+      <div className="flex w-full flex-col items-stretch gap-2 sm:items-end">
+        <motion.button
           type="button"
           onClick={() => void connect()}
           disabled={isConnecting}
-          className="rounded-md border border-kite-border bg-kite-card-hover px-4 py-2 font-mono text-sm text-foreground transition hover:border-kite-accent hover:text-kite-accent disabled:opacity-50"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ ease: brandEase }}
+          className={`${brandPrimaryButton} w-full sm:w-auto`}
         >
           {isConnecting ? 'Connecting…' : 'Connect Wallet'}
-        </button>
+        </motion.button>
         {error ? (
-          <p className="max-w-xs text-right text-xs text-[var(--accent-danger)]">
+          <p className="max-w-full text-left text-xs text-red-400 sm:max-w-xs sm:text-right">
             {error}
           </p>
         ) : null}
@@ -91,32 +96,32 @@ export function WalletConnect({
   }
 
   return (
-    <div className="group relative flex flex-col items-end gap-3">
-      <div className="flex flex-wrap items-center justify-end gap-3">
-        <div className="flex items-center gap-2 font-mono text-xs text-kite-muted">
+    <div className="group relative flex w-full flex-col items-start gap-3 sm:items-end">
+      <div className="flex w-full flex-wrap items-center gap-2 sm:justify-end sm:gap-3">
+        <div className="flex items-center gap-2 font-sans text-xs text-slate-400">
           <span className="relative flex h-2 w-2 shrink-0">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-kite-success opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-kite-success" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/80 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
           </span>
           <span>Kite AI Testnet</span>
         </div>
 
-        <div className="flex items-center gap-2 rounded-md border border-kite-border bg-kite-bg px-3 py-2 font-mono text-sm text-foreground">
+        <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2 font-mono text-sm text-foreground">
           <span title={address}>{truncateAddress(address)}</span>
           <button
             type="button"
             onClick={() => void copyAddress()}
-            className="text-xs text-kite-accent underline-offset-2 hover:underline"
+            className={`text-xs underline-offset-2 ${brandLinkDark} hover:underline`}
           >
             {copyDone ? 'Copied' : 'Copy'}
           </button>
         </div>
 
-        <div className="font-mono text-sm text-kite-usdt">
+        <div className="font-mono text-sm text-emerald-400/90">
           {balancePending && usdtBalance === null ? (
-            <span className="text-kite-muted">USDT …</span>
+            <span className="text-slate-500">USDT …</span>
           ) : usdtBalance === null ? (
-            <span className="text-kite-muted" title="Set KITE_USDT_CONTRACT">
+            <span className="text-slate-500" title="Set KITE_USDT_CONTRACT">
               USDT —
             </span>
           ) : (
@@ -133,7 +138,7 @@ export function WalletConnect({
       <button
         type="button"
         onClick={disconnect}
-        className="font-mono text-xs text-kite-muted opacity-0 transition-opacity hover:text-[var(--accent-danger)] group-hover:opacity-100"
+        className="min-h-[44px] px-1 font-sans text-xs text-slate-500 opacity-100 transition-opacity hover:text-red-400 sm:min-h-0 sm:opacity-0 sm:group-hover:opacity-100"
       >
         Disconnect
       </button>

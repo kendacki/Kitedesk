@@ -11,7 +11,8 @@
   --border: #1e1e2e;
   --text-primary: #e8e8f0;
   --text-secondary: #6b6b8a;
-  --accent-primary: #5b8af5;
+  /* Brand accent aligned with landing (emerald) */
+  --accent-primary: #34d399;
   --accent-success: #22c55e;
   --accent-warning: #f59e0b;
   --accent-danger: #ef4444;
@@ -23,7 +24,13 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 .font-mono-kite {
@@ -33,5 +40,24 @@ body {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Horizontal safe area (notch / rounded corners) */
+  .safe-x {
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+  }
+
+  .safe-t {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-b {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
   }
 }

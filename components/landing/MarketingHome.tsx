@@ -1,16 +1,17 @@
 // KiteDesk | marketing landing (white / deep-green, Poppins, motion)
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Poppins } from 'next/font/google'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { KitedeskLogoMark } from '@/components/landing/KitedeskLogoMark'
 import { HeroCtas } from '@/components/landing/HeroCtas'
-
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['400', '600'],
-})
+import { MobileLandingDock } from '@/components/landing/MobileLandingDock'
+import {
+  brandEase,
+  brandPrimaryCtaMarketing,
+  brandSecondaryCtaMarketing,
+} from '@/lib/brand'
 
 const MotionLink = motion(Link)
 
@@ -22,7 +23,7 @@ const fadeUp = {
     transition: {
       delay: i * 0.06,
       duration: 0.45,
-      ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+      ease: brandEase,
     },
   }),
 }
@@ -33,24 +34,58 @@ const floatTransition = {
   ease: [0.45, 0, 0.55, 1] as [number, number, number, number],
 }
 
-const linkPrimaryClass =
-  'inline-flex min-w-[160px] items-center justify-center rounded-md bg-gradient-to-br from-emerald-900 to-emerald-500 px-6 py-3 text-center text-sm font-semibold text-white shadow-md'
-
-const linkSecondaryClass =
-  'inline-flex min-w-[160px] items-center justify-center rounded-md border-2 border-emerald-900 px-6 py-3 text-center text-sm font-semibold text-emerald-900'
+function MenuIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      className="text-slate-800"
+      aria-hidden
+    >
+      {open ? (
+        <path
+          d="M6 6L18 18M18 6L6 18"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      ) : (
+        <path
+          d="M4 7h16M4 12h16M4 17h16"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      )}
+    </svg>
+  )
+}
 
 export function MarketingHome() {
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [menuOpen])
+
   return (
-    <div
-      className={`${poppins.className} min-h-screen bg-white text-slate-900 antialiased`}
-    >
-      <header className="sticky top-0 z-50 border-b border-slate-100/80 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <KitedeskLogoMark size={36} />
-            <span className="text-lg font-semibold tracking-tight">KiteDesk</span>
+    <div className="min-h-screen bg-white pb-[calc(4.5rem+env(safe-area-inset-bottom))] font-sans text-slate-900 antialiased md:pb-0">
+      <header className="safe-t sticky top-0 z-50 border-b border-slate-100/80 bg-white/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 safe-x">
+          <Link href="/" className="flex min-w-0 items-center gap-2">
+            <KitedeskLogoMark size={34} />
+            <span className="truncate text-base font-semibold tracking-tight sm:text-lg">
+              KiteDesk
+            </span>
           </Link>
-          <nav className="hidden items-center gap-8 text-sm font-normal text-slate-600 md:flex">
+          <nav className="hidden items-center gap-6 text-sm font-normal text-slate-600 md:flex lg:gap-8">
             <a href="#product" className="hover:text-emerald-700">
               Product
             </a>
@@ -64,10 +99,10 @@ export function MarketingHome() {
               Launch app
             </Link>
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <MotionLink
               href="/desk"
-              className={`${linkSecondaryClass} hidden sm:inline-flex`}
+              className={`${brandSecondaryCtaMarketing} hidden md:inline-flex`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -75,18 +110,97 @@ export function MarketingHome() {
             </MotionLink>
             <MotionLink
               href="/desk"
-              className={linkPrimaryClass}
+              className={`${brandPrimaryCtaMarketing} hidden min-h-[44px] sm:inline-flex`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Open console
+              <span className="hidden sm:inline">Open console</span>
+              <span className="sm:hidden">Open</span>
             </MotionLink>
+            <button
+              type="button"
+              className="touch-target inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-slate-800 shadow-sm md:hidden"
+              aria-expanded={menuOpen}
+              aria-controls="mobile-nav"
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              onClick={() => setMenuOpen((o) => !o)}
+            >
+              <MenuIcon open={menuOpen} />
+            </button>
           </div>
         </div>
       </header>
 
+      <AnimatePresence>
+        {menuOpen ? (
+          <motion.div
+            key="mobile-menu"
+            id="mobile-nav"
+            className="fixed inset-0 z-[60] md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <button
+              type="button"
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+              aria-label="Close menu"
+              onClick={() => setMenuOpen(false)}
+            />
+            <motion.aside
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+              className="absolute right-0 top-0 flex h-full w-[min(100%,20rem)] flex-col bg-white shadow-2xl safe-x"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
+                <span className="text-sm font-semibold text-slate-900">Menu</span>
+                <button
+                  type="button"
+                  className="touch-target rounded-lg px-3 text-sm font-medium text-slate-600"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Close
+                </button>
+              </div>
+              <nav className="flex flex-1 flex-col gap-1 p-4 text-base font-medium text-slate-700">
+                <a
+                  href="#product"
+                  className="rounded-lg px-3 py-3 active:bg-emerald-50"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Product
+                </a>
+                <a
+                  href="#how"
+                  className="rounded-lg px-3 py-3 active:bg-emerald-50"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  How it works
+                </a>
+                <a
+                  href="#trust"
+                  className="rounded-lg px-3 py-3 active:bg-emerald-50"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Security
+                </a>
+                <Link
+                  href="/desk"
+                  className="mt-2 rounded-lg bg-gradient-to-br from-emerald-900 to-emerald-500 px-3 py-3 text-center text-white shadow-md"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Launch app
+                </Link>
+              </nav>
+            </motion.aside>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
       <main>
-        <section className="relative overflow-hidden px-6 pb-24 pt-16 md:pb-32 md:pt-24">
+        <section className="relative overflow-hidden px-4 pb-20 pt-12 sm:px-6 sm:pb-24 sm:pt-16 md:pb-32 md:pt-24">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.12)_0%,_transparent_55%)]" />
           <div className="relative mx-auto max-w-4xl text-center">
             <motion.div
@@ -103,7 +217,7 @@ export function MarketingHome() {
               initial="hidden"
               animate="show"
               variants={fadeUp}
-              className="text-balance text-4xl font-semibold leading-tight tracking-tight text-slate-900 md:text-5xl lg:text-6xl"
+              className="text-balance text-[clamp(1.75rem,5vw+0.5rem,3.75rem)] font-semibold leading-[1.15] tracking-tight text-slate-900 sm:text-5xl lg:text-6xl"
             >
               Escrow-grade trust for{' '}
               <span className="bg-gradient-to-br from-emerald-900 to-emerald-500 bg-clip-text text-transparent">
@@ -115,7 +229,7 @@ export function MarketingHome() {
               initial="hidden"
               animate="show"
               variants={fadeUp}
-              className="mx-auto mt-6 max-w-2xl text-lg font-normal leading-relaxed text-slate-600"
+              className="mx-auto mt-6 max-w-2xl text-base font-normal leading-relaxed text-slate-600 sm:text-lg"
             >
               KiteDesk pairs USDT settlement on Kite testnet with autonomous agents and
               cryptographic attestations—so milestones are verified, payouts are
@@ -126,7 +240,7 @@ export function MarketingHome() {
               initial="hidden"
               animate="show"
               variants={fadeUp}
-              className="mt-8 flex flex-wrap items-center justify-center gap-4 text-sm text-slate-600"
+              className="mt-8 flex flex-col items-stretch justify-center gap-3 text-sm text-slate-600 xs:flex-row xs:flex-wrap xs:items-center xs:justify-center xs:gap-4"
             >
               <span className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5">
                 <span className="text-emerald-600">&#10003;</span> Milestone-based
@@ -143,16 +257,16 @@ export function MarketingHome() {
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={floatTransition}
-              className="relative mx-auto mt-16 max-w-3xl"
+              className="relative mx-auto mt-12 max-w-3xl sm:mt-16"
             >
-              <div className="rounded-3xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-8 shadow-xl shadow-emerald-900/5">
-                <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-4 text-left text-sm text-slate-500">
+              <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-4 shadow-xl shadow-emerald-900/5 sm:rounded-3xl sm:p-8">
+                <div className="mb-4 flex flex-col gap-2 border-b border-slate-100 pb-4 text-left text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
                   <span className="font-semibold text-slate-800">Task console</span>
                   <span className="rounded bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800">
                     Kite testnet
                   </span>
                 </div>
-                <div className="grid gap-4 text-left sm:grid-cols-3">
+                <div className="grid gap-3 text-left sm:grid-cols-3 sm:gap-4">
                   {['Research', 'Code review', 'Content'].map((label) => (
                     <div
                       key={label}
@@ -173,7 +287,7 @@ export function MarketingHome() {
 
         <section
           id="product"
-          className="border-t border-slate-100 bg-slate-50/50 py-16"
+          className="border-t border-slate-100 bg-slate-50/50 px-4 py-12 sm:px-6 sm:py-16"
         >
           <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
             Trusted execution layer for builders
@@ -187,10 +301,10 @@ export function MarketingHome() {
           </div>
         </section>
 
-        <section className="px-6 py-24" id="trust">
-          <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:items-start">
+        <section className="px-4 py-16 sm:px-6 sm:py-24" id="trust">
+          <div className="mx-auto grid max-w-6xl gap-8 sm:gap-12 lg:grid-cols-2 lg:items-start">
             <div>
-              <h2 className="text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
+              <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
                 Why teams choose KiteDesk
               </h2>
               <p className="mt-4 font-normal leading-relaxed text-slate-600">
@@ -204,10 +318,10 @@ export function MarketingHome() {
               Kite—so disputes shrink and clients gain confidence.
             </p>
           </div>
-          <div className="mx-auto mt-14 grid max-w-6xl gap-6 md:grid-cols-2">
+          <div className="mx-auto mt-10 grid max-w-6xl gap-4 sm:mt-14 sm:gap-6 md:grid-cols-2">
             <motion.div
               whileHover={{ y: -4 }}
-              className="rounded-3xl bg-gradient-to-br from-emerald-900 to-emerald-500 p-8 text-white shadow-lg shadow-emerald-900/20"
+              className="rounded-2xl bg-gradient-to-br from-emerald-900 to-emerald-500 p-6 text-white shadow-lg shadow-emerald-900/20 sm:rounded-3xl sm:p-8"
             >
               <h3 className="text-xl font-semibold">Settlement you can audit</h3>
               <p className="mt-3 font-normal leading-relaxed text-white/90">
@@ -217,7 +331,7 @@ export function MarketingHome() {
             </motion.div>
             <motion.div
               whileHover={{ y: -4 }}
-              className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"
+              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:rounded-3xl sm:p-8"
             >
               <h3 className="text-xl font-semibold text-slate-900">
                 Agents with receipts
@@ -231,16 +345,16 @@ export function MarketingHome() {
           </div>
         </section>
 
-        <section className="border-t border-slate-100 bg-white px-6 py-24" id="how">
+        <section className="border-t border-slate-100 bg-white px-4 py-16 sm:px-6 sm:py-24" id="how">
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl font-semibold text-slate-900 md:text-4xl">
+            <h2 className="text-2xl font-semibold text-slate-900 sm:text-3xl md:text-4xl">
               Launch in four streamlined steps
             </h2>
             <p className="mt-4 font-normal text-slate-600">
               From wallet to attestation—no opaque black boxes.
             </p>
           </div>
-          <ol className="mx-auto mt-14 grid max-w-5xl gap-8 md:grid-cols-4">
+          <ol className="mx-auto mt-10 grid max-w-5xl gap-4 sm:mt-14 sm:gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
             {[
               {
                 step: '01',
@@ -279,13 +393,13 @@ export function MarketingHome() {
           </ol>
         </section>
 
-        <section className="border-t border-slate-100 bg-slate-50/60 px-6 py-24">
-          <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-2">
+        <section className="border-t border-slate-100 bg-slate-50/60 px-4 py-16 sm:px-6 sm:py-24">
+          <div className="mx-auto grid max-w-6xl gap-8 sm:gap-10 lg:grid-cols-2">
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="rounded-3xl bg-gradient-to-br from-emerald-900 to-emerald-500 p-10 text-white"
+              className="rounded-2xl bg-gradient-to-br from-emerald-900 to-emerald-500 p-6 text-white sm:rounded-3xl sm:p-10"
             >
               <p className="text-lg font-semibold leading-relaxed">
                 &ldquo;We needed clients to see the same proof we see internally.
@@ -328,14 +442,14 @@ export function MarketingHome() {
           </div>
         </section>
 
-        <section className="px-6 py-20">
+        <section className="px-4 py-14 sm:px-6 sm:py-20">
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="mx-auto max-w-4xl rounded-3xl bg-gradient-to-br from-emerald-900 to-emerald-500 px-8 py-14 text-center text-white shadow-xl"
+            className="mx-auto max-w-4xl rounded-2xl bg-gradient-to-br from-emerald-900 to-emerald-500 px-5 py-10 text-center text-white shadow-xl sm:rounded-3xl sm:px-8 sm:py-14"
           >
-            <h2 className="text-3xl font-semibold md:text-4xl">
+            <h2 className="text-2xl font-semibold sm:text-3xl md:text-4xl">
               Ready to run your first attested task?
             </h2>
             <p className="mx-auto mt-4 max-w-xl font-normal text-white/90">
@@ -356,7 +470,7 @@ export function MarketingHome() {
         </section>
       </main>
 
-      <footer className="border-t border-slate-100 bg-white px-6 py-14">
+      <footer className="border-t border-slate-100 bg-white px-4 py-10 sm:px-6 sm:py-14">
         <div className="mx-auto flex max-w-6xl flex-col gap-10 md:flex-row md:justify-between">
           <div>
             <div className="flex items-center gap-2">
@@ -444,6 +558,8 @@ export function MarketingHome() {
           demonstrations.
         </p>
       </footer>
+
+      <MobileLandingDock />
     </div>
   )
 }

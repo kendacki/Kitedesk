@@ -10,6 +10,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      screens: {
+        xs: '475px',
+      },
       backgroundImage: {
         'deep-green-gradient': 'linear-gradient(135deg, #064e3b 0%, #10b981 100%)',
       },
@@ -28,7 +31,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-poppins)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-jetbrains-mono)', 'ui-monospace', 'monospace'],
       },
     },

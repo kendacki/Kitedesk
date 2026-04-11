@@ -1,9 +1,11 @@
-// KiteDesk | task type cards, prompt, pay and run
+// KiteDesk | task type cards, prompt, pay and run (brand buttons + landing alignment)
 'use client'
 
 import { useState, type FormEvent } from 'react'
+import { motion } from 'framer-motion'
 import { TASK_CONFIG } from '@/lib/constants'
 import { PriceTag } from '@/components/PriceTag'
+import { brandEase, brandPrimaryButton } from '@/lib/brand'
 import type { TaskType } from '@/types'
 
 const ORDER: TaskType[] = ['research', 'code_review', 'content_gen']
@@ -45,9 +47,15 @@ export function TaskForm({ canSubmit, busy, onRun }: TaskFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <motion.form
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: brandEase }}
+      onSubmit={handleSubmit}
+      className="space-y-6"
+    >
       <div>
-        <p className="mb-3 font-mono text-xs uppercase tracking-widest text-kite-muted">
+        <p className="mb-3 font-sans text-xs font-semibold uppercase tracking-widest text-emerald-400/90">
           Task type
         </p>
         <div className="grid gap-3 sm:grid-cols-3">
@@ -55,32 +63,40 @@ export function TaskForm({ canSubmit, busy, onRun }: TaskFormProps) {
             const cfg = TASK_CONFIG[key]
             const selected = taskType === key
             return (
-              <button
+              <motion.button
                 key={key}
                 type="button"
+                layout
                 onClick={() => setTaskType(key)}
                 disabled={busy}
-                className={`rounded-lg border p-4 text-left transition ${
+                whileTap={{ scale: 0.98 }}
+                className={`rounded-xl border p-4 text-left transition ${
                   selected
-                    ? 'border-kite-accent bg-kite-card-hover ring-1 ring-kite-accent/40'
-                    : 'border-kite-border bg-kite-bg hover:border-kite-muted'
+                    ? 'border-emerald-500/60 bg-emerald-950/30 ring-1 ring-emerald-500/40'
+                    : 'border-white/10 bg-white/[0.02] hover:border-emerald-700/50'
                 } ${busy ? 'opacity-60' : ''}`}
               >
                 <div className="mb-2 flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded border border-kite-border font-mono text-sm text-kite-accent">
+                  <span
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg border font-mono text-sm ${
+                      selected
+                        ? 'border-emerald-500/50 text-emerald-300'
+                        : 'border-white/15 text-emerald-400/80'
+                    }`}
+                  >
                     {iconLabel(key)}
                   </span>
-                  <span className="font-mono text-sm font-medium text-foreground">
+                  <span className="font-sans text-sm font-semibold text-white">
                     {cfg.label}
                   </span>
                 </div>
-                <p className="font-mono text-xs leading-relaxed text-kite-muted">
+                <p className="font-sans text-xs leading-relaxed text-slate-400">
                   {cfg.description}
                 </p>
-                <p className="mt-2 font-mono text-xs text-kite-usdt">
+                <p className="mt-2 font-mono text-xs text-emerald-400/90">
                   {cfg.priceUsdt.toFixed(2)} USDT
                 </p>
-              </button>
+              </motion.button>
             )
           })}
         </div>
@@ -89,7 +105,7 @@ export function TaskForm({ canSubmit, busy, onRun }: TaskFormProps) {
       <div>
         <label
           htmlFor="prompt"
-          className="mb-2 block font-mono text-xs uppercase tracking-widest text-kite-muted"
+          className="mb-2 block font-sans text-xs font-semibold uppercase tracking-widest text-emerald-400/90"
         >
           Prompt
         </label>
@@ -100,20 +116,22 @@ export function TaskForm({ canSubmit, busy, onRun }: TaskFormProps) {
           disabled={busy}
           rows={6}
           placeholder={PLACEHOLDERS[taskType]}
-          className="w-full resize-y rounded-lg border border-kite-border bg-kite-bg px-4 py-3 font-mono text-sm text-foreground placeholder:text-kite-muted focus:border-kite-accent focus:outline-none focus:ring-1 focus:ring-kite-accent disabled:opacity-60"
+          className="min-h-[140px] w-full resize-y rounded-xl border border-white/10 bg-black/20 px-3 py-3 font-mono text-sm text-foreground placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/40 disabled:opacity-60 sm:px-4"
         />
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-kite-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="sticky bottom-0 z-10 -mx-6 mt-4 flex flex-col gap-3 border-t border-white/10 bg-zinc-950/90 px-6 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-md sm:static sm:z-0 sm:mx-0 sm:flex-row sm:items-center sm:justify-between sm:border-white/10 sm:bg-transparent sm:px-0 sm:pb-0 sm:backdrop-blur-none">
         <PriceTag taskType={taskType} />
-        <button
+        <motion.button
           type="submit"
           disabled={!canSubmit || busy || !prompt.trim()}
-          className="rounded-md bg-kite-accent px-6 py-2.5 font-mono text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className={`${brandPrimaryButton} w-full sm:min-h-0 sm:w-auto`}
         >
           {busy ? 'Working…' : 'Pay and run agent'}
-        </button>
+        </motion.button>
       </div>
-    </form>
+    </motion.form>
   )
 }

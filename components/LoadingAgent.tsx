@@ -1,7 +1,9 @@
-// KiteDesk | loading stages for pay / agent / attestation
+// KiteDesk | loading stages (logo + emerald accents)
 'use client'
 
+import { motion } from 'framer-motion'
 import { KitedeskLogoLoader } from '@/components/KitedeskLogoLoader'
+import { brandEase } from '@/lib/brand'
 import type { ExecutionStatus } from '@/hooks/useTaskExecution'
 
 type LoadingAgentProps = {
@@ -38,14 +40,17 @@ export function LoadingAgent({ status }: LoadingAgentProps) {
   const activeIndex = status === 'paying' ? 0 : status === 'executing' ? 1 : 2
 
   return (
-    <div
-      className="mt-6 rounded-lg border border-kite-border bg-kite-bg p-6"
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: brandEase }}
+      className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4 shadow-lg shadow-emerald-950/20 backdrop-blur-sm sm:p-6"
       role="status"
       aria-live="polite"
     >
       <div className="mb-4 flex items-center gap-3">
         <KitedeskLogoLoader size={40} invert />
-        <p className="font-mono text-xs uppercase tracking-widest text-kite-accent">
+        <p className="font-sans text-xs font-semibold uppercase tracking-widest text-emerald-400">
           In progress
         </p>
       </div>
@@ -59,22 +64,22 @@ export function LoadingAgent({ status }: LoadingAgentProps) {
               className={`flex gap-3 ${active ? 'opacity-100' : 'opacity-50'}`}
             >
               <span
-                className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
+                className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
                   done
-                    ? 'bg-kite-success'
+                    ? 'bg-emerald-400'
                     : active
-                      ? 'animate-pulse bg-kite-accent'
-                      : 'bg-kite-border'
+                      ? 'animate-pulse bg-emerald-400'
+                      : 'bg-white/20'
                 }`}
               />
               <div>
-                <p className="font-mono text-sm text-foreground">{stage.label}</p>
-                <p className="font-mono text-xs text-kite-muted">{stage.detail}</p>
+                <p className="font-sans text-sm font-medium text-white">{stage.label}</p>
+                <p className="font-sans text-xs text-slate-400">{stage.detail}</p>
               </div>
             </li>
           )
         })}
       </ul>
-    </div>
+    </motion.div>
   )
 }

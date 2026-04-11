@@ -12,12 +12,12 @@ export function HeroCtas() {
   const router = useRouter()
 
   return (
-    <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+    <div className="mt-10 flex w-full max-w-md flex-col items-stretch justify-center gap-3 sm:mx-auto sm:max-w-none sm:flex-row sm:items-center sm:gap-4">
       <MotionPrimary
         type="button"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="min-w-[200px]"
+        className="min-h-[48px] w-full min-w-0 sm:min-w-[200px] sm:w-auto"
         onClick={() => router.push('/desk')}
       >
         Start a task
@@ -26,7 +26,7 @@ export function HeroCtas() {
         type="button"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="min-w-[200px]"
+        className="min-h-[48px] w-full min-w-0 sm:min-w-[200px] sm:w-auto"
         onClick={() =>
           document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' })
         }

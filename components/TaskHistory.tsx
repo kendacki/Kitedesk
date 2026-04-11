@@ -1,4 +1,4 @@
-// KiteDesk | last 10 tasks with attestation links (localStorage)
+// KiteDesk | recent tasks (brand chips + links)
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -9,11 +9,11 @@ import type { TaskHistoryEntry, TaskType } from '@/types'
 function badgeClass(taskType: TaskType): string {
   switch (taskType) {
     case 'research':
-      return 'bg-kite-bg text-kite-accent border-kite-accent/40'
+      return 'border-emerald-500/40 bg-emerald-950/40 text-emerald-300'
     case 'code_review':
-      return 'bg-kite-bg text-kite-success border-kite-success/40'
+      return 'border-emerald-600/40 bg-emerald-950/30 text-emerald-200'
     default:
-      return 'bg-kite-bg text-kite-muted border-kite-border'
+      return 'border-white/15 bg-white/[0.04] text-slate-300'
   }
 }
 
@@ -41,7 +41,7 @@ export function TaskHistory() {
 
   if (entries.length === 0) {
     return (
-      <div className="mt-8 rounded-lg border border-dashed border-kite-border p-6 text-center font-mono text-sm text-kite-muted">
+      <div className="mt-8 rounded-2xl border border-dashed border-white/15 p-4 text-center font-sans text-sm text-slate-500 sm:p-6">
         Completed tasks will appear here with attestation links.
       </div>
     )
@@ -49,26 +49,24 @@ export function TaskHistory() {
 
   return (
     <div className="mt-8">
-      <h3 className="mb-3 font-mono text-sm font-medium text-foreground">
-        Recent tasks
-      </h3>
+      <h3 className="mb-3 font-sans text-sm font-semibold text-white">Recent tasks</h3>
       <ul className="space-y-2">
         {entries.map((e) => (
           <li
             key={e.taskId}
-            className="flex flex-col gap-2 rounded-md border border-kite-border bg-kite-card px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
           >
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
               <span
-                className={`rounded border px-2 py-0.5 font-mono text-xs ${badgeClass(e.taskType)}`}
+                className={`shrink-0 rounded-lg border px-2 py-0.5 font-sans text-xs font-medium ${badgeClass(e.taskType)}`}
               >
                 {TASK_CONFIG[e.taskType].label}
               </span>
-              <span className="max-w-[200px] truncate font-mono text-xs text-kite-muted sm:max-w-md">
+              <span className="min-w-0 max-w-full truncate font-mono text-xs text-slate-400 sm:max-w-md">
                 {e.promptPreview}
               </span>
             </div>
-            <div className="flex items-center gap-3 font-mono text-xs text-kite-muted">
+            <div className="flex items-center gap-3 font-mono text-xs text-slate-500">
               <span>
                 {new Date(e.completedAt).toLocaleString(undefined, {
                   dateStyle: 'short',
@@ -79,7 +77,7 @@ export function TaskHistory() {
                 href={e.attestationUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-kite-success hover:underline"
+                className="text-emerald-400/90 transition hover:text-emerald-300 hover:underline"
               >
                 Attestation
               </a>

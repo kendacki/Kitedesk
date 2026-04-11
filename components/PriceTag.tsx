@@ -1,4 +1,4 @@
-// KiteDesk | show task price in USDT and estimated duration
+// KiteDesk | task price + duration (brand typography)
 'use client'
 
 import { TASK_CONFIG } from '@/lib/constants'
@@ -11,9 +11,11 @@ type PriceTagProps = {
 export function PriceTag({ taskType }: PriceTagProps) {
   const cfg = TASK_CONFIG[taskType]
   return (
-    <div className="flex flex-wrap items-center gap-3 font-mono text-sm text-kite-muted">
-      <span className="text-kite-usdt">{cfg.priceUsdt.toFixed(2)} USDT</span>
-      <span className="text-kite-muted">~ {cfg.estimatedTime}</span>
+    <div className="flex flex-wrap items-center gap-3 font-sans text-sm text-slate-400">
+      <span className="font-semibold text-emerald-400/90">
+        {cfg.priceUsdt.toFixed(2)} USDT
+      </span>
+      <span className="text-slate-500">~ {cfg.estimatedTime}</span>
     </div>
   )
 }
