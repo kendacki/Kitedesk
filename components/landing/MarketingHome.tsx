@@ -211,15 +211,6 @@ export function MarketingHome() {
           <div className="relative mx-auto max-w-6xl">
             <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
               <div className="flex min-w-0 w-full max-w-full flex-col items-stretch gap-5 text-left sm:gap-6 lg:max-w-xl lg:pr-8">
-                <motion.div
-                  custom={0}
-                  initial="hidden"
-                  animate="show"
-                  variants={fadeUp}
-                  className="inline-flex w-fit max-w-full self-start rounded-full border border-emerald-200/80 bg-emerald-50/90 px-5 py-2.5 text-left text-xs font-semibold uppercase leading-snug tracking-wider text-emerald-900"
-                >
-                  USDT-secured milestones, chain-verified receipts
-                </motion.div>
                 <motion.h1
                   custom={1}
                   initial="hidden"
