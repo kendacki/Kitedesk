@@ -3,7 +3,9 @@
 
 import { motion } from 'framer-motion'
 import { brandEase, brandLinkLight } from '@/lib/brand'
-import type { AgentStep, ToolName } from '@/types'
+import type { AgentStep, ToolCall, ToolName } from '@/types'
+
+const KITE_TESTNET_TX_BASE = 'https://testnet.kitescan.ai/tx'
 
 export interface AgentStepsPanelProps {
   steps: AgentStep[]
@@ -15,6 +17,8 @@ export interface AgentStepsPanelProps {
   planReasoning?: string
   skippedTools?: string[]
   budgetSavings?: number
+  x402PaymentsCount?: number
+  x402TotalPaidUsdt?: number
 }
 
 function toolBadgeClass(toolName: ToolName): string {
@@ -105,6 +109,74 @@ const rowVariants = {
   },
 }
 
+function X402PaymentBadge({
+  paymentStatus,
+  x402TxHash,
+}: {
+  paymentStatus?: ToolCall['paymentStatus']
+  x402TxHash?: string
+}) {
+  if (paymentStatus === 'free' || paymentStatus === undefined) {
+    return null
+  }
+  if (paymentStatus === 'budget_exceeded') {
+    return (
+      <span className="inline-flex items-center rounded-lg border border-amber-200 bg-amber-50 px-2 py-0.5 font-sans text-[10px] font-medium text-amber-900 sm:text-xs">
+        {'\u26A0'} Skipped — budget limit
+      </span>
+    )
+  }
+  if (paymentStatus === 'paid_via_x402') {
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="inline-flex items-center rounded-lg border border-emerald-300 bg-emerald-100 px-2 py-0.5 font-sans text-[10px] font-semibold text-emerald-900 sm:text-xs">
+          {'\u2713'} Paid via x402
+        </span>
+        {x402TxHash ? (
+          <a
+            href={`${KITE_TESTNET_TX_BASE}/${x402TxHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-[10px] text-emerald-800 underline decoration-emerald-300 hover:text-emerald-950 sm:text-xs"
+          >
+            {truncate(x402TxHash, 22)}
+          </a>
+        ) : null}
+      </div>
+    )
+  }
+  return null
+}
+
+function X402FlowSequence() {
+  const labels = [
+    'Hit 402 Paywall',
+    'Evaluated Cost',
+    'Paid via x402',
+    'Got Result',
+  ] as const
+  return (
+    <div
+      className="mt-2 flex flex-wrap items-center gap-x-1 gap-y-1 font-sans text-[10px] sm:text-xs"
+      role="list"
+      aria-label="x402 payment flow"
+    >
+      {labels.map((label, i) => (
+        <span key={label} className="inline-flex items-center gap-1" role="listitem">
+          {i > 0 ? (
+            <span className="px-0.5 font-medium text-emerald-600" aria-hidden>
+              →
+            </span>
+          ) : null}
+          <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-medium text-emerald-800">
+            {label}
+          </span>
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function BrainIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -134,6 +206,8 @@ export function AgentStepsPanel({
   planReasoning,
   skippedTools,
   budgetSavings,
+  x402PaymentsCount,
+  x402TotalPaidUsdt,
 }: AgentStepsPanelProps) {
   const pct =
     budgetUsdt > 0
@@ -147,6 +221,10 @@ export function AgentStepsPanel({
       ? Math.max(0, budgetSavings)
       : saved
 
+  const showX402CommerceBanner = steps.some(
+    (s) => s.toolCall?.paymentStatus === 'paid_via_x402'
+  )
+
   let runningCost = 0
 
   return (
@@ -155,6 +233,11 @@ export function AgentStepsPanel({
         <h3 className="font-sans text-sm font-semibold text-slate-900">
           Agent execution trace
         </h3>
+        {showX402CommerceBanner ? (
+          <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 font-sans text-xs leading-snug text-emerald-800">
+            Agent autonomously handled API payments via x402 protocol
+          </p>
+        ) : null}
         <div className="mt-3">
           <div className="mb-1 flex justify-between font-mono text-xs text-slate-600 sm:text-sm">
             <span>
@@ -232,7 +315,23 @@ export function AgentStepsPanel({
                     —
                   </span>
                 )}
+                {step.stepKind === 'x402_payment' ? (
+                  <span className="inline-flex rounded-lg border border-cyan-200 bg-cyan-50 px-2 py-0.5 font-mono text-xs font-medium text-cyan-900">
+                    x402 payment
+                  </span>
+                ) : null}
               </div>
+              {step.toolCall?.paymentStatus === 'paid_via_x402' ? <X402FlowSequence /> : null}
+              {step.toolCall &&
+              (step.toolCall.paymentStatus === 'paid_via_x402' ||
+                step.toolCall.paymentStatus === 'budget_exceeded') ? (
+                <div className="mt-2">
+                  <X402PaymentBadge
+                    paymentStatus={step.toolCall.paymentStatus}
+                    x402TxHash={step.toolCall.x402TxHash}
+                  />
+                </div>
+              ) : null}
               <p className="mt-2 font-sans text-xs leading-relaxed text-slate-500">
                 {step.reasoning}
               </p>
@@ -340,6 +439,13 @@ export function AgentStepsPanel({
                 </tbody>
               </table>
             </div>
+          ) : null}
+          {typeof x402PaymentsCount === 'number' &&
+          typeof x402TotalPaidUsdt === 'number' ? (
+            <p className="mt-3 font-sans text-sm text-slate-700">
+              x402 payments: {x402PaymentsCount} calls,{' '}
+              {x402TotalPaidUsdt.toFixed(4)} USDT paid autonomously
+            </p>
           ) : null}
           <p className="mt-3 font-sans text-sm text-slate-600">
             Saved {formatUsdt(saved)} USDT from your budget

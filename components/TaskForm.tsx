@@ -23,6 +23,26 @@ const CLASSIC_PLACEHOLDERS: Record<Exclude<TaskType, 'goal'>, string> = {
 
 const GOAL_PLACEHOLDER = 'e.g. Find the best GPU under $500 and write a buying guide'
 
+function InfoCircleIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className={className}
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+      />
+    </svg>
+  )
+}
+
 function GoalCrosshairIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -89,6 +109,45 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
           Task type
         </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <motion.button
+            type="button"
+            layout
+            onClick={() => setTaskType('goal')}
+            disabled={busy}
+            whileTap={{ scale: 0.98 }}
+            className={`col-span-1 w-full rounded-xl border p-4 text-left transition sm:col-span-2 xl:col-span-4 ${
+              taskType === 'goal'
+                ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-200'
+                : 'border-slate-200 bg-slate-50/80 hover:border-emerald-300'
+            } ${busy ? 'opacity-60' : ''}`}
+          >
+            <div className="relative mb-2 flex items-start justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <span
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${
+                    taskType === 'goal'
+                      ? 'border-emerald-600 bg-white text-emerald-800'
+                      : 'border-slate-200 bg-white text-emerald-700'
+                  }`}
+                >
+                  <GoalCrosshairIcon className="h-5 w-5 shrink-0" />
+                </span>
+                <span className="font-sans text-sm font-semibold text-slate-900">
+                  Goal Agent
+                </span>
+              </div>
+              <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
+                ⚡ Agentic Commerce
+              </span>
+            </div>
+            <p className="font-sans text-xs leading-relaxed text-slate-600">
+              Describe any goal. Agent plans, picks tools, and executes autonomously.
+            </p>
+            <p className="mt-2 font-mono text-xs font-medium text-emerald-800">
+              Pay your budget — agent spends only what&apos;s needed
+            </p>
+          </motion.button>
+
           {CLASSIC_ORDER.map((key) => {
             const cfg = TASK_CONFIG[key]
             const selected = taskType === key
@@ -129,41 +188,13 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
               </motion.button>
             )
           })}
-
-          <motion.button
-            type="button"
-            layout
-            onClick={() => setTaskType('goal')}
-            disabled={busy}
-            whileTap={{ scale: 0.98 }}
-            className={`rounded-xl border p-4 text-left transition ${
-              taskType === 'goal'
-                ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-200'
-                : 'border-slate-200 bg-slate-50/80 hover:border-emerald-300'
-            } ${busy ? 'opacity-60' : ''}`}
-          >
-            <div className="mb-2 flex items-center gap-2">
-              <span
-                className={`flex h-9 w-9 items-center justify-center rounded-lg border ${
-                  taskType === 'goal'
-                    ? 'border-emerald-600 bg-white text-emerald-800'
-                    : 'border-slate-200 bg-white text-emerald-700'
-                }`}
-              >
-                <GoalCrosshairIcon className="h-5 w-5 shrink-0" />
-              </span>
-              <span className="font-sans text-sm font-semibold text-slate-900">
-                Goal Agent
-              </span>
-            </div>
-            <p className="font-sans text-xs leading-relaxed text-slate-600">
-              Describe any goal. Agent plans, picks tools, and executes autonomously.
-            </p>
-            <p className="mt-2 font-mono text-xs font-medium text-emerald-800">
-              Pay your budget — agent spends only what&apos;s needed
-            </p>
-          </motion.button>
         </div>
+        {taskType === 'goal' ? (
+          <p className="mt-3 max-w-3xl font-sans text-xs leading-relaxed text-slate-500">
+            Agent autonomously discovers, evaluates, and pays for APIs using x402 protocol — no
+            human approval needed
+          </p>
+        ) : null}
       </div>
 
       {taskType === 'goal' ? (
@@ -175,6 +206,12 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
             >
               Goal
             </label>
+            <div className="mb-3 flex gap-2 rounded-lg border border-emerald-100 bg-emerald-50/60 px-3 py-2.5">
+              <InfoCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
+              <p className="font-sans text-xs leading-relaxed text-slate-700">
+                Agent pays per API call via x402 — budget is enforced autonomously
+              </p>
+            </div>
             <textarea
               id="goal-input"
               value={goalText}
@@ -249,7 +286,7 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
           {busy
             ? 'Working…'
             : taskType === 'goal'
-              ? 'Launch Agent'
+              ? 'Launch Agentic Commerce'
               : 'Pay and run agent'}
         </motion.button>
       </div>

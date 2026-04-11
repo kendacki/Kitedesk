@@ -6,8 +6,27 @@ import type { AgentStep } from '@/types'
 
 const ATTESTATION_ABI = [
   'function attestTask(string taskId, address user, bytes32 resultHash, string taskType) external',
-  'function attestGoal(string taskId, address user, bytes32 resultHash, bytes32 stepsHash, uint256 totalSpentMicro, uint8 stepCount, string goalPreview) external',
+  'function attestGoal(string taskId, address user, bytes32 resultHash, bytes32 stepsHash, uint256 totalSpentMicro, uint8 stepCount, string goalPreview, uint256 x402PaymentsCount, uint256 x402TotalPaidMicro) external',
 ]
+
+function goalX402StatsFromSteps(steps: AgentStep[]): {
+  x402PaymentsCount: number
+  x402TotalPaidMicro: bigint
+} {
+  let count = 0
+  let totalMicro = BigInt(0)
+  for (const s of steps) {
+    if (s.toolCall?.paymentStatus !== 'paid_via_x402') continue
+    count += 1
+    const cost = s.toolCall.costUsdt
+    const micro =
+      typeof cost === 'number' && Number.isFinite(cost)
+        ? BigInt(Math.round(cost * 1_000_000))
+        : BigInt(0)
+    totalMicro += micro
+  }
+  return { x402PaymentsCount: count, x402TotalPaidMicro: totalMicro }
+}
 
 export async function writeAttestation(
   taskId: string,
@@ -43,7 +62,11 @@ export async function writeGoalAttestation(
   steps: AgentStep[],
   totalSpentUsdt: number,
   goalPreview: string
-): Promise<string> {
+): Promise<{
+  attestationHash: string
+  x402PaymentsCount: number
+  x402TotalPaidMicro: number
+}> {
   const pk = process.env.ATTESTATION_SIGNER_PRIVATE_KEY
   if (!pk) {
     throw new HttpError('ATTESTATION_SIGNER_PRIVATE_KEY is not configured', 503)
@@ -74,6 +97,7 @@ export async function writeGoalAttestation(
   )
   const totalSpentMicro = BigInt(Math.round(totalSpentUsdt * 1_000_000))
   const stepCount = steps.length
+  const { x402PaymentsCount, x402TotalPaidMicro } = goalX402StatsFromSteps(steps)
 
   const tx = await contract.attestGoal(
     taskId,
@@ -82,11 +106,21 @@ export async function writeGoalAttestation(
     stepsHash,
     totalSpentMicro,
     stepCount,
-    goalPreview
+    goalPreview,
+    x402PaymentsCount,
+    x402TotalPaidMicro
   )
   const receipt = await tx.wait()
   if (!receipt || receipt.status !== 1) {
     throw new HttpError('Goal attestation transaction failed', 502)
   }
-  return receipt.hash
+  const x402MicroNum = Number(x402TotalPaidMicro)
+  if (!Number.isSafeInteger(x402MicroNum)) {
+    throw new HttpError('x402 total micro-USDT exceeds safe integer range', 500)
+  }
+  return {
+    attestationHash: receipt.hash,
+    x402PaymentsCount,
+    x402TotalPaidMicro: x402MicroNum,
+  }
 }

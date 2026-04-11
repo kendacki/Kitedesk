@@ -31,6 +31,24 @@ function spentFromSteps(
   return stepList.reduce((sum, s) => sum + (s.toolCall?.costUsdt ?? 0), 0)
 }
 
+function x402StatsFromSteps(
+  stepList: {
+    toolCall?: { costUsdt?: number; paymentStatus?: string } | undefined
+  }[]
+): { x402PaymentsCount: number; x402TotalPaidUsdt: number } {
+  let x402PaymentsCount = 0
+  let x402TotalPaidUsdt = 0
+  for (const s of stepList) {
+    if (s.toolCall?.paymentStatus !== 'paid_via_x402') continue
+    x402PaymentsCount += 1
+    const c = s.toolCall.costUsdt
+    if (typeof c === 'number' && Number.isFinite(c)) {
+      x402TotalPaidUsdt += c
+    }
+  }
+  return { x402PaymentsCount, x402TotalPaidUsdt }
+}
+
 export function KiteDeskApp() {
   const wallet = useWallet()
   const task = useTaskExecution()
@@ -46,6 +64,8 @@ export function KiteDeskApp() {
   const busy = ['paying', 'planning', 'executing', 'attesting'].includes(task.status)
   const showResult = task.result && task.status === 'done'
   const showGoalResult = task.goalResult && task.status === 'done'
+
+  const liveX402 = useMemo(() => x402StatsFromSteps(task.steps), [task.steps])
 
   const showGoalLive =
     task.isGoalFlow && (task.status === 'planning' || task.status === 'executing')
@@ -152,6 +172,8 @@ export function KiteDeskApp() {
                   budgetUsdt={panelGoalBudget || liveBudget}
                   isRunning
                   budgetSavings={(panelGoalBudget || liveBudget) - liveSpent}
+                  x402PaymentsCount={liveX402.x402PaymentsCount}
+                  x402TotalPaidUsdt={liveX402.x402TotalPaidUsdt}
                 />
               </div>
             ) : null}
@@ -164,6 +186,8 @@ export function KiteDeskApp() {
                   budgetUsdt={panelGoalBudget || liveBudget}
                   isRunning={false}
                   budgetSavings={(panelGoalBudget || liveBudget) - liveSpent}
+                  x402PaymentsCount={liveX402.x402PaymentsCount}
+                  x402TotalPaidUsdt={liveX402.x402TotalPaidUsdt}
                 />
               </div>
             ) : null}
@@ -203,6 +227,8 @@ export function KiteDeskApp() {
                     (lastGoalBudgetUsdt ?? task.goalResult.budgetUsdt) -
                     task.goalResult.totalSpentUsdt
                   }
+                  x402PaymentsCount={task.goalResult.x402PaymentsCount}
+                  x402TotalPaidUsdt={task.goalResult.x402TotalPaidUsdt}
                 />
                 <motion.button
                   type="button"

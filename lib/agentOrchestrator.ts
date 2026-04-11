@@ -1,7 +1,10 @@
 // KiteDesk | multi-step goal agent — real API execution with budget constraints
+import { ethers } from 'ethers'
 import Groq from 'groq-sdk'
 import { HttpError } from '@/lib/httpError'
 import { getTotalCost, TOOL_REGISTRY } from '@/lib/tools'
+import { KITE_CHAIN } from '@/lib/constants'
+import { buildXPaymentHeaderForFacilitator } from '@/lib/x402AgentPayment'
 import type { AgentStep, GoalResult, ToolName } from '@/types'
 
 const DEFAULT_MODEL = 'openai/gpt-oss-120b'
@@ -10,7 +13,7 @@ const PLANNER_SYSTEM_PROMPT = `You are an autonomous economic agent with access 
 Your job: achieve the user's goal with minimum cost while staying within budget.
 
 Available tools (you pay per call from the user's budget):
-- web_search: $0.05 — live web search via Tavily, returns real results
+- web_search: $0.05 — live web search via Tavily via x402 paid API on this app
 - news_fetch: $0.04 — recent news articles, good for current events
 - price_check: $0.05 — current market prices, good for product research
 - competitor_analysis: $0.08 — alternatives and comparisons, expensive, use sparingly
@@ -45,6 +48,43 @@ type PlannerJson = {
   plan?: PlanRow[]
   estimatedCost?: number
   planReasoning?: string
+}
+
+type X402AcceptsEntry = {
+  maxAmountRequired?: string
+  payTo?: string
+  asset?: string
+}
+
+type X402ChallengeBody = {
+  accepts?: X402AcceptsEntry[]
+  error?: string
+}
+
+type SearchApiOk = {
+  answer?: string
+  results?: unknown[]
+  settlementTxHash?: string
+}
+
+export type ExecuteX402ToolResult =
+  | { skipped: true; reason: 'budget_exceeded' }
+  | {
+      ok: true
+      output: string
+      paidUsdt: number
+      x402TxHash?: string
+      paymentStatus: 'paid_via_x402' | 'free'
+    }
+  | { ok: false; error: string }
+
+function getInternalApiBaseUrl(): string {
+  const fromEnv =
+    process.env.INTERNAL_API_BASE_URL?.replace(/\/$/, '') ||
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '')
+  if (fromEnv) return fromEnv
+  const port = process.env.PORT ?? '3000'
+  return `http://127.0.0.1:${port}`
 }
 
 function normalizeMessageContent(content: unknown): string {
@@ -91,6 +131,157 @@ function buildContextualInput(row: PlanRow, priorSteps: AgentStep[]): string {
     .join('\n\n')
   if (!prior) return row.inputPrompt
   return `Prior research context:\n${prior}\n\nCurrent task:\n${row.inputPrompt}`
+}
+
+async function readTokenDecimals(
+  provider: ethers.JsonRpcProvider,
+  asset: string
+): Promise<number> {
+  const c = new ethers.Contract(asset, ['function decimals() view returns (uint8)'], provider)
+  try {
+    const d = await c.decimals()
+    return Number(d)
+  } catch {
+    return 18
+  }
+}
+
+/**
+ * x402 tool execution: probe /api/x402/search without payment, pay via agent wallet
+ * EIP-3009 authorization in X-Payment (Pieverse facilitator settle — not a raw ERC20.transfer).
+ */
+export async function executeX402Tool(
+  toolName: ToolName,
+  input: string,
+  budgetUsdt: number,
+  accumulatedUsdt: number
+): Promise<ExecuteX402ToolResult> {
+  if (toolName !== 'web_search') {
+    const out = await TOOL_REGISTRY[toolName].execute(input)
+    return {
+      ok: true,
+      output: out,
+      paidUsdt: TOOL_REGISTRY[toolName].costUsdt,
+      paymentStatus: 'free',
+    }
+  }
+
+  const base = getInternalApiBaseUrl()
+  const url = `${base}/api/x402/search`
+  const body = JSON.stringify({ query: input.trim() })
+
+  const first = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  })
+
+  if (first.status === 200) {
+    const raw = (await first.json()) as SearchApiOk
+    const out = JSON.stringify({
+      answer: raw.answer ?? '',
+      results: raw.results ?? [],
+    })
+    return { ok: true, output: out, paidUsdt: 0, paymentStatus: 'free' }
+  }
+
+  if (first.status !== 402) {
+    const t = await first.text()
+    return {
+      ok: false,
+      error: `x402 search unexpected status ${first.status}: ${t.slice(0, 500)}`,
+    }
+  }
+
+  let challenge: X402ChallengeBody
+  try {
+    challenge = (await first.json()) as X402ChallengeBody
+  } catch {
+    return { ok: false, error: 'Invalid JSON in 402 response' }
+  }
+
+  const acc = challenge.accepts?.[0]
+  if (!acc?.maxAmountRequired || !acc.payTo || !acc.asset) {
+    return { ok: false, error: '402 response missing accepts[0] payment fields' }
+  }
+
+  let maxWei: bigint
+  try {
+    maxWei = BigInt(acc.maxAmountRequired)
+  } catch {
+    return { ok: false, error: 'Invalid maxAmountRequired in 402' }
+  }
+
+  let payTo: string
+  let asset: string
+  try {
+    payTo = ethers.getAddress(acc.payTo)
+    asset = ethers.getAddress(acc.asset)
+  } catch {
+    return { ok: false, error: 'Invalid payTo or asset in 402' }
+  }
+
+  const pk = process.env.ATTESTATION_SIGNER_PRIVATE_KEY?.trim()
+  if (!pk) {
+    return { ok: false, error: 'ATTESTATION_SIGNER_PRIVATE_KEY is not configured' }
+  }
+
+  const provider = new ethers.JsonRpcProvider(KITE_CHAIN.rpcUrl)
+  const decimals = await readTokenDecimals(provider, asset)
+  const priceUsdt = parseFloat(ethers.formatUnits(maxWei, decimals))
+
+  if (!Number.isFinite(priceUsdt) || priceUsdt < 0) {
+    return { ok: false, error: 'Could not derive price from 402 maxAmountRequired' }
+  }
+
+  if (accumulatedUsdt + priceUsdt > budgetUsdt) {
+    return { skipped: true, reason: 'budget_exceeded' }
+  }
+
+  const wallet = new ethers.Wallet(pk, provider)
+  let xPayment: string
+  try {
+    xPayment = await buildXPaymentHeaderForFacilitator(wallet, provider, {
+      asset,
+      payTo,
+      value: maxWei,
+    })
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    return { ok: false, error: `Failed to build X-Payment: ${msg}` }
+  }
+
+  const second = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Payment': xPayment,
+    },
+    body,
+  })
+
+  if (!second.ok) {
+    const t = await second.text()
+    return {
+      ok: false,
+      error: `x402 search after payment failed ${second.status}: ${t.slice(0, 500)}`,
+    }
+  }
+
+  const data = (await second.json()) as SearchApiOk
+  const out = JSON.stringify({
+    answer: data.answer ?? '',
+    results: data.results ?? [],
+  })
+
+  return {
+    ok: true,
+    output: out,
+    paidUsdt: priceUsdt,
+    x402TxHash:
+      typeof data.settlementTxHash === 'string' ? data.settlementTxHash : undefined,
+    paymentStatus: 'paid_via_x402',
+  }
 }
 
 async function runPlanner(
@@ -220,25 +411,81 @@ export async function executeGoal(
   for (let i = 0; i < bodyPlan.length; i++) {
     const row = bodyPlan[i]
     const toolName = row.toolName as ToolName
-    const cost = TOOL_REGISTRY[toolName].costUsdt
-    if (accumulated + cost > budgetUsdt) {
-      steps.push({
-        stepNumber: steps.length + 1,
-        description: 'Stopped: budget reached before running this tool',
-        reasoning: `Need ${cost} USDT but only ${(budgetUsdt - accumulated).toFixed(4)} USDT left.`,
-        completedAt: Date.now(),
-      })
-      skippedTools.push(toolName)
-      for (const rest of bodyPlan.slice(i + 1)) {
-        skippedTools.push(rest.toolName)
+    const registryCost = TOOL_REGISTRY[toolName].costUsdt
+
+    if (toolName !== 'web_search') {
+      if (accumulated + registryCost > budgetUsdt) {
+        steps.push({
+          stepNumber: steps.length + 1,
+          description: 'Stopped: budget reached before running this tool',
+          reasoning: `Need ${registryCost} USDT but only ${(budgetUsdt - accumulated).toFixed(4)} USDT left.`,
+          completedAt: Date.now(),
+        })
+        skippedTools.push(toolName)
+        for (const rest of bodyPlan.slice(i + 1)) {
+          skippedTools.push(rest.toolName)
+        }
+        break
       }
-      break
     }
+
     const toolInput = buildContextualInput(row, steps)
     const started = Date.now()
+
+    if (toolName === 'web_search') {
+      const xr = await executeX402Tool(toolName, toolInput, budgetUsdt, accumulated)
+      const durationMs = Date.now() - started
+
+      if ('skipped' in xr) {
+        steps.push({
+          stepNumber: steps.length + 1,
+          description: TOOL_REGISTRY.web_search.description,
+          reasoning: row.reasoning,
+          completedAt: Date.now(),
+          stepKind: 'x402_payment',
+          toolCall: {
+            toolName: 'web_search',
+            input: toolInput,
+            output: JSON.stringify({ skipped: true, reason: xr.reason }),
+            costUsdt: 0,
+            durationMs,
+            paymentStatus: 'budget_exceeded',
+          },
+        })
+        skippedTools.push('web_search')
+        for (const rest of bodyPlan.slice(i + 1)) {
+          skippedTools.push(rest.toolName)
+        }
+        break
+      }
+
+      if (!xr.ok) {
+        throw new HttpError(xr.error, 502)
+      }
+
+      accumulated += xr.paidUsdt
+      steps.push({
+        stepNumber: steps.length + 1,
+        description: TOOL_REGISTRY.web_search.description,
+        reasoning: row.reasoning,
+        completedAt: Date.now(),
+        stepKind: xr.paymentStatus === 'paid_via_x402' ? 'x402_payment' : undefined,
+        toolCall: {
+          toolName: 'web_search',
+          input: toolInput,
+          output: xr.output,
+          costUsdt: xr.paidUsdt,
+          durationMs,
+          x402TxHash: xr.x402TxHash,
+          paymentStatus: xr.paymentStatus,
+        },
+      })
+      continue
+    }
+
     const output = await TOOL_REGISTRY[toolName].execute(toolInput)
     const durationMs = Date.now() - started
-    accumulated += cost
+    accumulated += registryCost
     steps.push({
       stepNumber: steps.length + 1,
       description: TOOL_REGISTRY[toolName].description,
@@ -248,8 +495,9 @@ export async function executeGoal(
         toolName,
         input: toolInput,
         output,
-        costUsdt: cost,
+        costUsdt: registryCost,
         durationMs,
+        paymentStatus: 'free',
       },
     })
   }
@@ -276,6 +524,7 @@ export async function executeGoal(
         output: finalOutput,
         costUsdt: synthCost,
         durationMs,
+        paymentStatus: 'free',
       },
     })
   } else {
@@ -285,6 +534,18 @@ export async function executeGoal(
 
   const uniqueSkipped = Array.from(new Set(skippedTools))
   const completedAt = Date.now()
+
+  let x402PaymentsCount = 0
+  let x402TotalPaidUsdt = 0
+  for (const s of steps) {
+    if (s.toolCall?.paymentStatus !== 'paid_via_x402') continue
+    x402PaymentsCount += 1
+    const c = s.toolCall.costUsdt
+    if (typeof c === 'number' && Number.isFinite(c)) {
+      x402TotalPaidUsdt += c
+    }
+  }
+
   return {
     goal: g,
     budgetUsdt,
@@ -295,5 +556,7 @@ export async function executeGoal(
     completedAt,
     planReasoning,
     skippedTools: uniqueSkipped,
+    x402PaymentsCount,
+    x402TotalPaidUsdt,
   }
 }

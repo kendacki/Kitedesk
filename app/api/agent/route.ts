@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       const taskId = uuidv4()
       const goalPreview = goal.trim().slice(0, 80)
 
-      const attestationHash = await writeGoalAttestation(
+      const { attestationHash } = await writeGoalAttestation(
         taskId,
         userAddress,
         partial.finalOutput,
@@ -106,6 +106,8 @@ export async function POST(req: NextRequest) {
         completedAt: partial.completedAt,
         planReasoning: partial.planReasoning,
         skippedTools: partial.skippedTools,
+        x402PaymentsCount: partial.x402PaymentsCount,
+        x402TotalPaidUsdt: partial.x402TotalPaidUsdt,
       }
 
       return NextResponse.json({

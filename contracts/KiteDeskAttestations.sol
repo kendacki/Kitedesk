@@ -21,6 +21,8 @@ contract KiteDeskAttestations {
         uint8 stepCount;
         uint256 timestamp;
         string goalPreview;
+        uint256 x402PaymentsCount;
+        uint256 x402TotalPaidMicro;
     }
 
     mapping(string => Attestation) public attestations;
@@ -39,7 +41,9 @@ contract KiteDeskAttestations {
         address indexed user,
         uint256 totalSpentMicro,
         uint8 stepCount,
-        uint256 timestamp
+        uint256 timestamp,
+        uint256 x402PaymentsCount,
+        uint256 x402TotalPaidMicro
     );
 
     address public owner;
@@ -81,7 +85,9 @@ contract KiteDeskAttestations {
         bytes32 stepsHash,
         uint256 totalSpentMicro,
         uint8 stepCount,
-        string calldata goalPreview
+        string calldata goalPreview,
+        uint256 x402PaymentsCount,
+        uint256 x402TotalPaidMicro
     ) external onlyOwner {
         require(goalAttestations[taskId].timestamp == 0, "Already attested");
 
@@ -93,10 +99,20 @@ contract KiteDeskAttestations {
             totalSpentMicro: totalSpentMicro,
             stepCount: stepCount,
             timestamp: block.timestamp,
-            goalPreview: goalPreview
+            goalPreview: goalPreview,
+            x402PaymentsCount: x402PaymentsCount,
+            x402TotalPaidMicro: x402TotalPaidMicro
         });
 
-        emit GoalAttested(taskId, user, totalSpentMicro, stepCount, block.timestamp);
+        emit GoalAttested(
+            taskId,
+            user,
+            totalSpentMicro,
+            stepCount,
+            block.timestamp,
+            x402PaymentsCount,
+            x402TotalPaidMicro
+        );
     }
 
     function getAttestation(string calldata taskId)

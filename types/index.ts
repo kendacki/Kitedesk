@@ -51,6 +51,8 @@ export interface ToolCall {
   output: string
   costUsdt: number
   durationMs: number
+  x402TxHash?: string
+  paymentStatus?: 'paid_via_x402' | 'budget_exceeded' | 'free'
 }
 
 export interface AgentStep {
@@ -59,6 +61,7 @@ export interface AgentStep {
   toolCall?: ToolCall
   reasoning: string
   completedAt: number
+  stepKind?: 'tool' | 'x402_payment'
 }
 
 export interface GoalResult {
@@ -75,4 +78,8 @@ export interface GoalResult {
   completedAt: number
   planReasoning?: string
   skippedTools?: string[]
+  /** Steps where toolCall.paymentStatus === paid_via_x402 */
+  x402PaymentsCount: number
+  /** Sum of toolCall.costUsdt for paid_via_x402 steps */
+  x402TotalPaidUsdt: number
 }

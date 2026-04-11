@@ -66,3 +66,27 @@ export const CONTRACTS = {
     envOr('KITE_ATTESTATION_CONTRACT', '')
   ),
 }
+
+const X402_TOKEN_DEFAULT = '0x0fF5393387ad2f9f691FD6Fd28e07E3969e27e63'
+const X402_FACILITATOR_DEFAULT = 'https://facilitator.pieverse.io'
+
+function x402FacilitatorSettleUrl(): string {
+  const base = envOr('KITE_FACILITATOR_URL', X402_FACILITATOR_DEFAULT).replace(/\/$/, '')
+  return base.endsWith('/v2/settle') ? base : `${base}/v2/settle`
+}
+
+/** x402 agent payments: EIP-3009 asset, Pieverse settle URL, optional Kite demo resource URL */
+export const KITE_X402 = {
+  get tokenAddress(): string {
+    const fromEnv = process.env.KITE_X402_TOKEN?.trim()
+    if (fromEnv) return fromEnv
+    const u = CONTRACTS.usdt.trim()
+    return u.length > 0 ? u : X402_TOKEN_DEFAULT
+  },
+  get settleUrl(): string {
+    return x402FacilitatorSettleUrl()
+  },
+  get demoApiUrl(): string {
+    return process.env.KITE_X402_DEMO_API?.trim() ?? ''
+  },
+} as const
