@@ -41,6 +41,11 @@ function isSignerOrConnectionError(err: unknown): boolean {
   )
 }
 
+function isRelayerError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message.toLowerCase() : ''
+  return msg.includes('relayer rejected') || msg.includes('relayer returned')
+}
+
 export function useTaskExecution() {
   const [status, setStatus] = useState<ExecutionStatus>('idle')
   const [result, setResult] = useState<TaskResult | null>(null)
@@ -87,6 +92,13 @@ export function useTaskExecution() {
           setStatus('error')
           setError(
             'Wallet connection was lost. Refresh the page, reconnect MetaMask, and try again.'
+          )
+          return
+        }
+        if (isRelayerError(payErr)) {
+          setStatus('error')
+          setError(
+            `${payErr instanceof Error ? payErr.message : 'Relayer error'} — Check that your USDT balance is sufficient and the relayer is reachable.`
           )
           return
         }
@@ -151,6 +163,12 @@ export function useTaskExecution() {
       if (isSignerOrConnectionError(err)) {
         setError(
           'Wallet connection was lost. Refresh the page, reconnect MetaMask, and try again.'
+        )
+        return
+      }
+      if (isRelayerError(err)) {
+        setError(
+          `${err instanceof Error ? err.message : 'Relayer error'} — Check that your USDT balance is sufficient and the relayer is reachable.`
         )
         return
       }

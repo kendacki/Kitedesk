@@ -53,9 +53,7 @@ export async function verifyPaymentTransaction(
 
   const user = ethers.getAddress(userAddress)
 
-  if (ethers.getAddress(tx.from) !== user) {
-    throw new HttpError('Payment sender does not match connected wallet', 400)
-  }
+  // Do not require tx.from === user: gasless EIP-3009 submissions are sent by the relayer.
 
   const usdt = CONTRACTS.usdt
   if (!usdt || !ethers.isAddress(usdt)) {

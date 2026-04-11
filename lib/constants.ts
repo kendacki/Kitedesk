@@ -19,6 +19,15 @@ export const KITE_CHAIN = {
   currency: 'KITE',
 } as const
 
+export const KITE_RELAYER = {
+  url: envOr(
+    'NEXT_PUBLIC_KITE_RELAYER_URL',
+    envOr('KITE_RELAYER_URL', 'https://relayer-testnet.gokite.ai/v1/gasless/transfer')
+  ),
+  tokenDomainName: envOr('NEXT_PUBLIC_KITE_TOKEN_DOMAIN_NAME', 'PYUSD'),
+  tokenDomainVersion: envOr('NEXT_PUBLIC_KITE_TOKEN_DOMAIN_VERSION', '1'),
+} as const
+
 export const TASK_CONFIG = {
   research: {
     label: 'Web Research',
