@@ -205,18 +205,18 @@ export function MarketingHome() {
       </AnimatePresence>
 
       <main>
-        <section className="relative overflow-hidden px-4 pb-20 pt-4 sm:px-6 sm:pb-24 sm:pt-6 md:pb-32 md:pt-10">
+        <section className="relative overflow-hidden px-4 pb-16 pt-3 sm:px-6 sm:pb-20 sm:pt-5 md:pb-28 md:pt-8">
           <LottieHeader />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.12)_0%,_transparent_55%)]" />
-          <div className="relative mx-auto max-w-6xl">
-            <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
+          <div className="relative mx-auto max-w-6xl rounded-2xl border border-slate-200/70 bg-white/60 p-4 shadow-sm backdrop-blur-sm sm:p-6 md:p-8">
+            <div className="grid items-start gap-6 sm:gap-7 lg:grid-cols-2 lg:gap-10">
               <div className="flex w-full flex-col items-start text-left">
                 <motion.div
                   custom={0}
                   initial="hidden"
                   animate="show"
                   variants={fadeUp}
-                  className="mb-4 inline-flex self-start rounded-full border border-emerald-200/80 bg-emerald-50/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-900"
+                  className="mb-2 inline-flex self-start rounded-full border border-emerald-200/80 bg-emerald-50/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-900"
                 >
                   On-chain proof for every AI task
                 </motion.div>
@@ -225,10 +225,10 @@ export function MarketingHome() {
                   initial="hidden"
                   animate="show"
                   variants={fadeUp}
-                  className="text-balance text-left text-[clamp(1.75rem,5vw+0.5rem,3.75rem)] font-semibold leading-[1.15] tracking-tight text-slate-900 sm:text-5xl lg:text-6xl"
+                  className="text-left text-[clamp(1.35rem,3.6vw+0.35rem,2.5rem)] font-semibold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.65rem]"
                 >
-                  Escrow-grade trust for{' '}
-                  <span className="bg-gradient-to-br from-emerald-900 to-emerald-500 bg-clip-text text-transparent">
+                  <span className="block">Escrow-grade trust for</span>
+                  <span className="mt-0.5 block bg-gradient-to-br from-emerald-900 to-emerald-500 bg-clip-text text-transparent sm:mt-1">
                     freelance AI work
                   </span>
                 </motion.h1>
@@ -237,7 +237,7 @@ export function MarketingHome() {
                   initial="hidden"
                   animate="show"
                   variants={fadeUp}
-                  className="mt-4 max-w-xl text-base font-normal leading-relaxed text-slate-600 sm:mt-5 sm:text-lg"
+                  className="mt-2 max-w-xl text-sm font-normal leading-relaxed text-slate-600 sm:mt-3 sm:text-base"
                 >
                   KiteDesk pairs USDT settlement on Kite testnet with autonomous agents and
                   cryptographic attestations—so milestones are verified, payouts are
@@ -248,7 +248,7 @@ export function MarketingHome() {
                   initial="hidden"
                   animate="show"
                   variants={fadeUp}
-                  className="mt-5 flex w-full max-w-xl flex-col items-stretch gap-3 text-sm text-slate-600 xs:mt-6 xs:flex-row xs:flex-wrap xs:justify-start xs:gap-4"
+                  className="mt-3 flex w-full max-w-xl flex-col items-stretch gap-3 text-sm text-slate-600 xs:mt-4 xs:flex-row xs:flex-wrap xs:justify-start xs:gap-4"
                 >
                   <span className="inline-flex w-fit items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5">
                     <IconMilestonePayments /> Milestone-based payments
@@ -266,7 +266,7 @@ export function MarketingHome() {
                 initial="hidden"
                 animate="show"
                 variants={fadeUp}
-                className="relative flex w-full justify-center bg-transparent lg:justify-end"
+                className="relative flex w-full justify-center bg-transparent lg:justify-end lg:pt-1"
               >
                 <Image
                   src="/images/hero-delivery-robot.png"
@@ -274,14 +274,14 @@ export function MarketingHome() {
                   width={1024}
                   height={771}
                   priority
-                  className="h-auto w-[min(100%,22rem)] bg-transparent object-contain drop-shadow-lg sm:w-[min(100%,26rem)] lg:w-[min(100%,32rem)]"
+                  className="h-auto w-[min(100%,20rem)] bg-transparent object-contain drop-shadow-lg sm:w-[min(100%,24rem)] lg:w-[min(100%,28rem)]"
                 />
               </motion.div>
             </div>
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={floatTransition}
-              className="relative mt-10 w-full max-w-3xl sm:mt-12"
+              className="relative mt-5 w-full max-w-3xl sm:mt-6"
             >
               <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-4 shadow-xl shadow-emerald-900/5 sm:rounded-3xl sm:p-8">
                 <div className="mb-4 flex flex-col gap-2 border-b border-slate-100 pb-4 text-left text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
