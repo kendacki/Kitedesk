@@ -6,7 +6,6 @@ import axios from 'axios'
 import { ethers } from 'ethers'
 import { payForTask } from '@/lib/payment'
 import { TASK_CONFIG } from '@/lib/constants'
-import { appendTaskHistory } from '@/lib/taskHistory'
 import type { TaskResult, TaskType } from '@/types'
 
 export type ExecutionStatus =
@@ -16,6 +15,31 @@ export type ExecutionStatus =
   | 'attesting'
   | 'done'
   | 'error'
+
+function isWalletUserRejected(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false
+  const e = err as {
+    code?: string | number
+    message?: string
+    info?: { error?: { code?: number; message?: string } }
+  }
+  if (e.code === 'ACTION_REJECTED' || e.code === 4001) return true
+  if (e.info?.error?.code === 4001) return true
+  const msg = (e.message || e.info?.error?.message || '').toLowerCase()
+  if (msg.includes('user denied') || msg.includes('user rejected')) return true
+  return false
+}
+
+function isSignerOrConnectionError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err)
+  const lower = msg.toLowerCase()
+  return (
+    lower.includes('signer') ||
+    (lower.includes('wallet') && lower.includes('connect')) ||
+    lower.includes('disconnected') ||
+    lower.includes('extension id')
+  )
+}
 
 export function useTaskExecution() {
   const [status, setStatus] = useState<ExecutionStatus>('idle')
@@ -39,25 +63,61 @@ export function useTaskExecution() {
     setResult(null)
 
     try {
+      try {
+        await signer.getAddress()
+      } catch {
+        setStatus('error')
+        setError('Wallet disconnected. Refresh the page and connect your wallet again.')
+        return
+      }
+
       const price = TASK_CONFIG[taskType].priceUsdt
 
       setStatus('paying')
-      const paymentTxHash = await payForTask(signer, price)
+      let paymentTxHash: string
+      try {
+        paymentTxHash = await payForTask(signer, price)
+      } catch (payErr: unknown) {
+        if (isWalletUserRejected(payErr)) {
+          setStatus('error')
+          setError('Transaction was cancelled in your wallet.')
+          return
+        }
+        if (isSignerOrConnectionError(payErr)) {
+          setStatus('error')
+          setError(
+            'Wallet connection was lost. Refresh the page, reconnect MetaMask, and try again.'
+          )
+          return
+        }
+        throw payErr
+      }
 
       setStatus('executing')
-      const { data } = await axios.post<{
+      let data: {
         success?: boolean
         taskId?: string
         output?: string
         attestationHash?: string
         attestationUrl?: string
         error?: string
-      }>('/api/agent', {
-        taskType,
-        prompt,
-        userAddress: address,
-        paymentTxHash,
-      })
+      }
+      try {
+        const res = await axios.post<typeof data>('/api/agent', {
+          taskType,
+          prompt,
+          userAddress: address,
+          paymentTxHash,
+        })
+        data = res.data
+      } catch (agentErr: unknown) {
+        if (axios.isAxiosError(agentErr) && isWalletUserRejected(agentErr)) {
+          setStatus('error')
+          setError('Request was cancelled.')
+          return
+        }
+        throw agentErr
+      }
 
       if (data.error || !data.taskId || !data.output) {
         throw new Error(data.error || 'Agent request failed')
@@ -76,22 +136,25 @@ export function useTaskExecution() {
       }
 
       setResult(taskResult)
-      appendTaskHistory({
-        taskId: data.taskId,
-        taskType,
-        promptPreview: prompt.slice(0, 120),
-        attestationUrl: taskResult.attestationUrl,
-        completedAt: taskResult.completedAt,
-      })
-
       setStatus('done')
     } catch (err: unknown) {
       setStatus('error')
-      if (axios.isAxiosError(err)) {
-        setError((err.response?.data as { error?: string })?.error || err.message)
-      } else {
-        setError(err instanceof Error ? err.message : 'Unknown error')
+      if (isWalletUserRejected(err)) {
+        setError('Transaction was cancelled in your wallet.')
+        return
       }
+      if (axios.isAxiosError(err)) {
+        const serverMsg = (err.response?.data as { error?: string })?.error
+        setError(serverMsg || err.message)
+        return
+      }
+      if (isSignerOrConnectionError(err)) {
+        setError(
+          'Wallet connection was lost. Refresh the page, reconnect MetaMask, and try again.'
+        )
+        return
+      }
+      setError(err instanceof Error ? err.message : 'Unknown error')
     }
   }
 

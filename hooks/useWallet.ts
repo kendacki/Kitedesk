@@ -1,8 +1,8 @@
 // KiteDesk | MetaMask connection and Kite testnet chain state
 'use client'
 
-import { useState, useCallback } from 'react'
-import { ethers } from 'ethers'
+import { useState, useCallback, useEffect } from 'react'
+import { ethers, type Eip1193Provider } from 'ethers'
 import { KITE_CHAIN } from '@/lib/constants'
 
 interface WalletState {
@@ -21,6 +21,16 @@ export function useWallet() {
     isConnecting: false,
     error: null,
   })
+
+  const disconnect = useCallback(() => {
+    setState({
+      address: null,
+      provider: null,
+      signer: null,
+      isConnecting: false,
+      error: null,
+    })
+  }, [])
 
   const connect = useCallback(async () => {
     if (!window.ethereum) {
@@ -67,7 +77,20 @@ export function useWallet() {
       }
 
       const provider = new ethers.BrowserProvider(window.ethereum)
-      const signer = await provider.getSigner()
+      let signer: ethers.JsonRpcSigner
+      try {
+        signer = await provider.getSigner()
+      } catch (signerErr: unknown) {
+        const message =
+          signerErr instanceof Error ? signerErr.message : 'Could not get wallet signer'
+        setState((s) => ({
+          ...s,
+          isConnecting: false,
+          error: `${message} Try refreshing the page and connecting again.`,
+        }))
+        return
+      }
+
       const address = await signer.getAddress()
 
       setState({
@@ -83,15 +106,55 @@ export function useWallet() {
     }
   }, [])
 
-  const disconnect = useCallback(() => {
-    setState({
-      address: null,
-      provider: null,
-      signer: null,
-      isConnecting: false,
-      error: null,
-    })
-  }, [])
+  useEffect(() => {
+    const eth = window.ethereum
+    if (!eth?.on || !eth.removeListener) return
+
+    const refreshFromProvider = async () => {
+      try {
+        const provider = new ethers.BrowserProvider(eth as Eip1193Provider)
+        const signer = await provider.getSigner()
+        const address = await signer.getAddress()
+        setState((s) => ({
+          ...s,
+          address,
+          provider,
+          signer,
+          isConnecting: false,
+          error: null,
+        }))
+      } catch {
+        disconnect()
+      }
+    }
+
+    const onAccountsChanged = (accounts: unknown) => {
+      const list = Array.isArray(accounts) ? accounts : []
+      if (list.length === 0) {
+        disconnect()
+        return
+      }
+      void refreshFromProvider()
+    }
+
+    const onChainChanged = () => {
+      disconnect()
+    }
+
+    const onDisconnect = () => {
+      disconnect()
+    }
+
+    eth.on('accountsChanged', onAccountsChanged)
+    eth.on('chainChanged', onChainChanged)
+    eth.on('disconnect', onDisconnect)
+
+    return () => {
+      eth.removeListener?.('accountsChanged', onAccountsChanged)
+      eth.removeListener?.('chainChanged', onChainChanged)
+      eth.removeListener?.('disconnect', onDisconnect)
+    }
+  }, [disconnect])
 
   return { ...state, connect, disconnect }
 }

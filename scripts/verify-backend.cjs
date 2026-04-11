@@ -62,6 +62,8 @@ async function main() {
     ],
     ['ATTESTATION_SIGNER_PRIVATE_KEY', process.env.ATTESTATION_SIGNER_PRIVATE_KEY],
     ['NEXT_PUBLIC_PLATFORM_WALLET', process.env.NEXT_PUBLIC_PLATFORM_WALLET],
+    ['SUPABASE_URL', process.env.SUPABASE_URL],
+    ['SUPABASE_SERVICE_ROLE_KEY', process.env.SUPABASE_SERVICE_ROLE_KEY],
   ]
 
   let bad = false

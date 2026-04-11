@@ -1,6 +1,7 @@
 // KiteDesk | wallet, task form, loading, results, history (light theme — matches landing)
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useWallet } from '@/hooks/useWallet'
@@ -26,6 +27,13 @@ const blockShow = {
 export function KiteDeskApp() {
   const wallet = useWallet()
   const task = useTaskExecution()
+  const [historyTick, setHistoryTick] = useState(0)
+
+  useEffect(() => {
+    if (task.status === 'done') {
+      setHistoryTick((t) => t + 1)
+    }
+  }, [task.status])
 
   const busy = ['paying', 'executing', 'attesting'].includes(task.status)
   const showResult = task.result && task.status === 'done'
@@ -126,7 +134,7 @@ export function KiteDeskApp() {
               />
             ) : null}
 
-            <TaskHistory />
+            <TaskHistory userAddress={wallet.address} refreshSignal={historyTick} />
           </>
         )}
       </motion.main>

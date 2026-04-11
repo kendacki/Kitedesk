@@ -5,8 +5,13 @@ import { v4 as uuidv4 } from 'uuid'
 import { executeAgentTask } from '@/lib/agent'
 import { writeAttestation } from '@/lib/attest'
 import { HttpError } from '@/lib/httpError'
-import { KITE_CHAIN } from '@/lib/constants'
+import { KITE_CHAIN, TASK_CONFIG } from '@/lib/constants'
 import { verifyPaymentTransaction } from '@/lib/verifyPayment'
+import {
+  claimPaymentTransaction,
+  completePaymentTask,
+  releasePaymentClaim,
+} from '@/lib/supabaseTasks'
 import type { TaskType } from '@/types'
 
 export const runtime = 'nodejs'
@@ -15,6 +20,8 @@ export const maxDuration = 120
 const TASK_TYPES: TaskType[] = ['research', 'code_review', 'content_gen']
 
 export async function POST(req: NextRequest) {
+  let paymentTxHashForRelease: string | null = null
+  let attestationWritten = false
   try {
     const body = await req.json()
     const { taskType, prompt, userAddress, paymentTxHash } = body as {
@@ -46,7 +53,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid user address' }, { status: 400 })
     }
 
-    await verifyPaymentTransaction(paymentTxHash, userAddress)
+    const expectedAmount = TASK_CONFIG[taskType as TaskType].priceUsdt
+    await verifyPaymentTransaction(paymentTxHash, userAddress, expectedAmount)
+
+    paymentTxHashForRelease = paymentTxHash
+    await claimPaymentTransaction(paymentTxHash, userAddress)
 
     const output = await executeAgentTask(taskType as TaskType, prompt)
     const taskId = uuidv4()
@@ -56,12 +67,22 @@ export async function POST(req: NextRequest) {
       output,
       taskType
     )
+    attestationWritten = true
 
     const explorerBase =
       process.env.KITE_EXPLORER_URL ||
       process.env.NEXT_PUBLIC_KITE_EXPLORER_URL ||
       KITE_CHAIN.explorerUrl
     const attestationUrl = `${explorerBase.replace(/\/$/, '')}/tx/${attestationHash}`
+
+    await completePaymentTask(paymentTxHash, {
+      taskId,
+      taskType,
+      promptPreview: prompt.trim().slice(0, 120),
+      attestationUrl,
+    })
+
+    paymentTxHashForRelease = null
 
     return NextResponse.json({
       success: true,
@@ -71,6 +92,9 @@ export async function POST(req: NextRequest) {
       attestationUrl,
     })
   } catch (err: unknown) {
+    if (paymentTxHashForRelease && !attestationWritten) {
+      await releasePaymentClaim(paymentTxHashForRelease)
+    }
     if (err instanceof HttpError) {
       return NextResponse.json({ error: err.message }, { status: err.status })
     }

@@ -1,9 +1,9 @@
-// KiteDesk | recent tasks (light theme)
+// KiteDesk | recent tasks from Supabase via API (light theme)
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
+import useSWR from 'swr'
 import { TASK_CONFIG } from '@/lib/constants'
-import { readTaskHistory, TASK_HISTORY_KEY } from '@/lib/taskHistory'
 import type { TaskHistoryEntry, TaskType } from '@/types'
 
 function badgeClass(taskType: TaskType): string {
@@ -17,27 +17,65 @@ function badgeClass(taskType: TaskType): string {
   }
 }
 
-export function TaskHistory() {
-  const [entries, setEntries] = useState<TaskHistoryEntry[]>([])
+async function fetchHistory(url: string): Promise<{ entries: TaskHistoryEntry[] }> {
+  const r = await fetch(url)
+  if (!r.ok) {
+    const j = (await r.json().catch(() => ({}))) as { error?: string }
+    throw new Error(j.error || 'Failed to load history')
+  }
+  return r.json() as Promise<{ entries: TaskHistoryEntry[] }>
+}
+
+type TaskHistoryProps = {
+  userAddress: string | null
+  refreshSignal?: number
+}
+
+export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps) {
+  const key = userAddress
+    ? `/api/history?address=${encodeURIComponent(userAddress)}`
+    : null
+
+  const { data, error, isLoading, mutate } = useSWR(key, fetchHistory, {
+    revalidateOnFocus: true,
+  })
 
   useEffect(() => {
-    setEntries(readTaskHistory())
-  }, [])
+    if (userAddress) void mutate()
+  }, [refreshSignal, userAddress, mutate])
 
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === null || e.key === TASK_HISTORY_KEY) {
-        setEntries(readTaskHistory())
-      }
-    }
-    const onLocal = () => setEntries(readTaskHistory())
-    window.addEventListener('storage', onStorage)
-    window.addEventListener('kitedesk-history', onLocal)
-    return () => {
-      window.removeEventListener('storage', onStorage)
-      window.removeEventListener('kitedesk-history', onLocal)
-    }
-  }, [])
+  if (!userAddress) {
+    return null
+  }
+
+  if (isLoading && !data) {
+    return (
+      <div className="mt-8">
+        <div className="mb-3 h-4 w-28 animate-pulse rounded bg-slate-200" aria-hidden />
+        <ul className="space-y-2" aria-busy="true" aria-label="Loading task history">
+          {[1, 2, 3].map((i) => (
+            <li
+              key={i}
+              className="h-[4.5rem] animate-pulse rounded-xl border border-slate-100 bg-slate-50"
+            />
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div
+        className="mt-8 rounded-xl border border-amber-200 bg-amber-50 p-4 font-sans text-sm text-amber-950"
+        role="alert"
+      >
+        Could not load task history. Check that Supabase is configured on the server.
+      </div>
+    )
+  }
+
+  const entries = data?.entries ?? []
 
   if (entries.length === 0) {
     return (
