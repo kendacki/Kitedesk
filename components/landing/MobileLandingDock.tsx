@@ -26,11 +26,7 @@ export function MobileLandingDock() {
         <a href="#how" className={itemClass}>
           Flow
         </a>
-        <Link
-          href="/desk"
-          className={`${itemClass} text-emerald-800`}
-          prefetch
-        >
+        <Link href="/desk" className={`${itemClass} text-emerald-800`} prefetch>
           Console
         </Link>
       </div>

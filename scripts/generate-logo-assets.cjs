@@ -9,9 +9,7 @@ const sharp = require('sharp')
 const THRESHOLD = 240
 
 async function main() {
-  const input =
-    process.argv[2] ||
-    path.join(__dirname, 'source-logo.png')
+  const input = process.argv[2] || path.join(__dirname, 'source-logo.png')
   if (!fs.existsSync(input)) {
     console.error('Missing source:', input)
     process.exit(1)

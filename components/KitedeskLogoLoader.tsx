@@ -11,7 +11,11 @@ type Props = {
   invert?: boolean
 }
 
-export function KitedeskLogoLoader({ className = '', size = 48, invert = false }: Props) {
+export function KitedeskLogoLoader({
+  className = '',
+  size = 48,
+  invert = false,
+}: Props) {
   return (
     <motion.div
       className={`inline-flex shrink-0 ${invert ? 'brightness-0 invert' : ''} ${className}`}

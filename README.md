@@ -32,7 +32,7 @@ Agents need programmable money and verifiable execution, not a receipt in a data
 
 ## Live Demo
 
-**Production:** *[Replace with your Vercel deployment URL for judges.]*
+**Production:** _[Replace with your Vercel deployment URL for judges.]_
 
 Desk UI: `/desk` after deploy. Marketing site: `/`.
 
@@ -51,15 +51,15 @@ Desk UI: `/desk` after deploy. Marketing site: `/`.
 
 ## Tech Stack
 
-| Layer     | Choice |
-| --------- | ------ |
-| Frontend  | Next.js 14 (App Router), TypeScript, Tailwind CSS, Framer Motion |
-| Chain     | Kite AI Testnet (chain ID 2368), ethers.js v6, MetaMask |
+| Layer     | Choice                                                                                          |
+| --------- | ----------------------------------------------------------------------------------------------- |
+| Frontend  | Next.js 14 (App Router), TypeScript, Tailwind CSS, Framer Motion                                |
+| Chain     | Kite AI Testnet (chain ID 2368), ethers.js v6, MetaMask                                         |
 | Payments  | Testnet USDT; gasless authorization path via Kite relayer (EIP-3009 / EIP-712) where configured |
-| Agent     | Groq (`groq-sdk`), multi-step orchestrator plus tool registry |
-| Storage   | Supabase (Postgres) for payment claims and task history |
-| Contracts | Solidity 0.8.20, `KiteDeskAttestations` (Hardhat) |
-| Deploy    | Vercel (recommended) |
+| Agent     | Groq (`groq-sdk`), multi-step orchestrator plus tool registry                                   |
+| Storage   | Supabase (Postgres) for payment claims and task history                                         |
+| Contracts | Solidity 0.8.20, `KiteDeskAttestations` (Hardhat)                                               |
+| Deploy    | Vercel (recommended)                                                                            |
 
 ---
 

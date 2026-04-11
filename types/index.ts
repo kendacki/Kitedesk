@@ -43,6 +43,7 @@ export type ToolName =
   | 'competitor_analysis'
   | 'summarize'
   | 'news_fetch'
+  | 'deep_read'
 
 export interface ToolCall {
   toolName: ToolName
@@ -72,4 +73,6 @@ export interface GoalResult {
   attestationHash: string
   attestationUrl: string
   completedAt: number
+  planReasoning?: string
+  skippedTools?: string[]
 }

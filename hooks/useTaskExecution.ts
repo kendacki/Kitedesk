@@ -291,7 +291,11 @@ export function useTaskExecution() {
       setStatus('attesting')
       await new Promise((r) => setTimeout(r, 450))
 
-      setGoalResult(gr)
+      setGoalResult({
+        ...gr,
+        planReasoning: gr.planReasoning,
+        skippedTools: gr.skippedTools,
+      })
       setIsGoalFlow(false)
       setStatus('done')
     } catch (err: unknown) {

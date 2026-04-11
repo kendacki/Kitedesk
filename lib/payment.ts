@@ -79,9 +79,13 @@ export async function payForTask(
     nonce,
   }
 
-  const signature = await signer.signTypedData(domain, {
-    TransferWithAuthorization: TRANSFER_WITH_AUTHORIZATION_TYPE,
-  }, message)
+  const signature = await signer.signTypedData(
+    domain,
+    {
+      TransferWithAuthorization: TRANSFER_WITH_AUTHORIZATION_TYPE,
+    },
+    message
+  )
 
   const { v, r, s } = ethers.Signature.from(signature)
 

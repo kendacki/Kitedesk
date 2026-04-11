@@ -62,7 +62,15 @@ export async function writeGoalAttestation(
 
   const resultHash = ethers.keccak256(ethers.toUtf8Bytes(finalOutput))
   const stepsHash = ethers.keccak256(
-    ethers.toUtf8Bytes(JSON.stringify(steps))
+    ethers.toUtf8Bytes(
+      JSON.stringify(
+        steps.map((s) => ({
+          tool: s.toolCall?.toolName,
+          cost: s.toolCall?.costUsdt,
+          reasoning: s.reasoning,
+        }))
+      )
+    )
   )
   const totalSpentMicro = BigInt(Math.round(totalSpentUsdt * 1_000_000))
   const stepCount = steps.length

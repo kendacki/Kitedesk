@@ -21,8 +21,7 @@ const CLASSIC_PLACEHOLDERS: Record<Exclude<TaskType, 'goal'>, string> = {
   content_gen: 'Topic or brief for social and blog content',
 }
 
-const GOAL_PLACEHOLDER =
-  'e.g. Find the best GPU under $500 and write a buying guide'
+const GOAL_PLACEHOLDER = 'e.g. Find the best GPU under $500 and write a buying guide'
 
 function GoalCrosshairIcon({ className }: { className?: string }) {
   return (
@@ -74,7 +73,8 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
   const goalSubmitDisabled =
     !canSubmit || busy || !goalText.trim() || (taskType === 'goal' && !onRunGoal)
   const classicSubmitDisabled = !canSubmit || busy || !prompt.trim()
-  const submitDisabled = taskType === 'goal' ? goalSubmitDisabled : classicSubmitDisabled
+  const submitDisabled =
+    taskType === 'goal' ? goalSubmitDisabled : classicSubmitDisabled
 
   return (
     <motion.form
@@ -152,7 +152,9 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
               >
                 <GoalCrosshairIcon className="h-5 w-5 shrink-0" />
               </span>
-              <span className="font-sans text-sm font-semibold text-slate-900">Goal Agent</span>
+              <span className="font-sans text-sm font-semibold text-slate-900">
+                Goal Agent
+              </span>
             </div>
             <p className="font-sans text-xs leading-relaxed text-slate-600">
               Describe any goal. Agent plans, picks tools, and executes autonomously.

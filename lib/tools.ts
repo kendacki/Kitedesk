@@ -1,110 +1,185 @@
-// KiteDesk | tool registry with costs and executors
-import Groq from 'groq-sdk'
+// KiteDesk | agent tool registry — real API calls per execution
+import { tavily } from '@tavily/core'
 import { HttpError } from '@/lib/httpError'
 import type { ToolName } from '@/types'
 
-const DEFAULT_MODEL = 'openai/gpt-oss-120b'
-
-export type Tool = {
+export interface Tool {
   name: ToolName
   description: string
   costUsdt: number
   execute: (input: string) => Promise<string>
 }
 
-function normalizeMessageContent(content: unknown): string {
-  if (content === null || content === undefined) return ''
-  if (typeof content === 'string') return content
-  if (Array.isArray(content)) {
-    return content
-      .map((part) => {
-        if (typeof part === 'object' && part !== null && 'text' in part) {
-          return String((part as { text?: string }).text ?? '')
-        }
-        return ''
-      })
-      .join('')
-  }
-  return String(content)
-}
-
-async function callGroq(systemPrompt: string, userInput: string): Promise<string> {
-  const trimmed = userInput.trim()
-  if (!trimmed) {
-    throw new HttpError('Tool input cannot be empty', 400)
-  }
-  const apiKey = process.env.GROQ_API_KEY
-  if (!apiKey) {
-    throw new HttpError('GROQ_API_KEY is not configured', 503)
-  }
-  const model = process.env.GROQ_MODEL?.trim() || DEFAULT_MODEL
-  const client = new Groq({ apiKey })
-  const completion = await client.chat.completions.create({
-    model,
-    max_tokens: 1024,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: trimmed },
-    ],
-  })
-  const raw = completion.choices[0]?.message?.content
-  const text = normalizeMessageContent(raw).trim()
-  if (!text) {
-    throw new HttpError('Tool returned no text output', 502)
-  }
-  return text
+function mapToolError(tool: string, e: unknown): never {
+  if (e instanceof HttpError) throw e
+  const msg = e instanceof Error ? e.message : String(e)
+  console.error(`[tool ${tool}]`, e)
+  throw new HttpError(`${tool} failed: ${msg}`, 502)
 }
 
 export const TOOL_REGISTRY: Record<ToolName, Tool> = {
   web_search: {
     name: 'web_search',
-    description: 'Simulated web search returning structured results',
+    description: 'Search the live web for any query',
     costUsdt: 0.05,
-    execute: (input) =>
-      callGroq(
-        'You are a web search engine. Given a query, return 5 realistic and factual search results in JSON format: [{title, url, snippet}]. Be accurate.',
-        input
-      ),
-  },
-  price_check: {
-    name: 'price_check',
-    description: 'Product pricing from multiple retailers (simulated)',
-    costUsdt: 0.05,
-    execute: (input) =>
-      callGroq(
-        'You are a product pricing database. Given a product query, return current realistic market prices from 3 retailers in JSON: [{retailer, price, url, inStock}].',
-        input
-      ),
-  },
-  competitor_analysis: {
-    name: 'competitor_analysis',
-    description: 'Competitor analysis with pros and cons',
-    costUsdt: 0.08,
-    execute: (input) =>
-      callGroq(
-        'You are a market research analyst. Given a product or company, return a structured competitor analysis with pros/cons for 3 competitors.',
-        input
-      ),
+    execute: async (input) => {
+      try {
+        const client = tavily({ apiKey: process.env.TAVILY_API_KEY! })
+        const response = await client.search(input, {
+          searchDepth: 'basic',
+          maxResults: 5,
+          includeAnswer: true,
+        })
+        return JSON.stringify({
+          answer: response.answer,
+          results: response.results.map((r) => ({
+            title: r.title,
+            url: r.url,
+            content: r.content.slice(0, 300),
+            score: r.score,
+          })),
+        })
+      } catch (e) {
+        mapToolError('web_search', e)
+      }
+    },
   },
   news_fetch: {
     name: 'news_fetch',
-    description: 'Recent news items for a topic (simulated)',
+    description: 'Fetch recent news articles on a topic',
     costUsdt: 0.04,
-    execute: (input) =>
-      callGroq(
-        'You are a news aggregator. Given a topic, return 4 recent relevant news items in JSON: [{headline, source, summary, date}].',
-        input
-      ),
+    execute: async (input) => {
+      try {
+        const client = tavily({ apiKey: process.env.TAVILY_API_KEY! })
+        const response = await client.search(input, {
+          searchDepth: 'basic',
+          topic: 'news',
+          maxResults: 5,
+          includeAnswer: true,
+          days: 7,
+        })
+        return JSON.stringify({
+          answer: response.answer,
+          articles: response.results.map((r) => ({
+            title: r.title,
+            url: r.url,
+            content: r.content.slice(0, 250),
+            publishedDate: r.publishedDate,
+          })),
+        })
+      } catch (e) {
+        mapToolError('news_fetch', e)
+      }
+    },
+  },
+  price_check: {
+    name: 'price_check',
+    description: 'Search for current prices and buying options',
+    costUsdt: 0.05,
+    execute: async (input) => {
+      try {
+        const client = tavily({ apiKey: process.env.TAVILY_API_KEY! })
+        const response = await client.search(`${input} price buy 2025`, {
+          searchDepth: 'advanced',
+          maxResults: 6,
+          includeAnswer: true,
+        })
+        return JSON.stringify({
+          answer: response.answer,
+          sources: response.results.map((r) => ({
+            title: r.title,
+            url: r.url,
+            content: r.content.slice(0, 300),
+          })),
+        })
+      } catch (e) {
+        mapToolError('price_check', e)
+      }
+    },
+  },
+  competitor_analysis: {
+    name: 'competitor_analysis',
+    description: 'Research competitors and alternatives',
+    costUsdt: 0.08,
+    execute: async (input) => {
+      try {
+        const client = tavily({ apiKey: process.env.TAVILY_API_KEY! })
+        const response = await client.search(
+          `${input} alternatives competitors comparison`,
+          {
+            searchDepth: 'advanced',
+            maxResults: 6,
+            includeAnswer: true,
+          }
+        )
+        return JSON.stringify({
+          answer: response.answer,
+          sources: response.results.map((r) => ({
+            title: r.title,
+            url: r.url,
+            content: r.content.slice(0, 300),
+          })),
+        })
+      } catch (e) {
+        mapToolError('competitor_analysis', e)
+      }
+    },
+  },
+  deep_read: {
+    name: 'deep_read',
+    description: 'Read full content of a specific URL',
+    costUsdt: 0.06,
+    execute: async (input) => {
+      try {
+        const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.FIRECRAWL_API_KEY}`,
+          },
+          body: JSON.stringify({
+            url: input.startsWith('http') ? input : `https://${input}`,
+            formats: ['markdown'],
+          }),
+        })
+        const data = (await res.json()) as {
+          success: boolean
+          data?: { markdown?: string }
+        }
+        if (!data.success || !data.data?.markdown) {
+          throw new HttpError('Firecrawl failed to read URL', 502)
+        }
+        return data.data.markdown.slice(0, 1500)
+      } catch (e) {
+        mapToolError('deep_read', e)
+      }
+    },
   },
   summarize: {
     name: 'summarize',
-    description: 'Synthesize research into a recommendation',
+    description: 'Synthesize all research into a final recommendation',
     costUsdt: 0.02,
-    execute: (input) =>
-      callGroq(
-        'You are an expert analyst. Synthesize the provided research into a clear, actionable recommendation with a final verdict.',
-        input
-      ),
+    execute: async (input) => {
+      try {
+        const Groq = (await import('groq-sdk')).default
+        const client = new Groq({ apiKey: process.env.GROQ_API_KEY! })
+        const completion = await client.chat.completions.create({
+          model: process.env.GROQ_MODEL?.trim() || 'openai/gpt-oss-120b',
+          max_tokens: 1024,
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You are an expert analyst. Synthesize the provided research context into a clear, structured recommendation with: 1) Key findings, 2) Final verdict, 3) Actionable next steps. Be specific and cite sources where possible.',
+            },
+            { role: 'user', content: input },
+          ],
+        })
+        return completion.choices[0]?.message?.content ?? 'No summary generated'
+      } catch (e) {
+        mapToolError('summarize', e)
+      }
+    },
   },
 }
 

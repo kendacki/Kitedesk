@@ -20,11 +20,7 @@ export const maxDuration = 120
 
 type ClassicTaskType = Exclude<TaskType, 'goal'>
 
-const CLASSIC_TASK_TYPES: ClassicTaskType[] = [
-  'research',
-  'code_review',
-  'content_gen',
-]
+const CLASSIC_TASK_TYPES: ClassicTaskType[] = ['research', 'code_review', 'content_gen']
 
 function explorerTxUrl(txHash: string): string {
   const explorerBase =
@@ -50,7 +46,8 @@ export async function POST(req: NextRequest) {
             ? parseFloat(budgetRaw)
             : NaN
       const userAddress = typeof body.userAddress === 'string' ? body.userAddress : ''
-      const paymentTxHash = typeof body.paymentTxHash === 'string' ? body.paymentTxHash : ''
+      const paymentTxHash =
+        typeof body.paymentTxHash === 'string' ? body.paymentTxHash : ''
 
       if (!goal.trim() || !userAddress || !paymentTxHash) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -107,6 +104,8 @@ export async function POST(req: NextRequest) {
         attestationHash,
         attestationUrl,
         completedAt: partial.completedAt,
+        planReasoning: partial.planReasoning,
+        skippedTools: partial.skippedTools,
       }
 
       return NextResponse.json({

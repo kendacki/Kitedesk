@@ -35,6 +35,7 @@ export function KiteDeskApp() {
   const wallet = useWallet()
   const task = useTaskExecution()
   const [historyTick, setHistoryTick] = useState(0)
+  const [lastGoalBudgetUsdt, setLastGoalBudgetUsdt] = useState<number | null>(null)
 
   useEffect(() => {
     if (task.status === 'done') {
@@ -62,11 +63,14 @@ export function KiteDeskApp() {
 
   const handleRunGoal = (goal: string, budgetUsdt: number) => {
     if (!wallet.signer || !wallet.address) return
+    setLastGoalBudgetUsdt(budgetUsdt)
     void task.executeGoal(wallet.signer, wallet.address, goal, budgetUsdt)
   }
 
-  const hideTaskForm =
-    showResult || showGoalResult || showGoalLive || showGoalAttesting
+  const panelGoalBudget =
+    lastGoalBudgetUsdt ?? task.goalResult?.budgetUsdt ?? task.goalBudgetUsdt ?? 0
+
+  const hideTaskForm = showResult || showGoalResult || showGoalLive || showGoalAttesting
 
   return (
     <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-4xl flex-col px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 safe-x sm:px-6 sm:py-12 md:py-16">
@@ -145,8 +149,9 @@ export function KiteDeskApp() {
                 <AgentStepsPanel
                   steps={task.steps}
                   totalSpentUsdt={liveSpent}
-                  budgetUsdt={liveBudget}
+                  budgetUsdt={panelGoalBudget || liveBudget}
                   isRunning
+                  budgetSavings={(panelGoalBudget || liveBudget) - liveSpent}
                 />
               </div>
             ) : null}
@@ -156,8 +161,9 @@ export function KiteDeskApp() {
                 <AgentStepsPanel
                   steps={task.steps}
                   totalSpentUsdt={liveSpent}
-                  budgetUsdt={liveBudget}
+                  budgetUsdt={panelGoalBudget || liveBudget}
                   isRunning={false}
+                  budgetSavings={(panelGoalBudget || liveBudget) - liveSpent}
                 />
               </div>
             ) : null}
@@ -187,14 +193,23 @@ export function KiteDeskApp() {
                 <AgentStepsPanel
                   steps={task.goalResult.steps}
                   totalSpentUsdt={task.goalResult.totalSpentUsdt}
-                  budgetUsdt={task.goalResult.budgetUsdt}
+                  budgetUsdt={lastGoalBudgetUsdt ?? task.goalResult.budgetUsdt}
                   isRunning={false}
                   finalOutput={task.goalResult.finalOutput}
                   attestationUrl={task.goalResult.attestationUrl}
+                  planReasoning={task.goalResult.planReasoning}
+                  skippedTools={task.goalResult.skippedTools}
+                  budgetSavings={
+                    (lastGoalBudgetUsdt ?? task.goalResult.budgetUsdt) -
+                    task.goalResult.totalSpentUsdt
+                  }
                 />
                 <motion.button
                   type="button"
-                  onClick={() => task.reset()}
+                  onClick={() => {
+                    setLastGoalBudgetUsdt(null)
+                    task.reset()
+                  }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className={`${brandSecondaryButtonLight} mt-6`}

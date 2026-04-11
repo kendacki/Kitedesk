@@ -350,7 +350,10 @@ export function MarketingHome() {
           </div>
         </section>
 
-        <section className="border-t border-slate-100 bg-white px-4 py-16 sm:px-6 sm:py-24" id="how">
+        <section
+          className="border-t border-slate-100 bg-white px-4 py-16 sm:px-6 sm:py-24"
+          id="how"
+        >
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="text-2xl font-semibold text-slate-900 sm:text-3xl md:text-4xl">
               Launch in four streamlined steps

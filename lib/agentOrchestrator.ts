@@ -1,4 +1,4 @@
-// KiteDesk | multi-step goal-based agent orchestrator
+// KiteDesk | multi-step goal agent — real API execution with budget constraints
 import Groq from 'groq-sdk'
 import { HttpError } from '@/lib/httpError'
 import { getTotalCost, TOOL_REGISTRY } from '@/lib/tools'
@@ -6,7 +6,33 @@ import type { AgentStep, GoalResult, ToolName } from '@/types'
 
 const DEFAULT_MODEL = 'openai/gpt-oss-120b'
 
-const PLANNER_SYSTEM = `You are an autonomous agent planner. Given a user goal and budget in USDT, decide which tools to use and in what order. Return ONLY valid JSON: { plan: [{stepNumber, toolName, inputPrompt, reasoning}], estimatedCost: number }. Available tools and costs: web_search($0.05), price_check($0.05), competitor_analysis($0.08), news_fetch($0.04), summarize($0.02). Always end with summarize. Never exceed the budget. Use minimum tools needed.`
+const PLANNER_SYSTEM_PROMPT = `You are an autonomous economic agent with access to real external APIs.
+Your job: achieve the user's goal with minimum cost while staying within budget.
+
+Available tools (you pay per call from the user's budget):
+- web_search: $0.05 — live web search via Tavily, returns real results
+- news_fetch: $0.04 — recent news articles, good for current events
+- price_check: $0.05 — current market prices, good for product research
+- competitor_analysis: $0.08 — alternatives and comparisons, expensive, use sparingly
+- deep_read: $0.06 — read full content of a specific URL, use when you need detail
+- summarize: $0.02 — synthesize findings into recommendation, ALWAYS use as final step
+
+Rules:
+- Always end with summarize
+- Never exceed the budget
+- Use the cheapest tool that gets the job done
+- If budget < $0.20, avoid competitor_analysis and deep_read
+- Chain tools logically: search first, then deep_read specific results if needed
+- Justify each step clearly in reasoning
+
+Return ONLY valid JSON with no markdown:
+{
+  "plan": [
+    { "stepNumber": 1, "toolName": "web_search", "inputPrompt": "specific search query here", "reasoning": "why this tool for this step" }
+  ],
+  "estimatedCost": 0.17,
+  "planReasoning": "one sentence explaining overall strategy"
+}`
 
 type PlanRow = {
   stepNumber: number
@@ -18,6 +44,7 @@ type PlanRow = {
 type PlannerJson = {
   plan?: PlanRow[]
   estimatedCost?: number
+  planReasoning?: string
 }
 
 function normalizeMessageContent(content: unknown): string {
@@ -54,7 +81,22 @@ function planCostForTools(names: ToolName[]): number {
   return getTotalCost(names)
 }
 
-async function runPlanner(goal: string, budgetUsdt: number): Promise<PlanRow[]> {
+function buildContextualInput(row: PlanRow, priorSteps: AgentStep[]): string {
+  const prior = priorSteps
+    .filter((s) => s.toolCall && s.toolCall.toolName !== 'summarize')
+    .map(
+      (s) =>
+        `Step ${s.stepNumber} (${s.toolCall!.toolName}): ${s.toolCall!.output.slice(0, 1200)}`
+    )
+    .join('\n\n')
+  if (!prior) return row.inputPrompt
+  return `Prior research context:\n${prior}\n\nCurrent task:\n${row.inputPrompt}`
+}
+
+async function runPlanner(
+  goal: string,
+  budgetUsdt: number
+): Promise<{ bodyPlan: PlanRow[]; planReasoning: string; skippedTools: string[] }> {
   const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) {
     throw new HttpError('GROQ_API_KEY is not configured', 503)
@@ -66,7 +108,7 @@ async function runPlanner(goal: string, budgetUsdt: number): Promise<PlanRow[]> 
     model,
     max_tokens: 1024,
     messages: [
-      { role: 'system', content: PLANNER_SYSTEM },
+      { role: 'system', content: PLANNER_SYSTEM_PROMPT },
       { role: 'user', content: userPayload },
     ],
   })
@@ -81,6 +123,11 @@ async function runPlanner(goal: string, budgetUsdt: number): Promise<PlanRow[]> 
   } catch {
     throw new HttpError('Planner returned invalid JSON', 502)
   }
+  const planReasoning =
+    typeof parsed.planReasoning === 'string' && parsed.planReasoning.trim()
+      ? parsed.planReasoning.trim()
+      : 'Planner did not return plan reasoning.'
+
   const rows = Array.isArray(parsed.plan) ? parsed.plan : []
   const valid: PlanRow[] = []
   for (const row of rows) {
@@ -94,7 +141,8 @@ async function runPlanner(goal: string, budgetUsdt: number): Promise<PlanRow[]> 
     }
     if (!isToolName(row.toolName)) continue
     valid.push({
-      stepNumber: typeof row.stepNumber === 'number' ? row.stepNumber : valid.length + 1,
+      stepNumber:
+        typeof row.stepNumber === 'number' ? row.stepNumber : valid.length + 1,
       toolName: row.toolName,
       inputPrompt: row.inputPrompt,
       reasoning: row.reasoning,
@@ -103,19 +151,49 @@ async function runPlanner(goal: string, budgetUsdt: number): Promise<PlanRow[]> 
   if (valid.length === 0) {
     throw new HttpError('Planner produced an empty plan', 502)
   }
-  const body = valid.filter((r) => r.toolName !== 'summarize')
+
+  let body = valid.filter((r) => r.toolName !== 'summarize')
+  const skippedTools: string[] = []
+
+  if (budgetUsdt < 0.2) {
+    for (const r of body) {
+      if (r.toolName === 'competitor_analysis' || r.toolName === 'deep_read') {
+        skippedTools.push(r.toolName)
+      }
+    }
+    body = body.filter(
+      (r) => r.toolName !== 'competitor_analysis' && r.toolName !== 'deep_read'
+    )
+  }
+
+  if (body.length === 0) {
+    throw new HttpError('Planner produced no executable steps after budget rules', 502)
+  }
+
   const synthCost = TOOL_REGISTRY.summarize.costUsdt
   if (synthCost > budgetUsdt) {
     throw new HttpError('Budget too small for minimum execution', 400)
   }
+
+  const fullBody = [...body]
   let trimmed = [...body]
   while (
     trimmed.length > 0 &&
-    planCostForTools(trimmed.map((r) => r.toolName as ToolName)) + synthCost > budgetUsdt
+    planCostForTools(trimmed.map((r) => r.toolName as ToolName)) + synthCost >
+      budgetUsdt
   ) {
     trimmed = trimmed.slice(0, -1)
   }
-  return trimmed
+
+  for (const dropped of fullBody.slice(trimmed.length)) {
+    skippedTools.push(dropped.toolName)
+  }
+
+  if (trimmed.length === 0) {
+    throw new HttpError('Budget too small for planned tools plus summarize', 400)
+  }
+
+  return { bodyPlan: trimmed, planReasoning, skippedTools }
 }
 
 export async function executeGoal(
@@ -129,7 +207,12 @@ export async function executeGoal(
     throw new HttpError('Goal cannot be empty', 400)
   }
 
-  const bodyPlan = await runPlanner(g, budgetUsdt)
+  const {
+    bodyPlan,
+    planReasoning,
+    skippedTools: skippedFromPlanner,
+  } = await runPlanner(g, budgetUsdt)
+  const skippedTools = [...skippedFromPlanner]
   const steps: AgentStep[] = []
   let accumulated = 0
   const synthCost = TOOL_REGISTRY.summarize.costUsdt
@@ -145,10 +228,15 @@ export async function executeGoal(
         reasoning: `Need ${cost} USDT but only ${(budgetUsdt - accumulated).toFixed(4)} USDT left.`,
         completedAt: Date.now(),
       })
+      skippedTools.push(toolName)
+      for (const rest of bodyPlan.slice(i + 1)) {
+        skippedTools.push(rest.toolName)
+      }
       break
     }
+    const toolInput = buildContextualInput(row, steps)
     const started = Date.now()
-    const output = await TOOL_REGISTRY[toolName].execute(row.inputPrompt)
+    const output = await TOOL_REGISTRY[toolName].execute(toolInput)
     const durationMs = Date.now() - started
     accumulated += cost
     steps.push({
@@ -158,7 +246,7 @@ export async function executeGoal(
       completedAt: Date.now(),
       toolCall: {
         toolName,
-        input: row.inputPrompt,
+        input: toolInput,
         output,
         costUsdt: cost,
         durationMs,
@@ -166,13 +254,10 @@ export async function executeGoal(
     })
   }
 
-  const contextParts = steps
-    .map((s) => s.toolCall?.output)
-    .filter((o): o is string => typeof o === 'string' && o.length > 0)
-  const synthesisInput =
-    contextParts.length > 0
-      ? `User goal:\n${g}\n\n--- Tool outputs ---\n${contextParts.join('\n\n---\n\n')}`
-      : `User goal:\n${g}\n\nNo intermediate tool outputs; provide a concise plan and recommendation.`
+  const researchCollected = steps
+    .map((s) => `Step ${s.stepNumber} (${s.toolCall?.toolName}): ${s.toolCall?.output}`)
+    .join('\n\n')
+  const synthesisInput = `Goal: ${g}\n\nResearch collected:\n${researchCollected}`
 
   let finalOutput: string
   if (accumulated + synthCost <= budgetUsdt) {
@@ -195,10 +280,10 @@ export async function executeGoal(
     })
   } else {
     finalOutput =
-      contextParts.join('\n\n---\n\n') ||
-      'Budget exhausted before final synthesis could run.'
+      researchCollected || 'Budget exhausted before final synthesis could run.'
   }
 
+  const uniqueSkipped = Array.from(new Set(skippedTools))
   const completedAt = Date.now()
   return {
     goal: g,
@@ -208,5 +293,7 @@ export async function executeGoal(
     remainingBudget: Math.max(0, budgetUsdt - accumulated),
     finalOutput,
     completedAt,
+    planReasoning,
+    skippedTools: uniqueSkipped,
   }
 }

@@ -12,6 +12,9 @@ export interface AgentStepsPanelProps {
   isRunning: boolean
   finalOutput?: string
   attestationUrl?: string
+  planReasoning?: string
+  skippedTools?: string[]
+  budgetSavings?: number
 }
 
 function toolBadgeClass(toolName: ToolName): string {
@@ -26,6 +29,8 @@ function toolBadgeClass(toolName: ToolName): string {
       return 'border-amber-200 bg-amber-50 text-amber-900'
     case 'news_fetch':
       return 'border-sky-200 bg-sky-50 text-sky-900'
+    case 'deep_read':
+      return 'border-indigo-200 bg-indigo-50 text-indigo-900'
     default:
       return 'border-slate-200 bg-slate-100 text-slate-800'
   }
@@ -40,7 +45,34 @@ function truncate(s: string, max: number): string {
   return `${s.slice(0, max - 1)}…`
 }
 
-function aggregateToolCosts(steps: AgentStep[]): { tool: ToolName; calls: number; cost: number }[] {
+type SourceLink = { title: string; url: string }
+
+function extractSourceLinks(output: string): SourceLink[] | null {
+  try {
+    const j = JSON.parse(output) as Record<string, unknown>
+    const key = (['results', 'articles', 'sources'] as const).find((k) =>
+      Array.isArray(j[k])
+    )
+    if (!key) return null
+    const arr = j[key] as Array<{ title?: string; url?: string }>
+    const out: SourceLink[] = []
+    for (const item of arr.slice(0, 3)) {
+      if (item?.url && typeof item.url === 'string') {
+        out.push({
+          title: typeof item.title === 'string' ? item.title : item.url,
+          url: item.url,
+        })
+      }
+    }
+    return out.length > 0 ? out : null
+  } catch {
+    return null
+  }
+}
+
+function aggregateToolCosts(
+  steps: AgentStep[]
+): { tool: ToolName; calls: number; cost: number }[] {
   const map = new Map<ToolName, { calls: number; cost: number }>()
   for (const step of steps) {
     const tc = step.toolCall
@@ -73,6 +105,25 @@ const rowVariants = {
   },
 }
 
+function BrainIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <path d="M12 5a3 3 0 0 0-3 3v1a4 4 0 0 0-3.2 6.4A4 4 0 0 0 9 20h.5a3 3 0 0 0 2.5-1.3A3 3 0 0 0 15 20h.5a4 4 0 0 0 3.2-4.6A4 4 0 0 0 15 9V8a3 3 0 0 0-3-3z" />
+      <path d="M9 12h.01M15 12h.01" />
+    </svg>
+  )
+}
+
 export function AgentStepsPanel({
   steps,
   totalSpentUsdt,
@@ -80,17 +131,30 @@ export function AgentStepsPanel({
   isRunning,
   finalOutput,
   attestationUrl,
+  planReasoning,
+  skippedTools,
+  budgetSavings,
 }: AgentStepsPanelProps) {
   const pct =
-    budgetUsdt > 0 ? Math.min(100, Math.round((totalSpentUsdt / budgetUsdt) * 1000) / 10) : 0
+    budgetUsdt > 0
+      ? Math.min(100, Math.round((totalSpentUsdt / budgetUsdt) * 1000) / 10)
+      : 0
   const saved = Math.max(0, budgetUsdt - totalSpentUsdt)
   const rows = aggregateToolCosts(steps)
   const tableTotal = rows.reduce((s, r) => s + r.cost, 0)
+  const savings =
+    typeof budgetSavings === 'number' && Number.isFinite(budgetSavings)
+      ? Math.max(0, budgetSavings)
+      : saved
+
+  let runningCost = 0
 
   return (
     <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-md shadow-slate-200/50 sm:p-6">
       <div className="mb-6 border-b border-slate-200 pb-4">
-        <h3 className="font-sans text-sm font-semibold text-slate-900">Agent execution trace</h3>
+        <h3 className="font-sans text-sm font-semibold text-slate-900">
+          Agent execution trace
+        </h3>
         <div className="mt-3">
           <div className="mb-1 flex justify-between font-mono text-xs text-slate-600 sm:text-sm">
             <span>
@@ -99,7 +163,7 @@ export function AgentStepsPanel({
             <span>{pct}%</span>
           </div>
           <div
-            className="h-2 w-full overflow-hidden rounded-full bg-slate-100"
+            className="h-2 w-full overflow-hidden rounded-full bg-slate-200"
             role="progressbar"
             aria-valuenow={pct}
             aria-valuemin={0}
@@ -107,7 +171,7 @@ export function AgentStepsPanel({
             aria-label="Budget used"
           >
             <div
-              className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-[width] duration-500"
+              className="h-full rounded-full bg-emerald-500 transition-[width] duration-500"
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -124,6 +188,16 @@ export function AgentStepsPanel({
         </div>
       ) : null}
 
+      {planReasoning ? (
+        <div className="mb-4 flex gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
+          <BrainIcon className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+          <p className="font-sans text-xs italic leading-relaxed text-slate-500">
+            <span className="font-semibold not-italic text-slate-600">Strategy: </span>
+            {planReasoning}
+          </p>
+        </div>
+      ) : null}
+
       <motion.ol
         className="space-y-3"
         variants={listVariants}
@@ -131,47 +205,91 @@ export function AgentStepsPanel({
         animate="show"
         key={steps.map((s) => s.stepNumber).join('-') || 'empty'}
       >
-        {steps.map((step) => (
-          <motion.li
-            key={`${step.stepNumber}-${step.completedAt}`}
-            variants={rowVariants}
-            className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4"
-          >
-            <div className="flex flex-wrap items-start gap-2 sm:gap-3">
-              <span className="inline-flex min-w-[2rem] justify-center rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-mono text-xs font-semibold text-slate-700">
-                {String(step.stepNumber).padStart(2, '0')}
-              </span>
-              {step.toolCall ? (
-                <span
-                  className={`inline-flex rounded-lg border px-2 py-0.5 font-mono text-xs font-medium ${toolBadgeClass(step.toolCall.toolName)}`}
-                >
-                  {step.toolCall.toolName}
+        {steps.map((step) => {
+          runningCost += step.toolCall?.costUsdt ?? 0
+          const sources =
+            step.toolCall?.output && step.toolCall.toolName !== 'summarize'
+              ? extractSourceLinks(step.toolCall.output)
+              : null
+          return (
+            <motion.li
+              key={`${step.stepNumber}-${step.completedAt}`}
+              variants={rowVariants}
+              className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4"
+            >
+              <div className="flex flex-wrap items-start gap-2 sm:gap-3">
+                <span className="inline-flex min-w-[2rem] justify-center rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-mono text-xs font-semibold text-slate-700">
+                  {String(step.stepNumber).padStart(2, '0')}
                 </span>
-              ) : (
-                <span className="inline-flex rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-mono text-xs text-slate-600">
-                  —
-                </span>
-              )}
-            </div>
-            <p className="mt-2 font-sans text-xs leading-relaxed text-slate-500">{step.reasoning}</p>
-            {step.toolCall ? (
-              <p className="mt-1 font-mono text-xs text-slate-500">
-                Input: {truncate(step.toolCall.input, 60)}
-              </p>
-            ) : null}
-            {step.toolCall ? (
-              <div className="mt-2 flex flex-wrap gap-3 font-mono text-xs">
-                <span className="font-medium text-emerald-800">
-                  {formatUsdt(step.toolCall.costUsdt)} USDT
-                </span>
-                <span className="text-slate-400">
-                  {(step.toolCall.durationMs / 1000).toFixed(1)}s
-                </span>
+                {step.toolCall ? (
+                  <span
+                    className={`inline-flex rounded-lg border px-2 py-0.5 font-mono text-xs font-medium ${toolBadgeClass(step.toolCall.toolName)}`}
+                  >
+                    {step.toolCall.toolName}
+                  </span>
+                ) : (
+                  <span className="inline-flex rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-mono text-xs text-slate-600">
+                    —
+                  </span>
+                )}
               </div>
-            ) : null}
-          </motion.li>
-        ))}
+              <p className="mt-2 font-sans text-xs leading-relaxed text-slate-500">
+                {step.reasoning}
+              </p>
+              {step.toolCall ? (
+                <p className="mt-1 font-mono text-xs text-slate-500">
+                  Input: {truncate(step.toolCall.input, 60)}
+                </p>
+              ) : null}
+              {step.toolCall ? (
+                <div className="mt-2 flex flex-wrap gap-3 font-mono text-xs">
+                  <span className="font-medium text-emerald-800">
+                    {formatUsdt(step.toolCall.costUsdt)} USDT
+                  </span>
+                  <span className="text-slate-400">
+                    {(step.toolCall.durationMs / 1000).toFixed(1)}s
+                  </span>
+                </div>
+              ) : null}
+              {step.toolCall?.output && step.toolCall.toolName !== 'summarize' ? (
+                <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-slate-200 bg-white p-2 font-mono text-[10px] text-slate-700 sm:text-xs">
+                  {truncate(step.toolCall.output, 600)}
+                </pre>
+              ) : null}
+              {sources && sources.length > 0 ? (
+                <div className="mt-2 border-t border-slate-200/80 pt-2">
+                  <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                    Sources
+                  </p>
+                  <ul className="flex flex-col gap-1">
+                    {sources.map((s) => (
+                      <li key={s.url}>
+                        <a
+                          href={s.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-sans text-xs text-slate-400 hover:text-slate-600 hover:underline"
+                        >
+                          ↗ {truncate(s.title, 50)}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              <p className="mt-2 font-mono text-[10px] text-slate-400 sm:text-xs">
+                Running total: {formatUsdt(runningCost)} USDT
+              </p>
+            </motion.li>
+          )
+        })}
       </motion.ol>
+
+      {skippedTools && skippedTools.length > 0 ? (
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 font-sans text-xs text-amber-800">
+          {`Agent skipped ${skippedTools.join(', ')} to stay within budget — saved $${savings.toFixed(2)} USDT`}
+        </div>
+      ) : null}
 
       {finalOutput ? (
         <div className="mt-6">
@@ -201,16 +319,23 @@ export function AgentStepsPanel({
                 </thead>
                 <tbody>
                   {rows.map((r) => (
-                    <tr key={r.tool} className="border-b border-slate-100 last:border-0">
+                    <tr
+                      key={r.tool}
+                      className="border-b border-slate-100 last:border-0"
+                    >
                       <td className="px-3 py-2 text-slate-900">{r.tool}</td>
                       <td className="px-3 py-2 text-slate-600">{r.calls}</td>
-                      <td className="px-3 py-2 text-emerald-800">${formatUsdt(r.cost)}</td>
+                      <td className="px-3 py-2 text-emerald-800">
+                        ${formatUsdt(r.cost)}
+                      </td>
                     </tr>
                   ))}
                   <tr className="bg-slate-50 font-semibold">
                     <td className="px-3 py-2 text-slate-900">Total</td>
                     <td className="px-3 py-2 text-slate-600" />
-                    <td className="px-3 py-2 text-emerald-900">${formatUsdt(tableTotal)}</td>
+                    <td className="px-3 py-2 text-emerald-900">
+                      ${formatUsdt(tableTotal)}
+                    </td>
                   </tr>
                 </tbody>
               </table>

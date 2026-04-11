@@ -98,7 +98,9 @@ export function LoadingAgent({ status, goalMode = false }: LoadingAgentProps) {
                 }`}
               />
               <div>
-                <p className="font-sans text-sm font-medium text-slate-900">{stage.label}</p>
+                <p className="font-sans text-sm font-medium text-slate-900">
+                  {stage.label}
+                </p>
                 <p className="font-sans text-xs text-slate-600">{detail}</p>
               </div>
             </li>

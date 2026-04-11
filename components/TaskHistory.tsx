@@ -97,7 +97,9 @@ export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps
 
   return (
     <div className="mt-8">
-      <h3 className="mb-3 font-sans text-sm font-semibold text-slate-900">Recent tasks</h3>
+      <h3 className="mb-3 font-sans text-sm font-semibold text-slate-900">
+        Recent tasks
+      </h3>
       <ul className="space-y-2">
         {entries.map((e) => (
           <li
