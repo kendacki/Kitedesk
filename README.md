@@ -1,6 +1,31 @@
 # KiteDesk — Autonomous Agentic Commerce on Kite AI
 
-**One-liner:** KiteDesk deploys an AI agent that autonomously discovers services, encounters HTTP 402 paywalls, decides whether to pay within budget constraints, settles USDT micro-payments via the x402 protocol on Kite testnet (through a facilitator), and attests the complete execution trace on-chain.
+**Core Innovation:** KiteDesk deploys an AI agent that autonomously discovers services, encounters HTTP 402 paywalls, decides whether to pay within budget constraints, settles USDT micro-payments via the x402 protocol on Kite testnet (through a facilitator), and attests the complete execution trace on-chain.
+
+```mermaid
+graph TD
+    UserGoal["User Goal & Budget"] --> Agent["Goal Agent Orchestrator"]
+    Agent --> ResourceCall["API Resource Call"]
+    ResourceCall --> Response{Response?}
+    
+    Response -- "200 OK" --> Synthesis["Synthesis & Attestation"]
+    Response -- "402 Payment Required" --> Extract["Extract Terms (Amount/PayTo)"]
+    
+    Extract --> BudgetCheck{Within Budget?}
+    BudgetCheck -- "No" --> Bounced["Execution Bounced"]
+    BudgetCheck -- "Yes" --> Pay["EIP-3009 Authorization"]
+    
+    Pay --> Facilitator["Pieverse Facilitator Settlement"]
+    Facilitator --> Retry["Retry with X-Payment Header"]
+    Retry --> PremiumData["Premium Data Retrieved"]
+    PremiumData --> Synthesis
+    
+    Synthesis --> OnChain["Immutable On-Chain Attestation"]
+    
+    style UserGoal fill:#f9f,stroke:#333,stroke-width:2px
+    style OnChain fill:#00ff00,stroke:#333,stroke-width:2px
+    style Bounced fill:#ff9999,stroke:#333,stroke-width:2px
+```
 
 ## Why This Matters
 
@@ -12,29 +37,30 @@ Agents that can transact are fundamentally different from agents that only gener
 
 Product console: `/` (marketing) and `/desk` (wallet, tasks, goal agent).
 
-## Critical setup (manual, before judging)
+## Deployment & Configuration
 
-1. **Fund the agent wallet** — The wallet for **`ATTESTATION_SIGNER_PRIVATE_KEY`** needs **testnet KITE** (gas) and **testnet USDT** on the same asset used for x402 (see **`KITE_X402_TOKEN`**). Use [Kite faucet](https://faucet.gokite.ai) for KITE, then obtain USDT via the Kite portal or docs.
-2. **Configure x402 env** in `.env.local` (see `.env.example`):
-   - **`KITE_X402_TOKEN`** — USDT contract for x402 payment lines in challenges (default matches Kite testnet USDT).
-   - **`KITE_FACILITATOR_URL`** — Pieverse facilitator base; the app posts to `{url}/v2/settle` unless you already include `/v2/settle`.
-   - **`KITE_X402_DEMO_API`** — Optional reference URL for Kite’s hosted x402 demo resource (e.g. weather); the shipped goal agent pays for **`/api/x402/search`** (Tavily-backed) on your deployment.
-3. **Redeploy attestations** after contract changes — `npm run deploy:contracts`, then set **`KITE_ATTESTATION_CONTRACT`** and **`NEXT_PUBLIC_KITE_ATTESTATION_CONTRACT`**.
-4. **Verify build** — Run **`npm run build`** and fix any TypeScript errors before Vercel deploy.
+To ensure a successful deployment on the Kite AI Testnet, follow these configuration steps:
 
-**Platform `payTo`:** Set **`NEXT_PUBLIC_PLATFORM_WALLET`** to the address that should receive x402 payments advertised in the 402 challenge (must match your deployment).
+1.  **Wallet Provisioning:** The address associated with `ATTESTATION_SIGNER_PRIVATE_KEY` must be funded with **Testnet KITE** (for gas) and **Testnet USDT** (for x402 payments). USDT can be acquired via the [Kite portal](https://docs.gokite.ai/) or community faucets.
+2.  **Environmental Variables:** Configure the following in `.env.local`:
+    - `KITE_X402_TOKEN`: The USDT contract address for x402 payment lines (defaults to the Kite Testnet USDT).
+    - `KITE_FACILITATOR_URL`: The Pieverse facilitator base URL (e.g., `https://facilitator.pieverse.io`).
+    - `KITE_X402_DEMO_API`: (Optional) A reference URL for a Kite-hosted x402 demo resource.
+3.  **Attestation Protocol:** Deploy the attestation contracts using `npm run deploy:contracts` and update `KITE_ATTESTATION_CONTRACT` in your environment settings.
+4.  **Production Hardening:** Run `npm run build` to verify type safety and build stability before deploying to Vercel.
 
-On **`/desk`**, the goal-agent trace shows the x402 step chips (402 → evaluate → pay → result), paid settlement links on Kitescan where applicable, budget skip when a call would exceed the envelope, the agentic-commerce banner when x402 settled, and a cost summary line with **x402 payment count** and **USDT paid autonomously**.
+**Note:** Ensure `NEXT_PUBLIC_PLATFORM_WALLET` is set to the intended recipient address for x402 payment challenges to align with the platform's economic model.
 
-## The x402 Flow (What Judges Will See)
+## Core Workflow: The x402 Life Cycle
 
-1. **Goal and budget** — The user describes an outcome and sets a USDT budget for the run.
-2. **402 from the resource** — The agent calls the paid search API and receives **HTTP 402 Payment Required** with payment terms (e.g. amount and `payTo`).
-3. **Budget check** — The orchestrator compares the quoted cost to the remaining budget and proceeds or stops autonomously.
-4. **Settlement on Kite** — The agent wallet signs an **EIP-3009** USDT authorization; the **Pieverse facilitator** settles to the API provider’s `payTo` address on **Kite AI Testnet**.
-5. **Retry with X-Payment** — The agent retries the request with an **X-Payment** header; the API returns real search data.
-6. **Synthesis** — Further tools and a final summarization step produce the user-facing answer within budget.
-7. **Attestation** — **`attestGoal`** writes an on-chain record that includes **`x402PaymentsCount`** and **total paid via x402 in micro-USDT** (`x402TotalPaidMicro`), alongside the result and steps digests.
+KiteDesk implements a fully autonomous commerce loop that is observable via the `/desk` console:
+
+1.  **Objective & Budgeting:** The user defines a goal and allocates a USDT budget envelope.
+2.  **402 Challenge Discovery:** The agent encounters a resource protected by an **HTTP 402 Payment Required** status, extracting the payment terms (amount and `payTo`).
+3.  **Autonomous Decisioning:** The orchestrator evaluates the requested cost against the remaining budget. If authorized, it proceeds to settlement.
+4.  **On-Chain Settlement:** Utilizing the **EIP-3009** protocol, the agent wallet authorizes a USDT transfer, settled by the **Pieverse facilitator** directly to the service provider on the Kite AI Testnet.
+5.  **Secure Access Redemption:** The agent retries the request with a cryptographic **X-Payment** header to unlock the premium resource.
+6.  **Synthesis & Attestation:** Upon completion, `attestGoal` writes an immutable record to the blockchain, including the `x402PaymentsCount` and `x402TotalPaidMicro`, providing a compact audit trail of autonomous spending.
 
 ## Tech Stack
 
@@ -68,12 +94,6 @@ On **`/desk`**, the goal-agent trace shows the x402 step chips (402 → evaluate
 ## On-Chain Attestation
 
 The **`KiteDeskAttestations`** contract records goal-mode runs with **`attestGoal`**. Besides the user, task id, **keccak256(final output)**, **keccak256(step trace digest)**, **total spend in micro-USDT**, **step count**, and a short **goal preview**, the attestation stores **how many tool steps completed a paid x402 path** (`x402PaymentsCount`) and **the sum of those payments in micro-USDT** (`x402TotalPaidMicro`). Together with the user’s funding transaction on-chain, that gives a compact, verifiable link between budget, autonomous API payment, and committed execution metadata.
-
-## Built By
-
-**Anand Vashishtha** — Kite AI Global Hackathon 2026, **Agentic Commerce** track (Encode Club).
-
-[X / Twitter](https://twitter.com/Anandvashisht15) · [LinkedIn](https://linkedin.com/in/anandvashishtha)
 
 Official Kite docs: [docs.gokite.ai](https://docs.gokite.ai/).
 
