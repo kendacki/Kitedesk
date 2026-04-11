@@ -82,14 +82,14 @@ export function MarketingHome() {
   return (
     <div className="min-h-screen bg-white pb-[calc(4.5rem+env(safe-area-inset-bottom))] font-sans text-slate-900 antialiased md:pb-0">
       <header className="safe-t sticky top-0 z-50 border-b border-slate-100/80 bg-white/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 safe-x">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 safe-x md:grid md:grid-cols-[auto_1fr_auto] md:items-center md:justify-normal md:gap-3">
           <Link href="/" className="flex min-w-0 items-center gap-2">
             <KitedeskLogoMark size={34} />
             <span className="truncate text-base font-semibold tracking-tight sm:text-lg">
               KiteDesk
             </span>
           </Link>
-          <nav className="hidden items-center gap-6 text-sm font-normal text-slate-600 md:flex lg:gap-8">
+          <nav className="hidden items-center justify-center justify-self-center gap-6 text-sm font-normal text-slate-600 md:flex lg:gap-8 translate-x-2 sm:translate-x-3 lg:translate-x-4">
             <a href="#how" className="transition hover:text-emerald-700">
               How it works
             </a>
@@ -100,7 +100,7 @@ export function MarketingHome() {
               Launch app
             </Link>
           </nav>
-          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <div className="flex shrink-0 items-center justify-self-end gap-2 sm:gap-3">
             <MotionLink
               href="/desk"
               className={`${brandSecondaryCtaMarketing} hidden md:inline-flex`}
