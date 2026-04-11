@@ -8,6 +8,10 @@ import { KitedeskLogoMark } from '@/components/landing/KitedeskLogoMark'
 import { HeroCtas } from '@/components/landing/HeroCtas'
 import { MobileLandingDock } from '@/components/landing/MobileLandingDock'
 import {
+  IconMilestonePayments,
+  IconOnChainAttestation,
+} from '@/components/landing/HeroFeatureIcons'
+import {
   brandEase,
   brandPrimaryCtaMarketing,
   brandSecondaryCtaMarketing,
@@ -240,12 +244,10 @@ export function MarketingHome() {
               className="mt-8 flex flex-col items-stretch justify-center gap-3 text-sm text-slate-600 xs:flex-row xs:flex-wrap xs:items-center xs:justify-center xs:gap-4"
             >
               <span className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5">
-                <span className="text-emerald-600">&#10003;</span> Milestone-based
-                payments
+                <IconMilestonePayments /> Milestone-based payments
               </span>
               <span className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5">
-                <span className="text-emerald-600">&#10003;</span> Attested outputs
-                on-chain
+                <IconOnChainAttestation /> Attested outputs on-chain
               </span>
             </motion.div>
             <motion.div custom={4} initial="hidden" animate="show" variants={fadeUp}>
