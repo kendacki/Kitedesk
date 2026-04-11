@@ -554,8 +554,7 @@ export function MarketingHome() {
           </div>
         </div>
         <p className="mx-auto mt-10 max-w-6xl text-center text-xs font-normal text-slate-400">
-          &copy; {new Date().getFullYear()} KiteDesk. Built for Kite AI testnet
-          demonstrations.
+          &copy; {new Date().getFullYear()} KiteDesk. Built for Kite AI Hackathon.
         </p>
       </footer>
 
