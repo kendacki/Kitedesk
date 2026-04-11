@@ -96,7 +96,7 @@ export function WalletConnect({
   }
 
   return (
-    <div className="group relative flex w-full flex-col items-start gap-3 sm:items-end">
+    <div className="flex w-full flex-col items-stretch gap-3 sm:items-end">
       <div className="flex w-full flex-wrap items-center gap-2 sm:justify-end sm:gap-3">
         <div className="flex items-center gap-2 font-sans text-xs text-slate-600">
           <span className="relative flex h-2 w-2 shrink-0">
@@ -138,13 +138,15 @@ export function WalletConnect({
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={disconnect}
-        className="min-h-[44px] px-1 font-sans text-xs text-slate-500 opacity-100 transition-opacity hover:text-red-600 sm:min-h-0 sm:opacity-0 sm:group-hover:opacity-100"
-      >
-        Disconnect
-      </button>
+      <div className="w-full sm:w-auto sm:self-end">
+        <button
+          type="button"
+          onClick={disconnect}
+          className="flex min-h-[44px] w-full items-center justify-center rounded-lg bg-gradient-to-br from-emerald-900 to-emerald-500 px-6 font-sans text-sm font-semibold text-white shadow-md transition hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400 sm:w-auto"
+        >
+          Disconnect
+        </button>
+      </div>
     </div>
   )
 }
