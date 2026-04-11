@@ -16,6 +16,7 @@ import {
   brandPrimaryCtaMarketing,
   brandSecondaryCtaMarketing,
 } from '@/lib/brand'
+import { LottieHeader } from '@/components/LottieHeader'
 
 const MotionLink = motion(Link)
 
@@ -204,6 +205,7 @@ export function MarketingHome() {
 
       <main>
         <section className="relative overflow-hidden px-4 pb-20 pt-12 sm:px-6 sm:pb-24 sm:pt-16 md:pb-32 md:pt-24">
+          <LottieHeader />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.12)_0%,_transparent_55%)]" />
           <div className="relative mx-auto max-w-4xl text-center">
             <motion.div
