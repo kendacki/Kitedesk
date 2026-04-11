@@ -86,9 +86,6 @@ export function MarketingHome() {
             </span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm font-normal text-slate-600 md:flex lg:gap-8">
-            <a href="#product" className="hover:text-emerald-700">
-              Product
-            </a>
             <a href="#how" className="hover:text-emerald-700">
               How it works
             </a>
