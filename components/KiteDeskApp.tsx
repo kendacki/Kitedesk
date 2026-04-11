@@ -1,7 +1,7 @@
-// KiteDesk | wallet, task form, loading, results, history (light theme — matches landing)
+// KiteDesk | app shell wiring goal agent + step streaming
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useWallet } from '@/hooks/useWallet'
@@ -25,6 +25,12 @@ const blockShow = {
   },
 }
 
+function spentFromSteps(
+  stepList: { toolCall?: { costUsdt?: number } | undefined }[]
+): number {
+  return stepList.reduce((sum, s) => sum + (s.toolCall?.costUsdt ?? 0), 0)
+}
+
 export function KiteDeskApp() {
   const wallet = useWallet()
   const task = useTaskExecution()
@@ -36,9 +42,18 @@ export function KiteDeskApp() {
     }
   }, [task.status])
 
-  const busy = ['paying', 'executing', 'attesting'].includes(task.status)
+  const busy = ['paying', 'planning', 'executing', 'attesting'].includes(task.status)
   const showResult = task.result && task.status === 'done'
   const showGoalResult = task.goalResult && task.status === 'done'
+
+  const showGoalLive =
+    task.isGoalFlow && (task.status === 'planning' || task.status === 'executing')
+
+  const showGoalAttesting =
+    task.isGoalFlow && task.status === 'attesting' && task.steps.length > 0
+
+  const liveBudget = task.goalBudgetUsdt ?? 0
+  const liveSpent = useMemo(() => spentFromSteps(task.steps), [task.steps])
 
   const handleRun = (taskType: ClassicTaskType, prompt: string) => {
     if (!wallet.signer || !wallet.address) return
@@ -49,6 +64,9 @@ export function KiteDeskApp() {
     if (!wallet.signer || !wallet.address) return
     void task.executeGoal(wallet.signer, wallet.address, goal, budgetUsdt)
   }
+
+  const hideTaskForm =
+    showResult || showGoalResult || showGoalLive || showGoalAttesting
 
   return (
     <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-4xl flex-col px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 safe-x sm:px-6 sm:py-12 md:py-16">
@@ -111,7 +129,7 @@ export function KiteDeskApp() {
           </div>
         ) : (
           <>
-            {!showResult && !showGoalResult && (
+            {!hideTaskForm && (
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md shadow-slate-200/60 md:p-8">
                 <TaskForm
                   canSubmit={!!wallet.signer && !!wallet.address}
@@ -122,7 +140,29 @@ export function KiteDeskApp() {
               </div>
             )}
 
-            <LoadingAgent status={task.status} />
+            {showGoalLive ? (
+              <div className="mt-2">
+                <AgentStepsPanel
+                  steps={task.steps}
+                  totalSpentUsdt={liveSpent}
+                  budgetUsdt={liveBudget}
+                  isRunning
+                />
+              </div>
+            ) : null}
+
+            {showGoalAttesting ? (
+              <div className="mt-2">
+                <AgentStepsPanel
+                  steps={task.steps}
+                  totalSpentUsdt={liveSpent}
+                  budgetUsdt={liveBudget}
+                  isRunning={false}
+                />
+              </div>
+            ) : null}
+
+            <LoadingAgent status={task.status} goalMode={task.isGoalFlow} />
 
             {task.status === 'error' && task.error ? (
               <div

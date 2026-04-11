@@ -6,13 +6,14 @@ import axios from 'axios'
 import { ethers } from 'ethers'
 import { payForTask } from '@/lib/payment'
 import { TASK_CONFIG } from '@/lib/constants'
-import type { GoalResult, TaskResult, TaskType } from '@/types'
+import type { AgentStep, GoalResult, TaskResult, TaskType } from '@/types'
 
 export type ClassicTaskType = Exclude<TaskType, 'goal'>
 
 export type ExecutionStatus =
   | 'idle'
   | 'paying'
+  | 'planning'
   | 'executing'
   | 'attesting'
   | 'done'
@@ -52,6 +53,9 @@ export function useTaskExecution() {
   const [status, setStatus] = useState<ExecutionStatus>('idle')
   const [result, setResult] = useState<TaskResult | null>(null)
   const [goalResult, setGoalResult] = useState<GoalResult | null>(null)
+  const [steps, setSteps] = useState<AgentStep[]>([])
+  const [goalBudgetUsdt, setGoalBudgetUsdt] = useState<number | null>(null)
+  const [isGoalFlow, setIsGoalFlow] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const reset = () => {
@@ -59,6 +63,9 @@ export function useTaskExecution() {
     setError(null)
     setResult(null)
     setGoalResult(null)
+    setSteps([])
+    setGoalBudgetUsdt(null)
+    setIsGoalFlow(false)
   }
 
   const execute = async (
@@ -71,6 +78,9 @@ export function useTaskExecution() {
     setError(null)
     setResult(null)
     setGoalResult(null)
+    setSteps([])
+    setGoalBudgetUsdt(null)
+    setIsGoalFlow(false)
 
     try {
       try {
@@ -191,6 +201,9 @@ export function useTaskExecution() {
     setError(null)
     setResult(null)
     setGoalResult(null)
+    setSteps([])
+    setGoalBudgetUsdt(budgetUsdt)
+    setIsGoalFlow(true)
 
     try {
       try {
@@ -198,6 +211,8 @@ export function useTaskExecution() {
       } catch {
         setStatus('error')
         setError('Wallet disconnected. Refresh the page and connect your wallet again.')
+        setIsGoalFlow(false)
+        setGoalBudgetUsdt(null)
         return
       }
 
@@ -209,6 +224,8 @@ export function useTaskExecution() {
         if (isWalletUserRejected(payErr)) {
           setStatus('error')
           setError('Transaction was cancelled in your wallet.')
+          setIsGoalFlow(false)
+          setGoalBudgetUsdt(null)
           return
         }
         if (isSignerOrConnectionError(payErr)) {
@@ -216,6 +233,8 @@ export function useTaskExecution() {
           setError(
             'Wallet connection was lost. Refresh the page, reconnect MetaMask, and try again.'
           )
+          setIsGoalFlow(false)
+          setGoalBudgetUsdt(null)
           return
         }
         if (isRelayerError(payErr)) {
@@ -223,10 +242,16 @@ export function useTaskExecution() {
           setError(
             `${payErr instanceof Error ? payErr.message : 'Relayer error'} — Check that your USDT balance is sufficient and the relayer is reachable.`
           )
+          setIsGoalFlow(false)
+          setGoalBudgetUsdt(null)
           return
         }
         throw payErr
       }
+
+      setSteps([])
+      setStatus('planning')
+      await new Promise((r) => setTimeout(r, 280))
 
       setStatus('executing')
       let data: {
@@ -248,6 +273,9 @@ export function useTaskExecution() {
         if (axios.isAxiosError(agentErr) && isWalletUserRejected(agentErr)) {
           setStatus('error')
           setError('Request was cancelled.')
+          setIsGoalFlow(false)
+          setGoalBudgetUsdt(null)
+          setSteps([])
           return
         }
         throw agentErr
@@ -257,13 +285,20 @@ export function useTaskExecution() {
         throw new Error(data.error || 'Goal agent request failed')
       }
 
+      const gr = data.goalResult
+      setSteps(gr.steps)
+
       setStatus('attesting')
       await new Promise((r) => setTimeout(r, 450))
 
-      setGoalResult(data.goalResult)
+      setGoalResult(gr)
+      setIsGoalFlow(false)
       setStatus('done')
     } catch (err: unknown) {
       setStatus('error')
+      setSteps([])
+      setIsGoalFlow(false)
+      setGoalBudgetUsdt(null)
       if (isWalletUserRejected(err)) {
         setError('Transaction was cancelled in your wallet.')
         return
@@ -289,5 +324,16 @@ export function useTaskExecution() {
     }
   }
 
-  return { execute, executeGoal, reset, status, result, goalResult, error }
+  return {
+    execute,
+    executeGoal,
+    reset,
+    status,
+    result,
+    goalResult,
+    steps,
+    goalBudgetUsdt,
+    isGoalFlow,
+    error,
+  }
 }
