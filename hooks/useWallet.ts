@@ -138,7 +138,19 @@ export function useWallet() {
     }
 
     const onChainChanged = () => {
-      disconnect()
+      void (async () => {
+        try {
+          const provider = new ethers.BrowserProvider(eth as Eip1193Provider)
+          const network = await provider.getNetwork()
+          if (Number(network.chainId) !== KITE_CHAIN.id) {
+            disconnect()
+            return
+          }
+          await refreshFromProvider()
+        } catch {
+          disconnect()
+        }
+      })()
     }
 
     const onDisconnect = () => {

@@ -18,7 +18,13 @@ function badgeClass(taskType: TaskType): string {
 }
 
 async function fetchHistory(url: string): Promise<{ entries: TaskHistoryEntry[] }> {
-  const r = await fetch(url)
+  let r: Response
+  try {
+    r = await fetch(url)
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Network error'
+    throw new Error(`Could not reach history API: ${msg}`)
+  }
   if (!r.ok) {
     const j = (await r.json().catch(() => ({}))) as { error?: string }
     throw new Error(j.error || 'Failed to load history')
@@ -38,6 +44,8 @@ export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps
 
   const { data, error, isLoading, mutate } = useSWR(key, fetchHistory, {
     revalidateOnFocus: true,
+    refreshInterval: 10_000,
+    dedupingInterval: 5_000,
   })
 
   useEffect(() => {
