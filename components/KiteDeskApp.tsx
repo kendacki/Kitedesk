@@ -41,20 +41,33 @@ export function KiteDeskApp() {
         initial="hidden"
         animate="show"
         variants={blockShow}
-        className="mb-8 flex flex-col gap-6 border-b border-slate-200 pb-6 sm:mb-10 sm:gap-8 sm:pb-8 md:mb-12 md:flex-row md:items-start md:justify-between"
+        className="mb-8 flex flex-col gap-8 border-b border-slate-200 pb-6 sm:mb-10 sm:gap-10 sm:pb-8 md:mb-12"
       >
-        <div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <Link
             href="/"
-            className="mb-4 inline-flex items-center gap-2 font-sans text-sm text-emerald-800 transition hover:text-emerald-700"
+            className="inline-flex w-fit items-center gap-2 font-sans text-sm text-emerald-800 transition hover:text-emerald-700"
           >
             <span aria-hidden className="text-lg">
               ←
             </span>
             Back to landing
           </Link>
-          <div className="flex items-start gap-3">
-            <KitedeskLogoMark size={44} className="mt-0.5" />
+          <div className="w-full sm:flex sm:w-auto sm:shrink-0 sm:justify-end">
+            <WalletConnect
+              address={wallet.address}
+              provider={wallet.provider}
+              connect={wallet.connect}
+              disconnect={wallet.disconnect}
+              isConnecting={wallet.isConnecting}
+              error={wallet.error}
+            />
+          </div>
+        </div>
+
+        <div className="mx-auto flex w-full max-w-3xl flex-col items-center text-center">
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
+            <KitedeskLogoMark size={44} />
             <div>
               <p className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800">
                 Kite AI Testnet
@@ -64,20 +77,10 @@ export function KiteDeskApp() {
               </h1>
             </div>
           </div>
-          <p className="mt-4 max-w-2xl font-sans text-sm leading-relaxed text-slate-600 sm:text-base">
+          <p className="mt-5 max-w-2xl text-pretty font-sans text-sm leading-relaxed text-slate-600 sm:mt-6 sm:text-base">
             Pay-per-task autonomous AI: connect a wallet, pay USDT on Kite, run
             research, code review, or content tasks with on-chain attestation.
           </p>
-        </div>
-        <div className="w-full shrink-0 md:w-auto">
-          <WalletConnect
-            address={wallet.address}
-            provider={wallet.provider}
-            connect={wallet.connect}
-            disconnect={wallet.disconnect}
-            isConnecting={wallet.isConnecting}
-            error={wallet.error}
-          />
         </div>
       </motion.header>
 
