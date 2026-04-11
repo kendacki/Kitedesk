@@ -1,4 +1,4 @@
-// KiteDesk | wallet, task form, loading, results, history (brand-aligned with landing)
+// KiteDesk | wallet, task form, loading, results, history (light theme — matches landing)
 'use client'
 
 import Link from 'next/link'
@@ -41,12 +41,12 @@ export function KiteDeskApp() {
         initial="hidden"
         animate="show"
         variants={blockShow}
-        className="mb-8 flex flex-col gap-6 border-b border-white/10 pb-6 sm:mb-10 sm:gap-8 sm:pb-8 md:mb-12 md:flex-row md:items-start md:justify-between"
+        className="mb-8 flex flex-col gap-6 border-b border-slate-200 pb-6 sm:mb-10 sm:gap-8 sm:pb-8 md:mb-12 md:flex-row md:items-start md:justify-between"
       >
         <div>
           <Link
             href="/"
-            className="mb-4 inline-flex items-center gap-2 font-sans text-sm text-emerald-400/90 transition hover:text-emerald-300"
+            className="mb-4 inline-flex items-center gap-2 font-sans text-sm text-emerald-800 transition hover:text-emerald-700"
           >
             <span aria-hidden className="text-lg">
               ←
@@ -54,17 +54,17 @@ export function KiteDeskApp() {
             Back to landing
           </Link>
           <div className="flex items-start gap-3">
-            <KitedeskLogoMark size={44} invert className="mt-0.5" />
+            <KitedeskLogoMark size={44} className="mt-0.5" />
             <div>
-              <p className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400/90">
+              <p className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800">
                 Kite AI Testnet
               </p>
-              <h1 className="mt-2 font-sans text-2xl font-semibold tracking-tight text-white sm:text-3xl md:text-4xl">
+              <h1 className="mt-2 font-sans text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
                 KiteDesk
               </h1>
             </div>
           </div>
-          <p className="mt-4 max-w-2xl font-sans text-sm leading-relaxed text-slate-400 sm:text-base">
+          <p className="mt-4 max-w-2xl font-sans text-sm leading-relaxed text-slate-600 sm:text-base">
             Pay-per-task autonomous AI: connect a wallet, pay USDT on Kite, run
             research, code review, or content tasks with on-chain attestation.
           </p>
@@ -88,13 +88,13 @@ export function KiteDeskApp() {
         className="flex flex-1 flex-col"
       >
         {!wallet.address ? (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center font-sans text-sm text-slate-400 shadow-lg shadow-emerald-950/20 backdrop-blur-sm sm:p-8">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center font-sans text-sm text-slate-600 shadow-sm sm:p-8">
             Connect your wallet to select a task and pay in USDT.
           </div>
         ) : (
           <>
             {!showResult && (
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-lg shadow-emerald-950/25 backdrop-blur-sm md:p-8">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md shadow-slate-200/60 md:p-8">
                 <TaskForm
                   canSubmit={!!wallet.signer && !!wallet.address}
                   busy={busy}
@@ -107,7 +107,7 @@ export function KiteDeskApp() {
 
             {task.status === 'error' && task.error ? (
               <div
-                className="mt-6 rounded-xl border border-red-500/40 bg-red-950/30 p-4 font-mono text-sm text-red-300"
+                className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 font-mono text-sm text-red-800"
                 role="alert"
               >
                 {task.error}

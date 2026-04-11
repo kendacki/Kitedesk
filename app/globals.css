@@ -1,21 +1,20 @@
-/* KiteDesk | Tailwind base and design tokens */
+/* KiteDesk | Tailwind base and design tokens (light-first; matches marketing) */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg-primary: #0a0a0f;
-  --bg-card: #111118;
-  --bg-card-hover: #16161f;
-  --border: #1e1e2e;
-  --text-primary: #e8e8f0;
-  --text-secondary: #6b6b8a;
-  /* Brand accent aligned with landing (emerald) */
-  --accent-primary: #34d399;
-  --accent-success: #22c55e;
+  --bg-primary: #ffffff;
+  --bg-card: #f8fafc;
+  --bg-card-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --accent-primary: #059669;
+  --accent-success: #16a34a;
   --accent-warning: #f59e0b;
-  --accent-danger: #ef4444;
+  --accent-danger: #dc2626;
   --usdt-green: #26a17b;
   --background: var(--bg-primary);
   --foreground: var(--text-primary);

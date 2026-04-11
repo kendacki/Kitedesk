@@ -1,4 +1,4 @@
-// KiteDesk | recent tasks (brand chips + links)
+// KiteDesk | recent tasks (light theme)
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -9,11 +9,11 @@ import type { TaskHistoryEntry, TaskType } from '@/types'
 function badgeClass(taskType: TaskType): string {
   switch (taskType) {
     case 'research':
-      return 'border-emerald-500/40 bg-emerald-950/40 text-emerald-300'
+      return 'border-emerald-200 bg-emerald-50 text-emerald-900'
     case 'code_review':
-      return 'border-emerald-600/40 bg-emerald-950/30 text-emerald-200'
+      return 'border-emerald-300 bg-emerald-50 text-emerald-900'
     default:
-      return 'border-white/15 bg-white/[0.04] text-slate-300'
+      return 'border-slate-200 bg-slate-100 text-slate-800'
   }
 }
 
@@ -41,7 +41,7 @@ export function TaskHistory() {
 
   if (entries.length === 0) {
     return (
-      <div className="mt-8 rounded-2xl border border-dashed border-white/15 p-4 text-center font-sans text-sm text-slate-500 sm:p-6">
+      <div className="mt-8 rounded-2xl border border-dashed border-slate-200 p-4 text-center font-sans text-sm text-slate-500 sm:p-6">
         Completed tasks will appear here with attestation links.
       </div>
     )
@@ -49,12 +49,12 @@ export function TaskHistory() {
 
   return (
     <div className="mt-8">
-      <h3 className="mb-3 font-sans text-sm font-semibold text-white">Recent tasks</h3>
+      <h3 className="mb-3 font-sans text-sm font-semibold text-slate-900">Recent tasks</h3>
       <ul className="space-y-2">
         {entries.map((e) => (
           <li
             key={e.taskId}
-            className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
               <span
@@ -62,7 +62,7 @@ export function TaskHistory() {
               >
                 {TASK_CONFIG[e.taskType].label}
               </span>
-              <span className="min-w-0 max-w-full truncate font-mono text-xs text-slate-400 sm:max-w-md">
+              <span className="min-w-0 max-w-full truncate font-mono text-xs text-slate-600 sm:max-w-md">
                 {e.promptPreview}
               </span>
             </div>
@@ -77,7 +77,7 @@ export function TaskHistory() {
                 href={e.attestationUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-emerald-400/90 transition hover:text-emerald-300 hover:underline"
+                className="font-medium text-emerald-800 transition hover:text-emerald-900 hover:underline"
               >
                 Attestation
               </a>

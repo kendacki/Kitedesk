@@ -1,11 +1,11 @@
-// KiteDesk | MetaMask connect, USDT balance — brand buttons (landing-aligned)
+// KiteDesk | MetaMask connect, USDT balance (light theme)
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import type { ethers } from 'ethers'
 import { checkUsdtBalance } from '@/lib/payment'
-import { brandEase, brandLinkDark, brandPrimaryButton } from '@/lib/brand'
+import { brandEase, brandLinkLight, brandPrimaryButton } from '@/lib/brand'
 
 function truncateAddress(address: string): string {
   if (address.length < 10) return address
@@ -87,7 +87,7 @@ export function WalletConnect({
           {isConnecting ? 'Connecting…' : 'Connect Wallet'}
         </motion.button>
         {error ? (
-          <p className="max-w-full text-left text-xs text-red-400 sm:max-w-xs sm:text-right">
+          <p className="max-w-full text-left text-xs text-red-600 sm:max-w-xs sm:text-right">
             {error}
           </p>
         ) : null}
@@ -98,26 +98,26 @@ export function WalletConnect({
   return (
     <div className="group relative flex w-full flex-col items-start gap-3 sm:items-end">
       <div className="flex w-full flex-wrap items-center gap-2 sm:justify-end sm:gap-3">
-        <div className="flex items-center gap-2 font-sans text-xs text-slate-400">
+        <div className="flex items-center gap-2 font-sans text-xs text-slate-600">
           <span className="relative flex h-2 w-2 shrink-0">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/80 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500/70 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-600" />
           </span>
           <span>Kite AI Testnet</span>
         </div>
 
-        <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2 font-mono text-sm text-foreground">
+        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 font-mono text-sm text-slate-900 shadow-sm">
           <span title={address}>{truncateAddress(address)}</span>
           <button
             type="button"
             onClick={() => void copyAddress()}
-            className={`text-xs underline-offset-2 ${brandLinkDark} hover:underline`}
+            className={`text-xs underline-offset-2 ${brandLinkLight}`}
           >
             {copyDone ? 'Copied' : 'Copy'}
           </button>
         </div>
 
-        <div className="font-mono text-sm text-emerald-400/90">
+        <div className="font-mono text-sm font-medium text-emerald-800">
           {balancePending && usdtBalance === null ? (
             <span className="text-slate-500">USDT …</span>
           ) : usdtBalance === null ? (
@@ -138,7 +138,7 @@ export function WalletConnect({
       <button
         type="button"
         onClick={disconnect}
-        className="min-h-[44px] px-1 font-sans text-xs text-slate-500 opacity-100 transition-opacity hover:text-red-400 sm:min-h-0 sm:opacity-0 sm:group-hover:opacity-100"
+        className="min-h-[44px] px-1 font-sans text-xs text-slate-500 opacity-100 transition-opacity hover:text-red-600 sm:min-h-0 sm:opacity-0 sm:group-hover:opacity-100"
       >
         Disconnect
       </button>

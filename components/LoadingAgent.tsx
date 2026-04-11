@@ -1,4 +1,4 @@
-// KiteDesk | loading stages (logo + emerald accents)
+// KiteDesk | loading stages (light theme + logo)
 'use client'
 
 import { motion } from 'framer-motion'
@@ -44,13 +44,13 @@ export function LoadingAgent({ status }: LoadingAgentProps) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: brandEase }}
-      className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4 shadow-lg shadow-emerald-950/20 backdrop-blur-sm sm:p-6"
+      className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-md shadow-slate-200/50 sm:p-6"
       role="status"
       aria-live="polite"
     >
       <div className="mb-4 flex items-center gap-3">
-        <KitedeskLogoLoader size={40} invert />
-        <p className="font-sans text-xs font-semibold uppercase tracking-widest text-emerald-400">
+        <KitedeskLogoLoader size={40} />
+        <p className="font-sans text-xs font-semibold uppercase tracking-widest text-emerald-800">
           In progress
         </p>
       </div>
@@ -66,15 +66,15 @@ export function LoadingAgent({ status }: LoadingAgentProps) {
               <span
                 className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
                   done
-                    ? 'bg-emerald-400'
+                    ? 'bg-emerald-600'
                     : active
-                      ? 'animate-pulse bg-emerald-400'
-                      : 'bg-white/20'
+                      ? 'animate-pulse bg-emerald-500'
+                      : 'bg-slate-300'
                 }`}
               />
               <div>
-                <p className="font-sans text-sm font-medium text-white">{stage.label}</p>
-                <p className="font-sans text-xs text-slate-400">{stage.detail}</p>
+                <p className="font-sans text-sm font-medium text-slate-900">{stage.label}</p>
+                <p className="font-sans text-xs text-slate-600">{stage.detail}</p>
               </div>
             </li>
           )
