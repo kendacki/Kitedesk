@@ -65,9 +65,9 @@ export function KiteDeskApp() {
           </div>
         </div>
 
-        <div className="mx-auto flex w-full max-w-3xl flex-col items-center text-center">
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
-            <KitedeskLogoMark size={44} />
+        <div className="w-full">
+          <div className="flex items-start gap-3">
+            <KitedeskLogoMark size={44} className="mt-0.5" />
             <div>
               <p className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800">
                 Kite AI Testnet
@@ -77,7 +77,7 @@ export function KiteDeskApp() {
               </h1>
             </div>
           </div>
-          <p className="mt-5 max-w-2xl text-pretty font-sans text-sm leading-relaxed text-slate-600 sm:mt-6 sm:text-base">
+          <p className="mt-4 max-w-2xl font-sans text-sm leading-relaxed text-slate-600 sm:text-base">
             Pay-per-task autonomous AI: connect a wallet, pay USDT on Kite, run
             research, code review, or content tasks with on-chain attestation.
           </p>
