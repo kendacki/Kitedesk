@@ -121,7 +121,10 @@ export function WalletConnect({
           {balancePending && usdtBalance === null ? (
             <span className="text-slate-500">USDT …</span>
           ) : usdtBalance === null ? (
-            <span className="text-slate-500" title="Set KITE_USDT_CONTRACT">
+            <span
+              className="text-slate-500"
+              title="Could not read USDT balance (RPC error). Optional: set NEXT_PUBLIC_KITE_USDT_CONTRACT to override the default Kite testnet USDT."
+            >
               USDT unavailable
             </span>
           ) : (

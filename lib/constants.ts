@@ -1,8 +1,30 @@
 // KiteDesk | chain config, task pricing, and contract addresses
 
+import { ethers } from 'ethers'
+
 const envOr = (key: string, fallback: string): string => {
   const v = process.env[key]
   return v && v.length > 0 ? v : fallback
+}
+
+/** Kite testnet default USDT (PYUSD / test USD) when no contract env is set — same token as x402 default */
+const KITE_TESTNET_DEFAULT_USDT =
+  '0x0fF5393387ad2f9f691FD6Fd28e07E3969e27e63'
+
+function resolveUsdtTokenAddress(): string {
+  const candidates = [
+    process.env.NEXT_PUBLIC_KITE_USDT_CONTRACT,
+    process.env.KITE_USDT_CONTRACT,
+    process.env.NEXT_PUBLIC_KITE_X402_TOKEN,
+    process.env.KITE_X402_TOKEN,
+  ]
+  for (const c of candidates) {
+    const t = typeof c === 'string' ? c.trim() : ''
+    if (t && ethers.isAddress(t)) {
+      return ethers.getAddress(t)
+    }
+  }
+  return ethers.getAddress(KITE_TESTNET_DEFAULT_USDT)
 }
 
 export const KITE_CHAIN = {
@@ -60,14 +82,14 @@ export const TASK_CONFIG = {
 } as const
 
 export const CONTRACTS = {
-  usdt: envOr('NEXT_PUBLIC_KITE_USDT_CONTRACT', envOr('KITE_USDT_CONTRACT', '')),
+  /** Testnet USDT (EIP-3009) for balance + relayer; defaults to Kite canonical address if env unset */
+  usdt: resolveUsdtTokenAddress(),
   attestation: envOr(
     'NEXT_PUBLIC_KITE_ATTESTATION_CONTRACT',
     envOr('KITE_ATTESTATION_CONTRACT', '')
   ),
 }
 
-const X402_TOKEN_DEFAULT = '0x0fF5393387ad2f9f691FD6Fd28e07E3969e27e63'
 const X402_FACILITATOR_DEFAULT = 'https://facilitator.pieverse.io'
 
 function x402FacilitatorSettleUrl(): string {
@@ -78,10 +100,13 @@ function x402FacilitatorSettleUrl(): string {
 /** x402 agent payments: EIP-3009 asset, Pieverse settle URL, optional Kite demo resource URL */
 export const KITE_X402 = {
   get tokenAddress(): string {
-    const fromEnv = process.env.KITE_X402_TOKEN?.trim()
-    if (fromEnv) return fromEnv
-    const u = CONTRACTS.usdt.trim()
-    return u.length > 0 ? u : X402_TOKEN_DEFAULT
+    const fromEnv =
+      process.env.KITE_X402_TOKEN?.trim() ||
+      process.env.NEXT_PUBLIC_KITE_X402_TOKEN?.trim()
+    if (fromEnv && ethers.isAddress(fromEnv)) {
+      return ethers.getAddress(fromEnv)
+    }
+    return CONTRACTS.usdt
   },
   get settleUrl(): string {
     return x402FacilitatorSettleUrl()
