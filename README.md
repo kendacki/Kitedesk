@@ -2,8 +2,6 @@
 
 Pay-per-task autonomous AI on [Kite AI](https://docs.gokite.ai/) testnet: connect a wallet, pay USDT for a task, run the Groq-powered agent, and record an on-chain attestation as proof of work.
 
-**Repository:** [github.com/kendacki/Kitedesk](https://github.com/kendacki/Kitedesk)
-
 ---
 
 ## What it does
