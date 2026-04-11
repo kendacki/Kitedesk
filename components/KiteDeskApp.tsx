@@ -41,7 +41,7 @@ export function KiteDeskApp() {
         initial="hidden"
         animate="show"
         variants={blockShow}
-        className="mb-8 flex flex-col gap-8 border-b border-slate-200 pb-6 sm:mb-10 sm:gap-10 sm:pb-8 md:mb-12"
+        className="mb-8 flex flex-col gap-5 border-b border-slate-200 pb-6 sm:mb-10 sm:gap-6 sm:pb-8 md:mb-12"
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <Link
@@ -77,7 +77,7 @@ export function KiteDeskApp() {
               </h1>
             </div>
           </div>
-          <p className="mt-4 max-w-2xl font-sans text-sm leading-relaxed text-slate-600 sm:text-base">
+          <p className="mt-8 max-w-2xl font-sans text-sm leading-relaxed text-slate-600 sm:mt-10 sm:text-base md:mt-12">
             Pay-per-task autonomous AI: connect a wallet, pay USDT on Kite, run
             research, code review, or content tasks with on-chain attestation.
           </p>
