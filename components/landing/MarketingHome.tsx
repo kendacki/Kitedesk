@@ -89,17 +89,6 @@ export function MarketingHome() {
               KiteDesk
             </span>
           </Link>
-          <nav className="hidden items-center gap-6 text-sm font-normal text-slate-600 md:flex lg:gap-8">
-            <a href="#how" className="hover:text-emerald-700">
-              How it works
-            </a>
-            <a href="#trust" className="hover:text-emerald-700">
-              Security
-            </a>
-            <Link href="/desk" className="hover:text-emerald-700">
-              Launch app
-            </Link>
-          </nav>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <MotionLink
               href="/desk"
@@ -225,19 +214,37 @@ export function MarketingHome() {
                 freelance AI work
               </span>
             </motion.h1>
-            <motion.p
+            <motion.nav
               custom={2}
               initial="hidden"
               animate="show"
               variants={fadeUp}
-              className="mx-auto mt-6 max-w-2xl text-base font-normal leading-relaxed text-slate-600 sm:text-lg"
+              className="mx-auto mt-5 flex w-full max-w-2xl flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm font-normal text-slate-600 sm:mt-6 sm:gap-x-10"
+              aria-label="Section shortcuts"
+            >
+              <a href="#how" className="transition hover:text-emerald-700">
+                How it works
+              </a>
+              <a href="#trust" className="transition hover:text-emerald-700">
+                Security
+              </a>
+              <Link href="/desk" className="transition hover:text-emerald-700">
+                Launch app
+              </Link>
+            </motion.nav>
+            <motion.p
+              custom={3}
+              initial="hidden"
+              animate="show"
+              variants={fadeUp}
+              className="mx-auto mt-6 max-w-2xl text-base font-normal leading-relaxed text-slate-600 sm:mt-8 sm:text-lg"
             >
               KiteDesk pairs USDT settlement on Kite testnet with autonomous agents and
               cryptographic attestations—so milestones are verified, payouts are
               predictable, and deliverables leave an immutable audit trail.
             </motion.p>
             <motion.div
-              custom={3}
+              custom={4}
               initial="hidden"
               animate="show"
               variants={fadeUp}
@@ -250,7 +257,7 @@ export function MarketingHome() {
                 <IconOnChainAttestation /> Attested outputs on-chain
               </span>
             </motion.div>
-            <motion.div custom={4} initial="hidden" animate="show" variants={fadeUp}>
+            <motion.div custom={5} initial="hidden" animate="show" variants={fadeUp}>
               <HeroCtas />
             </motion.div>
             <motion.div
