@@ -11,11 +11,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen text-kite-muted">
-      <div
-        className="pointer-events-none fixed inset-0 z-0 bg-kite-bg"
-        aria-hidden
-      />
+    <div className="relative isolate min-h-screen bg-kite-bg text-kite-muted">
       <LottieBackground />
       <div className="relative z-10">
         <MarketingHome />
