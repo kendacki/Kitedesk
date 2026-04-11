@@ -8,12 +8,13 @@ import { useWallet } from '@/hooks/useWallet'
 import { useTaskExecution } from '@/hooks/useTaskExecution'
 import { WalletConnect } from '@/components/WalletConnect'
 import { TaskForm } from '@/components/TaskForm'
+import { AgentStepsPanel } from '@/components/AgentStepsPanel'
 import { LoadingAgent } from '@/components/LoadingAgent'
 import { ResultPanel } from '@/components/ResultPanel'
 import { TaskHistory } from '@/components/TaskHistory'
 import { KitedeskLogoMark } from '@/components/landing/KitedeskLogoMark'
-import { brandEase } from '@/lib/brand'
-import type { TaskType } from '@/types'
+import { brandEase, brandSecondaryButtonLight } from '@/lib/brand'
+import type { ClassicTaskType } from '@/hooks/useTaskExecution'
 
 const blockShow = {
   hidden: { opacity: 0, y: 12 },
@@ -37,10 +38,16 @@ export function KiteDeskApp() {
 
   const busy = ['paying', 'executing', 'attesting'].includes(task.status)
   const showResult = task.result && task.status === 'done'
+  const showGoalResult = task.goalResult && task.status === 'done'
 
-  const handleRun = (taskType: TaskType, prompt: string) => {
+  const handleRun = (taskType: ClassicTaskType, prompt: string) => {
     if (!wallet.signer || !wallet.address) return
     void task.execute(wallet.signer, wallet.address, taskType, prompt)
+  }
+
+  const handleRunGoal = (goal: string, budgetUsdt: number) => {
+    if (!wallet.signer || !wallet.address) return
+    void task.executeGoal(wallet.signer, wallet.address, goal, budgetUsdt)
   }
 
   return (
@@ -104,12 +111,13 @@ export function KiteDeskApp() {
           </div>
         ) : (
           <>
-            {!showResult && (
+            {!showResult && !showGoalResult && (
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md shadow-slate-200/60 md:p-8">
                 <TaskForm
                   canSubmit={!!wallet.signer && !!wallet.address}
                   busy={busy}
                   onRun={handleRun}
+                  onRunGoal={handleRunGoal}
                 />
               </div>
             )}
@@ -132,6 +140,28 @@ export function KiteDeskApp() {
                   task.reset()
                 }}
               />
+            ) : null}
+
+            {showGoalResult && task.goalResult ? (
+              <div className="mt-2">
+                <AgentStepsPanel
+                  steps={task.goalResult.steps}
+                  totalSpentUsdt={task.goalResult.totalSpentUsdt}
+                  budgetUsdt={task.goalResult.budgetUsdt}
+                  isRunning={false}
+                  finalOutput={task.goalResult.finalOutput}
+                  attestationUrl={task.goalResult.attestationUrl}
+                />
+                <motion.button
+                  type="button"
+                  onClick={() => task.reset()}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`${brandSecondaryButtonLight} mt-6`}
+                >
+                  Run another task
+                </motion.button>
+              </div>
             ) : null}
 
             <TaskHistory userAddress={wallet.address} refreshSignal={historyTick} />
