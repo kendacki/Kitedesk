@@ -272,9 +272,9 @@ export function MarketingHome() {
                   src="/images/hero-delivery-robot.png"
                   alt="KiteDesk agent mascot with cart"
                   width={1024}
-                  height={771}
+                  height={682}
                   priority
-                  className="h-auto w-[min(100%,20rem)] bg-transparent object-contain drop-shadow-lg sm:w-[min(100%,24rem)] lg:w-[min(100%,28rem)]"
+                  className="h-auto w-[min(100%,24rem)] bg-transparent object-contain drop-shadow-lg sm:w-[min(100%,28rem)] lg:w-[min(100%,32rem)]"
                 />
               </motion.div>
             </div>
