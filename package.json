@@ -17,8 +17,10 @@
     "validate": "npm run format:check && npm run lint && npm run simulate && npm run build"
   },
   "dependencies": {
+    "@stitches/react": "^1.2.8",
     "axios": "^1.15.0",
     "ethers": "^6.16.0",
+    "framer-motion": "^12.38.0",
     "groq-sdk": "^1.1.2",
     "next": "14.2.35",
     "react": "^18",

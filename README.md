@@ -14,16 +14,25 @@ Pay-per-task autonomous AI on [Kite AI](https://docs.gokite.ai/) testnet: connec
 
 ---
 
+## Routes
+
+| Path        | Purpose                                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------ |
+| **`/`**     | Marketing landing (white UI, Poppins, deep green gradient, Framer Motion, Stitches button primitives). |
+| **`/desk`** | Product console: MetaMask, USDT payment, Groq agent, on-chain attestation (original KiteDesk shell).   |
+
+---
+
 ## Tech stack
 
-| Layer | Choice |
-|--------|--------|
-| App | Next.js 14 (App Router), TypeScript, Tailwind CSS |
-| Wallet / chain | ethers.js v6, MetaMask |
-| Payments | USDT (ERC-20) on Kite testnet |
-| Agent | Groq API |
-| Contracts | Solidity 0.8.20, Hardhat |
-| Deploy | Vercel (recommended) |
+| Layer          | Choice                                                                     |
+| -------------- | -------------------------------------------------------------------------- |
+| App            | Next.js 14 (App Router), TypeScript, Tailwind CSS, Framer Motion, Stitches |
+| Wallet / chain | ethers.js v6, MetaMask                                                     |
+| Payments       | USDT (ERC-20) on Kite testnet                                              |
+| Agent          | Groq API                                                                   |
+| Contracts      | Solidity 0.8.20, Hardhat                                                   |
+| Deploy         | Vercel (recommended)                                                       |
 
 ---
 
@@ -84,17 +93,17 @@ Paste the deployed address into `.env.local` as both `KITE_ATTESTATION_CONTRACT`
 
 ## Scripts
 
-| Command | Purpose |
-|---------|---------|
-| `npm run dev` | Development server |
-| `npm run build` | Production build |
-| `npm run lint` | ESLint |
-| `npm run format` | Prettier (write) |
-| `npm run format:check` | Prettier (check) |
-| `npm run verify:chain` | RPC + contract bytecode smoke test |
+| Command                  | Purpose                                      |
+| ------------------------ | -------------------------------------------- |
+| `npm run dev`            | Development server                           |
+| `npm run build`          | Production build                             |
+| `npm run lint`           | ESLint                                       |
+| `npm run format`         | Prettier (write)                             |
+| `npm run format:check`   | Prettier (check)                             |
+| `npm run verify:chain`   | RPC + contract bytecode smoke test           |
 | `npm run verify:backend` | Env + chain checks (optional: `--live-groq`) |
-| `npm run simulate` | `verify:chain` + `verify:backend` |
-| `npm run validate` | Format check, lint, simulate, build |
+| `npm run simulate`       | `verify:chain` + `verify:backend`            |
+| `npm run validate`       | Format check, lint, simulate, build          |
 
 ---
 

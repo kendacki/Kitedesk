@@ -1,6 +1,7 @@
 // KiteDesk | wallet, task form, loading, results, history
 'use client'
 
+import Link from 'next/link'
 import { useWallet } from '@/hooks/useWallet'
 import { useTaskExecution } from '@/hooks/useTaskExecution'
 import { WalletConnect } from '@/components/WalletConnect'
@@ -26,6 +27,12 @@ export function KiteDeskApp() {
     <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-6 py-16">
       <header className="mb-12 flex flex-col gap-8 border-b border-kite-border pb-8 md:flex-row md:items-start md:justify-between">
         <div>
+          <Link
+            href="/"
+            className="mb-3 inline-block font-mono text-xs text-kite-muted transition hover:text-kite-accent"
+          >
+            Back to landing
+          </Link>
           <p className="font-mono text-xs uppercase tracking-widest text-kite-accent">
             Kite AI Testnet
           </p>

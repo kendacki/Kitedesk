@@ -10,6 +10,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      backgroundImage: {
+        'deep-green-gradient': 'linear-gradient(135deg, #064e3b 0%, #10b981 100%)',
+      },
       colors: {
         background: 'var(--background)',
         foreground: 'var(--foreground)',
