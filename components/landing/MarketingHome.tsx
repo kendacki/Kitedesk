@@ -205,11 +205,11 @@ export function MarketingHome() {
       </AnimatePresence>
 
       <main>
-        <section className="relative overflow-hidden px-4 pb-16 pt-3 sm:px-6 sm:pb-20 sm:pt-5 md:pb-28 md:pt-8">
+        <section className="relative overflow-hidden px-4 pb-20 pt-4 sm:px-6 sm:pb-24 sm:pt-6 md:pb-32 md:pt-10">
           <LottieHeader />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.12)_0%,_transparent_55%)]" />
-          <div className="relative mx-auto max-w-6xl rounded-2xl border border-slate-200/70 bg-white/60 p-4 shadow-sm backdrop-blur-sm sm:p-6 md:p-8">
-            <div className="grid items-start gap-6 sm:gap-7 lg:grid-cols-2 lg:gap-10">
+          <div className="relative mx-auto max-w-6xl">
+            <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
               <div className="flex w-full flex-col items-start text-left">
                 <motion.div
                   custom={0}
@@ -266,7 +266,7 @@ export function MarketingHome() {
                 initial="hidden"
                 animate="show"
                 variants={fadeUp}
-                className="relative flex w-full justify-center bg-transparent lg:justify-end lg:pt-1"
+                className="relative flex w-full justify-center bg-transparent lg:justify-end"
               >
                 <Image
                   src="/images/hero-delivery-robot.png"
@@ -281,7 +281,7 @@ export function MarketingHome() {
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={floatTransition}
-              className="relative mt-5 w-full max-w-3xl sm:mt-6"
+              className="relative mx-auto mt-10 w-full max-w-3xl sm:mt-12"
             >
               <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-4 shadow-xl shadow-emerald-900/5 sm:rounded-3xl sm:p-8">
                 <div className="mb-4 flex flex-col gap-2 border-b border-slate-100 pb-4 text-left text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
