@@ -1,7 +1,6 @@
 // KiteDesk | wallet, task form, loading, results, history (light theme — matches landing)
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useWallet } from '@/hooks/useWallet'
@@ -11,6 +10,7 @@ import { TaskForm } from '@/components/TaskForm'
 import { LoadingAgent } from '@/components/LoadingAgent'
 import { ResultPanel } from '@/components/ResultPanel'
 import { TaskHistory } from '@/components/TaskHistory'
+import { KitedeskLogoMark } from '@/components/landing/KitedeskLogoMark'
 import { brandEase } from '@/lib/brand'
 import type { TaskType } from '@/types'
 
@@ -67,14 +67,7 @@ export function KiteDeskApp() {
 
         <div className="w-full">
           <div className="flex items-start gap-3">
-            <Image
-              src="/logo-transparent.png"
-              alt="KiteDesk logo"
-              width={1024}
-              height={768}
-              className="mt-0.5 h-auto w-32 shrink-0 object-contain md:w-40"
-              priority
-            />
+            <KitedeskLogoMark size={44} className="mt-0.5" />
             <div>
               <p className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800">
                 Kite AI Testnet
