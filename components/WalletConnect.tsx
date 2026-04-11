@@ -106,7 +106,7 @@ export function WalletConnect({
           <span>Kite AI Testnet</span>
         </div>
 
-        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 font-mono text-sm text-slate-900 shadow-sm">
+        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 font-sans text-sm text-slate-900 shadow-sm">
           <span title={address}>{truncateAddress(address)}</span>
           <button
             type="button"
@@ -117,12 +117,12 @@ export function WalletConnect({
           </button>
         </div>
 
-        <div className="font-mono text-sm font-medium text-emerald-800">
+        <div className="font-sans text-sm font-medium text-emerald-800">
           {balancePending && usdtBalance === null ? (
             <span className="text-slate-500">USDT …</span>
           ) : usdtBalance === null ? (
             <span className="text-slate-500" title="Set KITE_USDT_CONTRACT">
-              USDT —
+              USDT unavailable
             </span>
           ) : (
             <span>

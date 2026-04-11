@@ -2,15 +2,15 @@
 
 /** Primary CTA — emerald gradient (light or dark surfaces) */
 export const brandPrimaryButton =
-  'inline-flex min-h-[44px] items-center justify-center rounded-md bg-gradient-to-br from-emerald-900 to-emerald-500 px-6 py-3 text-center text-sm font-semibold text-white shadow-md transition hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400 disabled:cursor-not-allowed disabled:opacity-40'
+  'inline-flex min-h-[44px] items-center justify-center rounded-md bg-gradient-to-br from-emerald-900 to-emerald-500 px-6 py-3 text-center font-sans text-sm font-semibold text-white shadow-md transition hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400 disabled:cursor-not-allowed disabled:opacity-40'
 
 /** Secondary — for light backgrounds (landing) */
 export const brandSecondaryButtonLight =
-  'inline-flex min-h-[44px] items-center justify-center rounded-md border-2 border-emerald-900 bg-transparent px-6 py-3 text-center text-sm font-semibold text-emerald-900 transition hover:bg-emerald-950/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 disabled:opacity-40'
+  'inline-flex min-h-[44px] items-center justify-center rounded-md border-2 border-emerald-900 bg-transparent px-6 py-3 text-center font-sans text-sm font-semibold text-emerald-900 transition hover:bg-emerald-950/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 disabled:opacity-40'
 
 /** Secondary — for dark surfaces (legacy; desk is light-themed) */
 export const brandSecondaryButtonDark =
-  'inline-flex min-h-[44px] items-center justify-center rounded-md border-2 border-emerald-700 bg-transparent px-4 py-2.5 text-center text-sm font-semibold text-emerald-200 transition hover:border-emerald-500 hover:text-emerald-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 disabled:opacity-40'
+  'inline-flex min-h-[44px] items-center justify-center rounded-md border-2 border-emerald-700 bg-transparent px-4 py-2.5 text-center font-sans text-sm font-semibold text-emerald-200 transition hover:border-emerald-500 hover:text-emerald-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 disabled:opacity-40'
 
 /** Inline links on light UI (desk + cards) */
 export const brandLinkLight =

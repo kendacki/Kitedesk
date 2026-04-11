@@ -137,7 +137,7 @@ function X402PaymentBadge({
             href={`${KITE_TESTNET_TX_BASE}/${x402TxHash}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-mono text-[10px] text-emerald-800 underline decoration-emerald-300 hover:text-emerald-950 sm:text-xs"
+            className="font-sans text-[10px] text-emerald-800 underline decoration-emerald-300 hover:text-emerald-950 sm:text-xs"
           >
             {truncate(x402TxHash, 22)}
           </a>
@@ -239,7 +239,7 @@ export function AgentStepsPanel({
           </p>
         ) : null}
         <div className="mt-3">
-          <div className="mb-1 flex justify-between font-mono text-xs text-slate-600 sm:text-sm">
+          <div className="mb-1 flex justify-between font-sans text-xs text-slate-600 sm:text-sm">
             <span>
               Spent {formatUsdt(totalSpentUsdt)} USDT of {formatUsdt(budgetUsdt)} budget
             </span>
@@ -301,22 +301,22 @@ export function AgentStepsPanel({
               className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4"
             >
               <div className="flex flex-wrap items-start gap-2 sm:gap-3">
-                <span className="inline-flex min-w-[2rem] justify-center rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-mono text-xs font-semibold text-slate-700">
+                <span className="inline-flex min-w-[2rem] justify-center rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-sans text-xs font-semibold text-slate-700">
                   {String(step.stepNumber).padStart(2, '0')}
                 </span>
                 {step.toolCall ? (
                   <span
-                    className={`inline-flex rounded-lg border px-2 py-0.5 font-mono text-xs font-medium ${toolBadgeClass(step.toolCall.toolName)}`}
+                    className={`inline-flex rounded-lg border px-2 py-0.5 font-sans text-xs font-medium ${toolBadgeClass(step.toolCall.toolName)}`}
                   >
                     {step.toolCall.toolName}
                   </span>
                 ) : (
-                  <span className="inline-flex rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-mono text-xs text-slate-600">
+                  <span className="inline-flex rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-sans text-xs text-slate-600">
                     —
                   </span>
                 )}
                 {step.stepKind === 'x402_payment' ? (
-                  <span className="inline-flex rounded-lg border border-cyan-200 bg-cyan-50 px-2 py-0.5 font-mono text-xs font-medium text-cyan-900">
+                  <span className="inline-flex rounded-lg border border-cyan-200 bg-cyan-50 px-2 py-0.5 font-sans text-xs font-medium text-cyan-900">
                     x402 payment
                   </span>
                 ) : null}
@@ -336,12 +336,12 @@ export function AgentStepsPanel({
                 {step.reasoning}
               </p>
               {step.toolCall ? (
-                <p className="mt-1 font-mono text-xs text-slate-500">
+                <p className="mt-1 font-sans text-xs text-slate-500">
                   Input: {truncate(step.toolCall.input, 60)}
                 </p>
               ) : null}
               {step.toolCall ? (
-                <div className="mt-2 flex flex-wrap gap-3 font-mono text-xs">
+                <div className="mt-2 flex flex-wrap gap-3 font-sans text-xs">
                   <span className="font-medium text-emerald-800">
                     {formatUsdt(step.toolCall.costUsdt)} USDT
                   </span>
@@ -351,7 +351,7 @@ export function AgentStepsPanel({
                 </div>
               ) : null}
               {step.toolCall?.output && step.toolCall.toolName !== 'summarize' ? (
-                <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-slate-200 bg-white p-2 font-mono text-[10px] text-slate-700 sm:text-xs">
+                <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-slate-200 bg-white p-2 font-sans text-[10px] text-slate-700 sm:text-xs">
                   {truncate(step.toolCall.output, 600)}
                 </pre>
               ) : null}
@@ -376,7 +376,7 @@ export function AgentStepsPanel({
                   </ul>
                 </div>
               ) : null}
-              <p className="mt-2 font-mono text-[10px] text-slate-400 sm:text-xs">
+              <p className="mt-2 font-sans text-[10px] text-slate-400 sm:text-xs">
                 Running total: {formatUsdt(runningCost)} USDT
               </p>
             </motion.li>
@@ -395,7 +395,7 @@ export function AgentStepsPanel({
           <h4 className="mb-2 font-sans text-xs font-semibold uppercase tracking-widest text-emerald-800">
             Final output
           </h4>
-          <pre className="max-h-[min(50dvh,480px)] overflow-auto whitespace-pre-wrap break-words rounded-xl border border-slate-200 bg-slate-50 p-3 font-mono text-xs text-slate-900 sm:max-h-[min(60vh,480px)] sm:p-4 sm:text-sm">
+          <pre className="max-h-[min(50dvh,480px)] overflow-auto whitespace-pre-wrap break-words rounded-xl border border-slate-200 bg-slate-50 p-3 font-sans text-xs text-slate-900 sm:max-h-[min(60vh,480px)] sm:p-4 sm:text-sm">
             {finalOutput}
           </pre>
         </div>
@@ -408,7 +408,7 @@ export function AgentStepsPanel({
           </h4>
           {rows.length > 0 ? (
             <div className="overflow-x-auto rounded-xl border border-slate-200">
-              <table className="w-full min-w-[280px] border-collapse font-mono text-xs sm:text-sm">
+              <table className="w-full min-w-[280px] border-collapse font-sans text-xs sm:text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50 text-left text-slate-600">
                     <th className="px-3 py-2 font-semibold">Tool</th>
@@ -459,7 +459,7 @@ export function AgentStepsPanel({
             href={attestationUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className={`${brandLinkLight} font-mono text-sm`}
+            className={`${brandLinkLight} font-sans text-sm`}
           >
             View attestation on Kite Explorer
           </a>

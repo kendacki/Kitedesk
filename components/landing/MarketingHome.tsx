@@ -461,7 +461,7 @@ export function MarketingHome() {
               Ready to run your first attested task?
             </h2>
             <p className="mx-auto mt-4 max-w-xl font-normal text-white/90">
-              Connect, pay USDT on Kite, and ship AI work with on-chain proof—built for
+              Connect, pay USDT on Kite, and ship AI work with on-chain proof - built for
               the Agentic Commerce track and production-minded teams.
             </p>
             <div className="mt-8 flex justify-center">

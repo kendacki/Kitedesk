@@ -5,6 +5,8 @@ import { styled } from '@/stitches.config'
 
 const deepGreen = 'linear-gradient(135deg, #064e3b 0%, #10b981 100%)'
 
+const poppinsStack = 'var(--font-poppins), system-ui, sans-serif'
+
 export const PrimaryButton = styled('button', {
   all: 'unset',
   boxSizing: 'border-box',
@@ -15,6 +17,7 @@ export const PrimaryButton = styled('button', {
   gap: '0.5rem',
   padding: '0.75rem 1.5rem',
   borderRadius: '$lg',
+  fontFamily: poppinsStack,
   fontWeight: 600,
   fontSize: '$base',
   color: '#ffffff',
@@ -40,6 +43,7 @@ export const SecondaryButton = styled('button', {
   gap: '0.5rem',
   padding: '0.75rem 1.5rem',
   borderRadius: '$lg',
+  fontFamily: poppinsStack,
   fontWeight: 600,
   fontSize: '$base',
   color: '#064e3b',

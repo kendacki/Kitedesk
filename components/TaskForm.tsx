@@ -137,14 +137,14 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
                 </span>
               </div>
               <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
-                ⚡ Agentic Commerce
+                Agentic Commerce
               </span>
             </div>
             <p className="font-sans text-xs leading-relaxed text-slate-600">
               Describe any goal. Agent plans, picks tools, and executes autonomously.
             </p>
-            <p className="mt-2 font-mono text-xs font-medium text-emerald-800">
-              Pay your budget — agent spends only what&apos;s needed
+            <p className="mt-2 font-sans text-xs font-medium text-emerald-800">
+              Pay your budget - agent spends only what&apos;s needed
             </p>
           </motion.button>
 
@@ -182,7 +182,7 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
                 <p className="font-sans text-xs leading-relaxed text-slate-600">
                   {cfg.description}
                 </p>
-                <p className="mt-2 font-mono text-xs font-medium text-emerald-800">
+                <p className="mt-2 font-sans text-xs font-medium text-emerald-800">
                   {cfg.priceUsdt.toFixed(2)} USDT
                 </p>
               </motion.button>
@@ -191,7 +191,7 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
         </div>
         {taskType === 'goal' ? (
           <p className="mt-3 max-w-3xl font-sans text-xs leading-relaxed text-slate-500">
-            Agent autonomously discovers, evaluates, and pays for APIs using x402 protocol — no
+            Agent autonomously discovers, evaluates, and pays for APIs using x402 protocol - no
             human approval needed
           </p>
         ) : null}
@@ -209,7 +209,7 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
             <div className="mb-3 flex gap-2 rounded-lg border border-emerald-100 bg-emerald-50/60 px-3 py-2.5">
               <InfoCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
               <p className="font-sans text-xs leading-relaxed text-slate-700">
-                Agent pays per API call via x402 — budget is enforced autonomously
+                Agent pays per API call via x402 - budget is enforced autonomously
               </p>
             </div>
             <textarea
@@ -219,7 +219,7 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
               disabled={busy}
               rows={6}
               placeholder={GOAL_PLACEHOLDER}
-              className="min-h-[140px] w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-3 font-mono text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/40 disabled:opacity-60 sm:px-4"
+              className="min-h-[140px] w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-3 font-sans text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/40 disabled:opacity-60 sm:px-4"
             />
           </div>
           <div>
@@ -227,7 +227,7 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
               <span className="font-sans text-xs font-semibold uppercase tracking-widest text-emerald-800">
                 Budget
               </span>
-              <span className="font-mono text-sm font-semibold text-slate-900">
+              <span className="font-sans text-sm font-semibold text-slate-900">
                 Budget: {budgetUsdt.toFixed(2)} USDT
               </span>
             </div>
@@ -263,14 +263,14 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
             disabled={busy}
             rows={6}
             placeholder={CLASSIC_PLACEHOLDERS[taskType]}
-            className="min-h-[140px] w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-3 font-mono text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/40 disabled:opacity-60 sm:px-4"
+            className="min-h-[140px] w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-3 font-sans text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/40 disabled:opacity-60 sm:px-4"
           />
         </div>
       )}
 
       <div className="sticky bottom-0 z-10 -mx-6 mt-4 flex flex-col gap-3 border-t border-slate-200 bg-white/95 px-6 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-sm sm:static sm:z-0 sm:mx-0 sm:flex-row sm:items-center sm:justify-between sm:border-slate-200 sm:bg-transparent sm:px-0 sm:pb-0 sm:backdrop-blur-none">
         {taskType === 'goal' ? (
-          <div className="font-mono text-sm text-slate-700">
+          <div className="font-sans text-sm text-slate-700">
             Pay up to {budgetUsdt.toFixed(2)} USDT for this run
           </div>
         ) : (

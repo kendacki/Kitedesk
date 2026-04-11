@@ -93,7 +93,7 @@ export function KiteDeskApp() {
   const hideTaskForm = showResult || showGoalResult || showGoalLive || showGoalAttesting
 
   return (
-    <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-4xl flex-col px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 safe-x sm:px-6 sm:py-12 md:py-16">
+    <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-4xl flex-col px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 font-sans safe-x sm:px-6 sm:py-12 md:py-16">
       <motion.header
         initial="hidden"
         animate="show"
@@ -196,7 +196,7 @@ export function KiteDeskApp() {
 
             {task.status === 'error' && task.error ? (
               <div
-                className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 font-mono text-sm text-red-800"
+                className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 font-sans text-sm text-red-800"
                 role="alert"
               >
                 {task.error}

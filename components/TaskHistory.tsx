@@ -112,11 +112,11 @@ export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps
               >
                 {TASK_CONFIG[e.taskType].label}
               </span>
-              <span className="min-w-0 max-w-full truncate font-mono text-xs text-slate-600 sm:max-w-md">
+              <span className="min-w-0 max-w-full truncate font-sans text-xs text-slate-600 sm:max-w-md">
                 {e.promptPreview}
               </span>
             </div>
-            <div className="flex items-center gap-3 font-mono text-xs text-slate-500">
+            <div className="flex items-center gap-3 font-sans text-xs text-slate-500">
               <span>
                 {new Date(e.completedAt).toLocaleString(undefined, {
                   dateStyle: 'short',
