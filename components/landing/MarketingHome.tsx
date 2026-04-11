@@ -82,25 +82,34 @@ export function MarketingHome() {
   return (
     <div className="min-h-screen bg-white pb-[calc(4.5rem+env(safe-area-inset-bottom))] font-sans text-slate-900 antialiased md:pb-0">
       <header className="safe-t sticky top-0 z-50 border-b border-slate-100/80 bg-white/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 safe-x md:grid md:grid-cols-[auto_1fr_auto] md:items-center md:justify-normal md:gap-3">
-          <Link href="/" className="flex min-w-0 items-center gap-2">
+        <div className="relative mx-auto flex min-h-[3.25rem] max-w-6xl items-center justify-between px-4 py-3 sm:min-h-[3.5rem] sm:px-6 sm:py-4 safe-x">
+          <Link
+            href="/"
+            className="relative z-30 flex min-w-0 shrink-0 items-center gap-2"
+          >
             <KitedeskLogoMark size={34} />
             <span className="truncate text-base font-semibold tracking-tight sm:text-lg">
               KiteDesk
             </span>
           </Link>
-          <nav className="hidden items-center justify-center justify-self-center gap-6 text-sm font-normal text-slate-600 md:flex lg:gap-8 translate-x-2 sm:translate-x-3 lg:translate-x-4">
-            <a href="#how" className="transition hover:text-emerald-700">
-              How it works
-            </a>
-            <a href="#trust" className="transition hover:text-emerald-700">
-              Security
-            </a>
-            <Link href="/desk" className="transition hover:text-emerald-700">
-              Launch app
-            </Link>
+          <nav
+            aria-label="Page sections"
+            className="pointer-events-none absolute inset-x-0 top-1/2 hidden -translate-y-1/2 md:flex md:justify-center"
+          >
+            <ul className="pointer-events-auto flex items-center gap-x-6 text-sm font-normal text-slate-600 lg:gap-x-8">
+              <li>
+                <a href="#how" className="transition hover:text-emerald-700">
+                  How it works
+                </a>
+              </li>
+              <li>
+                <a href="#trust" className="transition hover:text-emerald-700">
+                  Security
+                </a>
+              </li>
+            </ul>
           </nav>
-          <div className="flex shrink-0 items-center justify-self-end gap-2 sm:gap-3">
+          <div className="relative z-30 flex shrink-0 items-center gap-2 sm:gap-3">
             <MotionLink
               href="/desk"
               className={`${brandSecondaryCtaMarketing} hidden md:inline-flex`}
@@ -187,13 +196,6 @@ export function MarketingHome() {
                 >
                   Security
                 </a>
-                <Link
-                  href="/desk"
-                  className="mt-2 rounded-lg bg-gradient-to-br from-emerald-900 to-emerald-500 px-3 py-3 text-center text-white shadow-md"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Launch app
-                </Link>
               </nav>
             </motion.aside>
           </motion.div>
