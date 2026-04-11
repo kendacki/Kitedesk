@@ -205,10 +205,10 @@ export function MarketingHome() {
       </AnimatePresence>
 
       <main>
-        <section className="relative overflow-hidden px-4 pb-20 pt-4 sm:px-6 sm:pb-24 sm:pt-6 md:pb-32 md:pt-10">
+        <section className="relative overflow-hidden pb-20 pt-4 sm:pb-24 sm:pt-6 md:pb-32 md:pt-10">
           <LottieHeader />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.12)_0%,_transparent_55%)]" />
-          <div className="relative mx-auto max-w-6xl">
+          <div className="relative mx-auto max-w-6xl px-4 sm:px-6 safe-x">
             <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
               <div className="flex min-w-0 w-full max-w-full flex-col items-stretch gap-5 text-left sm:gap-6 lg:max-w-xl lg:pr-8">
                 <motion.h1
