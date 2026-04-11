@@ -50,6 +50,13 @@ export const TASK_CONFIG = {
     estimatedTime: '5-10 seconds',
     icon: 'content' as const,
   },
+  goal: {
+    label: 'Goal Agent',
+    description: 'Multi-step agent; you set a USDT budget at run time.',
+    priceUsdt: 0.1,
+    estimatedTime: 'Varies',
+    icon: 'search' as const,
+  },
 } as const
 
 export const CONTRACTS = {

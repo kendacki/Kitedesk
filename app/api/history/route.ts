@@ -6,7 +6,7 @@ import type { TaskHistoryEntry, TaskType } from '@/types'
 
 export const runtime = 'nodejs'
 
-const TASK_TYPES: TaskType[] = ['research', 'code_review', 'content_gen']
+const TASK_TYPES: TaskType[] = ['research', 'code_review', 'content_gen', 'goal']
 
 export async function GET(req: NextRequest) {
   const address = req.nextUrl.searchParams.get('address')?.trim()

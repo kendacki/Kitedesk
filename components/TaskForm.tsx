@@ -15,6 +15,7 @@ const PLACEHOLDERS: Record<TaskType, string> = {
   research: 'e.g. Latest developments in AI agent payments',
   code_review: 'Paste code to review (any language)',
   content_gen: 'Topic or brief for social and blog content',
+  goal: 'Use Goal mode from the desk when wired (budget + goal)',
 }
 
 type TaskFormProps = {

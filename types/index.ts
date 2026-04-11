@@ -1,6 +1,6 @@
 // KiteDesk | agent goal and tool types
 
-export type TaskType = 'research' | 'code_review' | 'content_gen'
+export type TaskType = 'research' | 'code_review' | 'content_gen' | 'goal'
 
 export interface Task {
   id: string

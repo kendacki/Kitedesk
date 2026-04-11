@@ -12,6 +12,8 @@ function badgeClass(taskType: TaskType): string {
       return 'border-emerald-200 bg-emerald-50 text-emerald-900'
     case 'code_review':
       return 'border-emerald-300 bg-emerald-50 text-emerald-900'
+    case 'goal':
+      return 'border-violet-200 bg-violet-50 text-violet-900'
     default:
       return 'border-slate-200 bg-slate-100 text-slate-800'
   }

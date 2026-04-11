@@ -3,9 +3,11 @@ import Groq from 'groq-sdk'
 import { HttpError } from '@/lib/httpError'
 import { TaskType } from '@/types'
 
+type AgentTaskType = Exclude<TaskType, 'goal'>
+
 const DEFAULT_MODEL = 'openai/gpt-oss-120b'
 
-const SYSTEM_PROMPTS: Record<TaskType, string> = {
+const SYSTEM_PROMPTS: Record<AgentTaskType, string> = {
   research: `You are a world-class research analyst. Given a topic or question, produce a structured research summary with:
 1. Key findings (3-5 bullet points)
 2. Important context and background
@@ -48,7 +50,7 @@ function normalizeMessageContent(content: unknown): string {
 }
 
 export async function executeAgentTask(
-  taskType: TaskType,
+  taskType: AgentTaskType,
   prompt: string
 ): Promise<string> {
   const trimmed = prompt.trim()
