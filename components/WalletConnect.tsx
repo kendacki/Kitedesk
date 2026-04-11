@@ -119,7 +119,7 @@ export function WalletConnect({
 
         <div className="font-sans text-sm font-medium text-emerald-800">
           {balancePending && usdtBalance === null ? (
-            <span className="text-slate-500">USDT …</span>
+            <span className="text-slate-500">…</span>
           ) : usdtBalance === null ? (
             <span
               className="text-slate-500"
@@ -129,10 +129,10 @@ export function WalletConnect({
             </span>
           ) : (
             <span>
-              USDT{' '}
               {usdtBalance.toLocaleString(undefined, {
                 maximumFractionDigits: 4,
-              })}
+              })}{' '}
+              USDT
             </span>
           )}
         </div>
