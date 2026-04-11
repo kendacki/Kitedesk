@@ -204,7 +204,7 @@ export function MarketingHome() {
       </AnimatePresence>
 
       <main>
-        <section className="relative overflow-hidden px-4 pb-20 pt-12 sm:px-6 sm:pb-24 sm:pt-16 md:pb-32 md:pt-24">
+        <section className="relative overflow-hidden px-4 pb-20 pt-4 sm:px-6 sm:pb-24 sm:pt-6 md:pb-32 md:pt-10">
           <LottieHeader />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.12)_0%,_transparent_55%)]" />
           <div className="relative mx-auto max-w-4xl text-center">
@@ -213,7 +213,7 @@ export function MarketingHome() {
               initial="hidden"
               animate="show"
               variants={fadeUp}
-              className="mb-6 inline-flex rounded-full border border-emerald-200/80 bg-emerald-50/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-900"
+              className="mb-4 inline-flex rounded-full border border-emerald-200/80 bg-emerald-50/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-900"
             >
               On-chain proof for every AI task
             </motion.div>
@@ -234,7 +234,7 @@ export function MarketingHome() {
               initial="hidden"
               animate="show"
               variants={fadeUp}
-              className="mx-auto mt-6 max-w-2xl text-base font-normal leading-relaxed text-slate-600 sm:mt-8 sm:text-lg"
+              className="mx-auto mt-4 max-w-2xl text-base font-normal leading-relaxed text-slate-600 sm:mt-5 sm:text-lg"
             >
               KiteDesk pairs USDT settlement on Kite testnet with autonomous agents and
               cryptographic attestations—so milestones are verified, payouts are
@@ -245,7 +245,7 @@ export function MarketingHome() {
               initial="hidden"
               animate="show"
               variants={fadeUp}
-              className="mt-8 flex flex-col items-stretch justify-center gap-3 text-sm text-slate-600 xs:flex-row xs:flex-wrap xs:items-center xs:justify-center xs:gap-4"
+              className="mt-5 flex flex-col items-stretch justify-center gap-3 text-sm text-slate-600 xs:mt-6 xs:flex-row xs:flex-wrap xs:items-center xs:justify-center xs:gap-4"
             >
               <span className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5">
                 <IconMilestonePayments /> Milestone-based payments
@@ -260,7 +260,7 @@ export function MarketingHome() {
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={floatTransition}
-              className="relative mx-auto mt-12 max-w-3xl sm:mt-16"
+              className="relative mx-auto mt-8 max-w-3xl sm:mt-12"
             >
               <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-4 shadow-xl shadow-emerald-900/5 sm:rounded-3xl sm:p-8">
                 <div className="mb-4 flex flex-col gap-2 border-b border-slate-100 pb-4 text-left text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
