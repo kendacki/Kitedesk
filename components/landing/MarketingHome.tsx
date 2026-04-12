@@ -469,8 +469,8 @@ export function MarketingHome() {
               Why Kite chain?
             </h2>
             <p className="mt-4 font-normal text-slate-600">
-              Agentic Commerce needs money and proofs that software can enforce — not
-              spreadsheets and honor codes.
+              Agentic commerce executes on programmable funds and verifiable states, moving
+              beyond spreadsheets and human honor codes.
             </p>
           </div>
           <div className="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-2">
