@@ -630,8 +630,9 @@ export function MarketingHome() {
               Run an agent with on-chain economics
             </h2>
             <p className="mx-auto mt-4 max-w-xl font-normal text-white/90">
-              Set a goal and budget on Kite testnet, let the agent plan and pay APIs,
-              then inspect spend and attestations, built for the Agentic Commerce track.
+              Deploy AI to autonomously procure and pay for API microservices, with
+              every action cryptographically verified via on-chain execution
+              attestations.
             </p>
             <div className="mt-8 flex justify-center">
               <MotionLink
