@@ -108,37 +108,39 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
         <p className="mb-3 text-center font-sans text-xs font-semibold uppercase tracking-widest text-emerald-800 sm:text-left">
           Task type
         </p>
-        <div className="flex flex-col items-center gap-3">
+        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3 sm:items-stretch">
           <motion.button
             type="button"
             layout
             onClick={() => setTaskType('goal')}
             disabled={busy}
             whileTap={{ scale: 0.98 }}
-            className={`flex w-full flex-col items-center rounded-xl border p-5 text-center transition ${
+            className={`col-span-1 w-full rounded-xl border p-4 text-left transition sm:col-span-3 ${
               taskType === 'goal'
                 ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-200'
                 : 'border-slate-200 bg-slate-50/80 hover:border-emerald-300'
             } ${busy ? 'opacity-60' : ''}`}
           >
-            <span className="mb-3 rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-1 font-sans text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
-              Agentic Commerce
-            </span>
-            <div className="flex items-center gap-2">
-              <span
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${
-                  taskType === 'goal'
-                    ? 'border-emerald-600 bg-white text-emerald-800'
-                    : 'border-slate-200 bg-white text-emerald-700'
-                }`}
-              >
-                <GoalCrosshairIcon className="h-5 w-5 shrink-0" />
-              </span>
-              <span className="font-sans text-sm font-semibold text-slate-900">
-                Goal Agent
+            <div className="relative mb-2 flex items-start justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <span
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${
+                    taskType === 'goal'
+                      ? 'border-emerald-600 bg-white text-emerald-800'
+                      : 'border-slate-200 bg-white text-emerald-700'
+                  }`}
+                >
+                  <GoalCrosshairIcon className="h-5 w-5 shrink-0" />
+                </span>
+                <span className="font-sans text-sm font-semibold text-slate-900">
+                  Goal Agent
+                </span>
+              </div>
+              <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
+                Agentic Commerce
               </span>
             </div>
-            <p className="mt-3 max-w-md font-sans text-xs leading-relaxed text-slate-600">
+            <p className="font-sans text-xs leading-relaxed text-slate-600">
               Describe any goal. Agent plans, picks tools, and executes autonomously.
             </p>
             <p className="mt-2 font-sans text-xs font-medium text-emerald-800">
@@ -146,51 +148,49 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
             </p>
           </motion.button>
 
-          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3 sm:items-stretch">
-            {CLASSIC_ORDER.map((key) => {
-              const cfg = TASK_CONFIG[key]
-              const selected = taskType === key
-              return (
-                <motion.button
-                  key={key}
-                  type="button"
-                  layout
-                  onClick={() => setTaskType(key)}
-                  disabled={busy}
-                  whileTap={{ scale: 0.98 }}
-                  className={`flex min-h-[11.5rem] w-full flex-col items-center rounded-xl border p-5 text-center transition ${
-                    selected
-                      ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-200'
-                      : 'border-slate-200 bg-slate-50/80 hover:border-emerald-300'
-                  } ${busy ? 'opacity-60' : ''}`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <span
-                      className={`flex h-9 w-9 items-center justify-center rounded-lg border ${
-                        selected
-                          ? 'border-emerald-600 bg-white text-emerald-800'
-                          : 'border-slate-200 bg-white text-emerald-700'
-                      }`}
-                    >
-                      <TaskTypeIcon taskType={key} />
-                    </span>
-                    <span className="font-sans text-sm font-semibold text-slate-900">
-                      {cfg.label}
-                    </span>
-                  </div>
-                  <p className="mt-3 flex-1 font-sans text-xs leading-relaxed text-slate-600">
-                    {cfg.description}
-                  </p>
-                  <p className="mt-3 font-sans text-xs font-medium text-emerald-800">
-                    {cfg.priceUsdt.toFixed(2)} USDT
-                  </p>
-                </motion.button>
-              )
-            })}
-          </div>
+          {CLASSIC_ORDER.map((key) => {
+            const cfg = TASK_CONFIG[key]
+            const selected = taskType === key
+            return (
+              <motion.button
+                key={key}
+                type="button"
+                layout
+                onClick={() => setTaskType(key)}
+                disabled={busy}
+                whileTap={{ scale: 0.98 }}
+                className={`flex min-h-[11.5rem] w-full flex-col items-center rounded-xl border p-5 text-center transition ${
+                  selected
+                    ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-200'
+                    : 'border-slate-200 bg-slate-50/80 hover:border-emerald-300'
+                } ${busy ? 'opacity-60' : ''}`}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <span
+                    className={`flex h-9 w-9 items-center justify-center rounded-lg border ${
+                      selected
+                        ? 'border-emerald-600 bg-white text-emerald-800'
+                        : 'border-slate-200 bg-white text-emerald-700'
+                    }`}
+                  >
+                    <TaskTypeIcon taskType={key} />
+                  </span>
+                  <span className="font-sans text-sm font-semibold text-slate-900">
+                    {cfg.label}
+                  </span>
+                </div>
+                <p className="mt-3 flex-1 font-sans text-xs leading-relaxed text-slate-600">
+                  {cfg.description}
+                </p>
+                <p className="mt-3 font-sans text-xs font-medium text-emerald-800">
+                  {cfg.priceUsdt.toFixed(2)} USDT
+                </p>
+              </motion.button>
+            )
+          })}
         </div>
         {taskType === 'goal' ? (
-          <p className="mt-3 text-center font-sans text-xs leading-relaxed text-slate-500 sm:text-left">
+          <p className="mt-3 max-w-3xl font-sans text-xs leading-relaxed text-slate-500">
             Agent autonomously discovers, evaluates, and pays for APIs using x402 protocol - no
             human approval needed
           </p>
