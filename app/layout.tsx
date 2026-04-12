@@ -1,6 +1,7 @@
 // KiteDesk | root layout, fonts, metadata
 
 import type { Metadata, Viewport } from 'next'
+import { Analytics } from '@vercel/analytics/next'
 import { jetbrainsMono, poppins } from '@/lib/fonts'
 import './globals.css'
 
@@ -65,6 +66,7 @@ export default function RootLayout({
         className={`${poppins.variable} ${jetbrainsMono.variable} min-h-[100dvh] font-sans antialiased`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   )
