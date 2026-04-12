@@ -368,21 +368,37 @@ export function MarketingHome() {
           <div className="mx-auto mt-10 flex max-w-4xl flex-wrap items-center justify-center gap-x-8 gap-y-5 opacity-60 grayscale sm:gap-x-12 sm:gap-y-6">
             {(
               [
-                { src: '/images/partners/metamask.png', alt: 'MetaMask' },
-                { src: '/images/partners/kite.png', alt: 'Kite' },
-                { src: '/images/partners/groq.png', alt: 'Groq' },
-                { src: '/images/partners/usdt.png', alt: 'USDT' },
-                { src: '/images/partners/solidity.png', alt: 'Solidity' },
+                {
+                  src: '/images/partners/metamask.png',
+                  alt: 'MetaMask',
+                  slot: 'default',
+                },
+                {
+                  src: '/images/partners/kite.png',
+                  alt: 'Kite',
+                  slot: 'wide',
+                },
+                { src: '/images/partners/groq.png', alt: 'Groq', slot: 'default' },
+                { src: '/images/partners/usdt.png', alt: 'USDT', slot: 'default' },
+                {
+                  src: '/images/partners/solidity.png',
+                  alt: 'Solidity',
+                  slot: 'default',
+                },
               ] as const
-            ).map(({ src, alt }) => (
+            ).map(({ src, alt, slot }) => (
               <div
                 key={src}
-                className="flex h-9 w-[6.5rem] shrink-0 items-center justify-center sm:h-10 sm:w-[7.5rem]"
+                className={
+                  slot === 'wide'
+                    ? 'flex h-9 w-[9.25rem] shrink-0 items-center justify-center sm:h-10 sm:w-[10.5rem]'
+                    : 'flex h-9 w-[6.5rem] shrink-0 items-center justify-center sm:h-10 sm:w-[7.5rem]'
+                }
               >
                 <Image
                   src={src}
                   alt={alt}
-                  width={150}
+                  width={slot === 'wide' ? 220 : 150}
                   height={40}
                   className="max-h-full w-auto max-w-full object-contain object-center"
                 />

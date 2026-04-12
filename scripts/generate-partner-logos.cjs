@@ -55,6 +55,41 @@ async function svgBufferToPng(svg, filename) {
   console.log('wrote', path.relative(process.cwd(), out))
 }
 
+/** Official Kite mark + wordmark: strip near-white pixels to alpha, then resize. */
+async function kitePngFromSource() {
+  const srcPath = path.join(__dirname, 'source-kite-logo.png')
+  await fs.promises.access(srcPath)
+  const base = sharp(srcPath).ensureAlpha()
+  const { data, info } = await base.clone().raw().toBuffer({ resolveWithObject: true })
+  const { width, height, channels } = info
+  if (channels !== 4) {
+    throw new Error(`Expected 4 channels after ensureAlpha, got ${channels}`)
+  }
+  const threshold = 248
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i]
+    const g = data[i + 1]
+    const b = data[i + 2]
+    if (r >= threshold && g >= threshold && b >= threshold) {
+      data[i + 3] = 0
+    }
+  }
+  const out = path.join(outDir, 'kite.png')
+  await fs.promises.mkdir(outDir, { recursive: true })
+  await sharp(Buffer.from(data), {
+    raw: { width, height, channels: 4 },
+  })
+    .trim()
+    .resize({
+      height: TARGET_H,
+      fit: 'inside',
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .png()
+    .toFile(out)
+  console.log('wrote', path.relative(process.cwd(), out), '(from source-kite-logo.png)')
+}
+
 async function main() {
   await svgBufferToPng(iconSvg(siSolidity), 'solidity.png')
   await svgBufferToPng(iconSvg(siTether), 'usdt.png')
@@ -71,11 +106,7 @@ async function main() {
 </svg>`
   await svgBufferToPng(groqSvg, 'groq.png')
 
-  const kiteSvg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 32" fill="none">
-  <text x="0" y="24" font-family="system-ui,Segoe UI,sans-serif" font-size="22" font-weight="700" fill="#334155">Kite</text>
-</svg>`
-  await svgBufferToPng(kiteSvg, 'kite.png')
+  await kitePngFromSource()
 }
 
 main().catch((e) => {
