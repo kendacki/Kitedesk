@@ -501,7 +501,7 @@ export function MarketingHome() {
           className="border-t border-slate-100 bg-slate-50/50 px-4 py-16 sm:px-6 sm:py-24"
           id="features"
         >
-          <div className="mx-auto grid max-w-6xl gap-8 sm:gap-12 lg:grid-cols-2 lg:items-start">
+          <div className="mx-auto max-w-6xl">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
                 Built for autonomous economic agents
@@ -512,38 +512,6 @@ export function MarketingHome() {
                 you set — with cryptography backing every step.
               </p>
             </div>
-            <ul className="space-y-3 text-sm font-normal leading-relaxed text-slate-600">
-              <li className="flex gap-2">
-                <span className="text-emerald-600" aria-hidden>
-                  ·
-                </span>
-                Goal-based execution with budgets
-              </li>
-              <li className="flex gap-2">
-                <span className="text-emerald-600" aria-hidden>
-                  ·
-                </span>
-                Agent-to-API micro-payments (x402)
-              </li>
-              <li className="flex gap-2">
-                <span className="text-emerald-600" aria-hidden>
-                  ·
-                </span>
-                Dynamic cost optimization
-              </li>
-              <li className="flex gap-2">
-                <span className="text-emerald-600" aria-hidden>
-                  ·
-                </span>
-                Multi-step autonomous workflows
-              </li>
-              <li className="flex gap-2">
-                <span className="text-emerald-600" aria-hidden>
-                  ·
-                </span>
-                On-chain execution proof
-              </li>
-            </ul>
           </div>
           <div className="mx-auto mt-10 grid max-w-6xl gap-4 sm:mt-14 sm:gap-6 md:grid-cols-2">
             <motion.div
