@@ -615,18 +615,18 @@ export function MarketingHome() {
         </section>
       </main>
 
-      <footer className="border-t border-slate-100 bg-white px-4 py-10 sm:px-6 sm:py-14">
-        <div className="mx-auto flex max-w-6xl flex-col gap-10 md:flex-row md:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
+      <footer className="border-t border-slate-100 bg-white px-4 py-10 text-left sm:px-6 sm:py-14">
+        <div className="mx-auto flex max-w-6xl flex-col gap-10 md:flex-row md:items-start md:justify-between">
+          <div className="flex w-full min-w-0 max-w-xs flex-col items-start text-left">
+            <div className="flex items-center justify-start gap-2">
               <KitedeskLogoMark size={32} />
               <span className="font-semibold">KiteDesk</span>
             </div>
-            <p className="mt-3 max-w-xs text-sm font-normal text-slate-500">
+            <p className="mt-3 w-full text-sm font-normal text-slate-500">
               Autonomous agents that pay APIs and anchor results on Kite; Agentic
               Commerce, not gig work.
             </p>
-            <div className="mt-4 flex gap-4 text-sm text-slate-400">
+            <div className="mt-4 flex justify-start gap-4 text-sm text-slate-400">
               <a
                 href="https://x.com/GoKiteAI"
                 target="_blank"
