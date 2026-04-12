@@ -160,7 +160,7 @@ export function KiteDeskApp() {
   const hideTaskForm = showResult || showGoalResult || showGoalLive || showGoalAttesting
 
   return (
-    <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-4xl flex-col px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-2 font-sans safe-x sm:px-6 sm:pb-12 sm:pt-4 md:pb-16 md:pt-5">
+    <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-4xl flex-col px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-1 font-sans safe-x sm:px-6 sm:pb-12 sm:pt-2 md:pb-16 md:pt-3">
       <a
         href="#kitedesk-main"
         className="fixed left-4 top-0 z-[100] -translate-y-[180%] rounded-md bg-emerald-900 px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-transform duration-200 focus:translate-y-4 focus:outline-none focus:ring-2 focus:ring-emerald-200"
@@ -179,7 +179,7 @@ export function KiteDeskApp() {
         initial="hidden"
         animate="show"
         variants={blockShow}
-        className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-5 sm:mb-8 sm:gap-5 sm:pb-6 md:mb-10"
+        className="mb-6 flex flex-col gap-3 border-b border-slate-200 pb-5 sm:mb-8 sm:gap-4 sm:pb-6 md:mb-10"
       >
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <Link
@@ -206,11 +206,13 @@ export function KiteDeskApp() {
         </div>
 
         <div className="flex w-full flex-col items-start text-left">
-          <KitedeskLogoMark size={44} className="shrink-0" />
-          <p className="mt-3 font-sans text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800">
-            KITEDESK
-          </p>
-          <h1 className="mt-2 max-w-2xl font-sans text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
+          <div className="mb-6 flex w-full flex-row items-center justify-start gap-3 sm:mb-8">
+            <KitedeskLogoMark size={44} className="shrink-0" />
+            <p className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800">
+              KITEDESK
+            </p>
+          </div>
+          <h1 className="max-w-2xl font-sans text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
             AI agents that plan, pay, and execute tasks under budget — autonomously
           </h1>
           <p className="mt-4 max-w-2xl font-sans text-sm leading-relaxed text-slate-600 sm:mt-5 sm:text-base md:mt-6">
