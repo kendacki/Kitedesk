@@ -313,9 +313,6 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
                 ? 'Launch Agentic Commerce'
                 : 'Pay and run agent'}
           </motion.button>
-          <p className="max-w-md text-center font-sans text-xs leading-relaxed text-slate-500 sm:text-right">
-            Agent plans, pays APIs via x402 when required, and stays under your budget.
-          </p>
         </div>
       </div>
     </motion.form>
