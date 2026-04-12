@@ -2,8 +2,9 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { ethers, type Eip1193Provider } from 'ethers'
+import { ethers } from 'ethers'
 import { KITE_CHAIN } from '@/lib/constants'
+import { getPreferredEip1193Provider } from '@/lib/getEip1193Provider'
 
 interface WalletState {
   address: string | null
@@ -33,10 +34,11 @@ export function useWallet() {
   }, [])
 
   const connect = useCallback(async () => {
-    if (!window.ethereum) {
+    const eth = getPreferredEip1193Provider()
+    if (!eth) {
       setState((s) => ({
         ...s,
-        error: 'MetaMask not found. Please install it.',
+        error: 'No wallet found. Install MetaMask (or disable conflicting wallet extensions).',
       }))
       return
     }
@@ -44,10 +46,10 @@ export function useWallet() {
     setState((s) => ({ ...s, isConnecting: true, error: null }))
 
     try {
-      await window.ethereum.request({ method: 'eth_requestAccounts' })
+      await eth.request({ method: 'eth_requestAccounts' })
 
       try {
-        await window.ethereum.request({
+        await eth.request({
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: `0x${KITE_CHAIN.id.toString(16)}` }],
         })
@@ -57,7 +59,7 @@ export function useWallet() {
             ? (switchError as { code?: number }).code
             : undefined
         if (code === 4902) {
-          await window.ethereum.request({
+          await eth.request({
             method: 'wallet_addEthereumChain',
             params: [
               {
@@ -76,7 +78,7 @@ export function useWallet() {
         }
       }
 
-      const provider = new ethers.BrowserProvider(window.ethereum)
+      const provider = new ethers.BrowserProvider(eth, KITE_CHAIN.id)
       let signer: ethers.JsonRpcSigner
       try {
         signer = await provider.getSigner()
@@ -107,12 +109,12 @@ export function useWallet() {
   }, [])
 
   useEffect(() => {
-    const eth = window.ethereum
+    const eth = getPreferredEip1193Provider()
     if (!eth?.on || !eth.removeListener) return
 
     const refreshFromProvider = async () => {
       try {
-        const provider = new ethers.BrowserProvider(eth as Eip1193Provider)
+        const provider = new ethers.BrowserProvider(eth, KITE_CHAIN.id)
         const signer = await provider.getSigner()
         const address = await signer.getAddress()
         setState((s) => ({
@@ -140,7 +142,7 @@ export function useWallet() {
     const onChainChanged = () => {
       void (async () => {
         try {
-          const provider = new ethers.BrowserProvider(eth as Eip1193Provider)
+          const provider = new ethers.BrowserProvider(eth, KITE_CHAIN.id)
           const network = await provider.getNetwork()
           if (Number(network.chainId) !== KITE_CHAIN.id) {
             disconnect()

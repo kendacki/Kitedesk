@@ -57,7 +57,7 @@ export function WalletConnect({
     if (!provider || !address) return
     const t = setInterval(() => {
       void refreshBalance()
-    }, 20000)
+    }, 45000)
     return () => clearInterval(t)
   }, [provider, address, refreshBalance])
 
