@@ -1,15 +1,14 @@
 // KiteDesk | server-side checks: chain, sender, USDT contract, Transfer log amount + recipient
 import { ethers } from 'ethers'
 import { HttpError } from '@/lib/httpError'
-import { CONTRACTS, KITE_CHAIN } from './constants'
-
-const ERC20_ABI = ['function decimals() view returns (uint8)']
+import { CONTRACTS, KITE_CHAIN, KITE_X402 } from './constants'
 
 const TRANSFER_IFACE = new ethers.Interface([
   'event Transfer(address indexed from, address indexed to, uint256 value)',
 ])
 
-function getPlatformWalletAddress(): string {
+/** Used by payment verification and x402 payTo — NEXT_PUBLIC_* or server-only PLATFORM_WALLET */
+export function getPlatformWalletAddress(): string {
   const w =
     process.env.NEXT_PUBLIC_PLATFORM_WALLET?.trim() ||
     process.env.PLATFORM_WALLET?.trim()
@@ -29,6 +28,10 @@ export async function verifyPaymentTransaction(
   userAddress: string,
   expectedAmountHuman: number
 ): Promise<void> {
+  if (!Number.isFinite(expectedAmountHuman) || expectedAmountHuman <= 0) {
+    throw new HttpError('Invalid expected payment amount', 400)
+  }
+
   const rpc =
     process.env.KITE_RPC_URL ||
     process.env.NEXT_PUBLIC_KITE_RPC_URL ||
@@ -72,12 +75,7 @@ export async function verifyPaymentTransaction(
     throw new HttpError('Payment transaction failed or not confirmed', 400)
   }
 
-  const token = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
-  const decimals = Number(await token.decimals())
-  if (!Number.isFinite(decimals) || decimals < 0 || decimals > 36) {
-    throw new HttpError('Invalid token decimals from contract', 500)
-  }
-
+  const decimals = KITE_X402.stablecoinDecimals
   const expectedUnits = amountToUnits(expectedAmountHuman, decimals)
   const platform = getPlatformWalletAddress()
 

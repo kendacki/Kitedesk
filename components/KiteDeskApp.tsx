@@ -14,6 +14,7 @@ import { ResultPanel } from '@/components/ResultPanel'
 import { TaskHistory } from '@/components/TaskHistory'
 import { KitedeskLogoMark } from '@/components/landing/KitedeskLogoMark'
 import { brandEase, brandSecondaryButtonLight } from '@/lib/brand'
+import { KITE_STAY_ON_TESTNET_MESSAGE } from '@/lib/constants'
 import type { ClassicTaskType } from '@/hooks/useTaskExecution'
 
 const blockShow = {
@@ -28,7 +29,18 @@ const blockShow = {
 function spentFromSteps(
   stepList: { toolCall?: { costUsdt?: number } | undefined }[]
 ): number {
-  return stepList.reduce((sum, s) => sum + (s.toolCall?.costUsdt ?? 0), 0)
+  return stepList.reduce((sum, s) => {
+    const c = s.toolCall?.costUsdt
+    const add = typeof c === 'number' && Number.isFinite(c) ? c : 0
+    return sum + add
+  }, 0)
+}
+
+function safeBudgetSavings(budget: number, spent: number): number {
+  const b = Number.isFinite(budget) ? budget : 0
+  const s = Number.isFinite(spent) ? spent : 0
+  const d = b - s
+  return Number.isFinite(d) ? d : 0
 }
 
 function x402StatsFromSteps(
@@ -116,6 +128,8 @@ export function KiteDeskApp() {
               provider={wallet.provider}
               connect={wallet.connect}
               disconnect={wallet.disconnect}
+              switchToKite={wallet.switchToKite}
+              wrongNetwork={wallet.wrongNetwork}
               isConnecting={wallet.isConnecting}
               error={wallet.error}
             />
@@ -151,6 +165,14 @@ export function KiteDeskApp() {
           <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center font-sans text-sm text-slate-600 shadow-sm sm:p-8">
             Connect your wallet to select a task and pay in USDT.
           </div>
+        ) : wallet.wrongNetwork ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center font-sans text-sm text-amber-950 shadow-sm sm:p-8">
+            <p className="font-medium">{KITE_STAY_ON_TESTNET_MESSAGE}</p>
+            <p className="mt-2 text-amber-900/90">
+              Wrong network — switch to Kite. Use the button in the header or select Kite AI Testnet
+              (chain 2368) in MetaMask before paying or launching the agent.
+            </p>
+          </div>
         ) : (
           <>
             {!hideTaskForm && (
@@ -171,7 +193,7 @@ export function KiteDeskApp() {
                   totalSpentUsdt={liveSpent}
                   budgetUsdt={panelGoalBudget || liveBudget}
                   isRunning
-                  budgetSavings={(panelGoalBudget || liveBudget) - liveSpent}
+                  budgetSavings={safeBudgetSavings(panelGoalBudget || liveBudget, liveSpent)}
                   x402PaymentsCount={liveX402.x402PaymentsCount}
                   x402TotalPaidUsdt={liveX402.x402TotalPaidUsdt}
                 />
@@ -185,7 +207,7 @@ export function KiteDeskApp() {
                   totalSpentUsdt={liveSpent}
                   budgetUsdt={panelGoalBudget || liveBudget}
                   isRunning={false}
-                  budgetSavings={(panelGoalBudget || liveBudget) - liveSpent}
+                  budgetSavings={safeBudgetSavings(panelGoalBudget || liveBudget, liveSpent)}
                   x402PaymentsCount={liveX402.x402PaymentsCount}
                   x402TotalPaidUsdt={liveX402.x402TotalPaidUsdt}
                 />
@@ -223,10 +245,10 @@ export function KiteDeskApp() {
                   attestationUrl={task.goalResult.attestationUrl}
                   planReasoning={task.goalResult.planReasoning}
                   skippedTools={task.goalResult.skippedTools}
-                  budgetSavings={
-                    (lastGoalBudgetUsdt ?? task.goalResult.budgetUsdt) -
+                  budgetSavings={safeBudgetSavings(
+                    lastGoalBudgetUsdt ?? task.goalResult.budgetUsdt,
                     task.goalResult.totalSpentUsdt
-                  }
+                  )}
                   x402PaymentsCount={task.goalResult.x402PaymentsCount}
                   x402TotalPaidUsdt={task.goalResult.x402TotalPaidUsdt}
                 />

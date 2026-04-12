@@ -45,4 +45,3 @@ typechain-types/
 
 # Optional raw logo for npm run logo:assets (processed output is in public/ + app/)
 scripts/source-logo.png
-digest.txt

@@ -22,5 +22,9 @@ export function getPreferredEip1193Provider(): BrowserEip1193Provider | undefine
     if (first) return first as BrowserEip1193Provider
   }
 
+  if (root.isMetaMask === true) {
+    return root
+  }
+
   return root
 }

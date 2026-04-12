@@ -1,12 +1,20 @@
 /**
  * KiteDesk | backend readiness: env presence, RPC chain, contract bytecode, optional Groq ping
  * Usage: node scripts/verify-backend.cjs [--live-groq]
+ *
+ * Loads .env then .env.local (later file does not override earlier by default in dotenv;
+ * we load .env first so .env.local wins for overrides).
  */
 const path = require('path')
-require('dotenv').config({ path: path.join(__dirname, '..', '.env.local') })
-require('dotenv').config()
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') })
+require('dotenv').config({
+  path: path.join(__dirname, '..', '.env.local'),
+  override: true,
+})
 
 const { ethers } = require('ethers')
+
+const DEFAULT_KITE_TESTNET_USDT = '0x0fF5393387ad2f9f691FD6Fd28e07E3969e27e63'
 
 function has(v) {
   return typeof v === 'string' && v.trim().length > 0
@@ -49,12 +57,15 @@ async function maybeLiveGroq() {
 }
 
 async function main() {
+  const effectiveUsdt =
+    process.env.KITE_USDT_CONTRACT?.trim() ||
+    process.env.NEXT_PUBLIC_KITE_USDT_CONTRACT?.trim() ||
+    DEFAULT_KITE_TESTNET_USDT
+
+  ok(`Effective USDT token (env or default): ${effectiveUsdt}`)
+
   const required = [
     ['GROQ_API_KEY', process.env.GROQ_API_KEY],
-    [
-      'KITE_USDT_CONTRACT or NEXT_PUBLIC_KITE_USDT_CONTRACT',
-      process.env.KITE_USDT_CONTRACT || process.env.NEXT_PUBLIC_KITE_USDT_CONTRACT,
-    ],
     [
       'KITE_ATTESTATION_CONTRACT or NEXT_PUBLIC_KITE_ATTESTATION_CONTRACT',
       process.env.KITE_ATTESTATION_CONTRACT ||
@@ -95,10 +106,8 @@ async function main() {
 
   const byteLen = (hex) => (hex && hex.startsWith('0x') ? (hex.length - 2) / 2 : 0)
 
-  const usdt =
-    process.env.KITE_USDT_CONTRACT || process.env.NEXT_PUBLIC_KITE_USDT_CONTRACT
-  if (usdt && ethers.isAddress(usdt)) {
-    const code = await provider.getCode(usdt)
+  if (effectiveUsdt && ethers.isAddress(effectiveUsdt)) {
+    const code = await provider.getCode(effectiveUsdt)
     if (byteLen(code) < 100) {
       fail('USDT contract bytecode looks empty')
       process.exitCode = 1

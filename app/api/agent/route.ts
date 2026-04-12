@@ -34,7 +34,12 @@ export async function POST(req: NextRequest) {
   let paymentTxHashForRelease: string | null = null
   let attestationWritten = false
   try {
-    const body = (await req.json()) as Record<string, unknown>
+    let body: Record<string, unknown>
+    try {
+      body = (await req.json()) as Record<string, unknown>
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+    }
 
     if (body.taskType === 'goal') {
       const goal = typeof body.goal === 'string' ? body.goal : ''

@@ -1,4 +1,4 @@
-// KiteDesk | agent tool registry — real API calls per execution
+// KiteDesk | agent tool registry — external Tavily/Firecrawl/Groq; goal web_search uses fetchX402Search (INTERNAL_API_BASE_URL + /api/x402/search) from the orchestrator
 import { tavily } from '@tavily/core'
 import { HttpError } from '@/lib/httpError'
 import type { ToolName } from '@/types'
@@ -17,6 +17,56 @@ function mapToolError(tool: string, e: unknown): never {
   throw new HttpError(`${tool} failed: ${msg}`, 502)
 }
 
+function logToolApi(tool: string, detail: string) {
+  console.error(`[KiteDesk|tool] ${tool}`, detail)
+}
+
+/** Structured x402 trace for demos (used from agentOrchestrator.executeX402Tool) */
+export const x402FlowDebug = {
+  apiCallStart(phase: 'first_pass' | 'retry', url: string, hasXPayment: boolean) {
+    console.error('[KiteDesk|x402]', 'api_call_start', { phase, url, hasXPayment })
+  },
+  responseStatus(phase: 'first_pass' | 'retry', status: number) {
+    console.error('[KiteDesk|x402]', 'response_status', { phase, status })
+  },
+  detected402(acceptsLength: number, error?: string) {
+    console.error('[KiteDesk|x402]', '402_detected', { acceptsLength, error })
+  },
+  paymentDecision(payload: {
+    action: 'proceed_to_pay' | 'skip_budget' | 'insufficient_agent_balance' | 'build_x_payment'
+    priceUsdt?: number
+    accumulatedUsdt?: number
+    budgetUsdt?: number
+    payTo?: string
+    asset?: string
+    agentWallet?: string
+    detail?: string
+  }) {
+    console.error('[KiteDesk|x402]', 'payment_decision', payload)
+  },
+  retryResult(payload: {
+    status: number
+    ok: boolean
+    settlementTxHash?: string
+    errorPreview?: string
+  }) {
+    console.error('[KiteDesk|x402]', 'retry_result', payload)
+  },
+  networkError(phase: 'first_pass' | 'retry', err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[KiteDesk|x402]', 'api_network_error', { phase, message: msg })
+  },
+  firstPassFree(status: number) {
+    console.error('[KiteDesk|x402]', 'first_pass_no_payment', {
+      status,
+      note: '200 without x402 charge (or free tier)',
+    })
+  },
+  unexpectedFirstStatus(status: number, preview: string) {
+    console.error('[KiteDesk|x402]', 'unexpected_response', { phase: 'first_pass', status, preview })
+  },
+} as const
+
 export const TOOL_REGISTRY: Record<ToolName, Tool> = {
   web_search: {
     name: 'web_search',
@@ -24,18 +74,29 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
     costUsdt: 0.05,
     execute: async (input) => {
       try {
+        console.error('[KiteDesk|x402]', 'tool_registry_web_search', {
+          path: 'direct_tavily_fallback',
+          note:
+            'Goal mode never uses this path — orchestrator calls fetchX402Search(INTERNAL_API_BASE_URL + /api/x402/search)',
+          inputChars: input.length,
+        })
+        logToolApi('web_search', 'Tavily search start')
         const client = tavily({ apiKey: process.env.TAVILY_API_KEY! })
         const response = await client.search(input, {
           searchDepth: 'basic',
           maxResults: 5,
           includeAnswer: true,
         })
+        logToolApi(
+          'web_search',
+          `Tavily response ok (results=${response.results?.length ?? 0}, hasAnswer=${Boolean(response.answer)})`
+        )
         return JSON.stringify({
           answer: response.answer,
-          results: response.results.map((r) => ({
+          results: (response.results ?? []).map((r) => ({
             title: r.title,
             url: r.url,
-            content: r.content.slice(0, 300),
+            content: (r.content ?? '').slice(0, 300),
             score: r.score,
           })),
         })
@@ -50,6 +111,7 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
     costUsdt: 0.04,
     execute: async (input) => {
       try {
+        logToolApi('news_fetch', 'Tavily news start')
         const client = tavily({ apiKey: process.env.TAVILY_API_KEY! })
         const response = await client.search(input, {
           searchDepth: 'basic',
@@ -60,10 +122,10 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
         })
         return JSON.stringify({
           answer: response.answer,
-          articles: response.results.map((r) => ({
+          articles: (response.results ?? []).map((r) => ({
             title: r.title,
             url: r.url,
-            content: r.content.slice(0, 250),
+            content: (r.content ?? '').slice(0, 250),
             publishedDate: r.publishedDate,
           })),
         })
@@ -78,18 +140,19 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
     costUsdt: 0.05,
     execute: async (input) => {
       try {
+        logToolApi('price_check', 'Tavily price search start')
         const client = tavily({ apiKey: process.env.TAVILY_API_KEY! })
-        const response = await client.search(`${input} price buy 2025`, {
+        const response = await client.search(`${input} price buy 2026`, {
           searchDepth: 'advanced',
           maxResults: 6,
           includeAnswer: true,
         })
         return JSON.stringify({
           answer: response.answer,
-          sources: response.results.map((r) => ({
+          sources: (response.results ?? []).map((r) => ({
             title: r.title,
             url: r.url,
-            content: r.content.slice(0, 300),
+            content: (r.content ?? '').slice(0, 300),
           })),
         })
       } catch (e) {
@@ -103,6 +166,7 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
     costUsdt: 0.08,
     execute: async (input) => {
       try {
+        logToolApi('competitor_analysis', 'Tavily competitors start')
         const client = tavily({ apiKey: process.env.TAVILY_API_KEY! })
         const response = await client.search(
           `${input} alternatives competitors comparison`,
@@ -114,10 +178,10 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
         )
         return JSON.stringify({
           answer: response.answer,
-          sources: response.results.map((r) => ({
+          sources: (response.results ?? []).map((r) => ({
             title: r.title,
             url: r.url,
-            content: r.content.slice(0, 300),
+            content: (r.content ?? '').slice(0, 300),
           })),
         })
       } catch (e) {
@@ -131,6 +195,7 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
     costUsdt: 0.06,
     execute: async (input) => {
       try {
+        logToolApi('deep_read', 'Firecrawl scrape POST start')
         const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
           method: 'POST',
           headers: {
@@ -142,6 +207,7 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
             formats: ['markdown'],
           }),
         })
+        logToolApi('deep_read', `Firecrawl response ${res.status}`)
         const data = (await res.json()) as {
           success: boolean
           data?: { markdown?: string }
@@ -161,6 +227,7 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
     costUsdt: 0.02,
     execute: async (input) => {
       try {
+        logToolApi('summarize', 'Groq completion start')
         const Groq = (await import('groq-sdk')).default
         const client = new Groq({ apiKey: process.env.GROQ_API_KEY! })
         const completion = await client.chat.completions.create({
@@ -190,3 +257,5 @@ export function getTotalCost(tools: ToolName[]): number {
 export function getToolByName(name: ToolName): Tool {
   return TOOL_REGISTRY[name]
 }
+
+export { fetchX402Search } from '@/lib/x402SearchClient'

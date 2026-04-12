@@ -1,18 +1,26 @@
 // KiteDesk | x402 search without self-HTTP (orchestrator + routes share this)
+import { ethers } from 'ethers'
 import { tavily } from '@tavily/core'
-import { KITE_X402 } from '@/lib/constants'
+import { KITE_X402, X402_SEARCH_PRICE_USDT } from '@/lib/constants'
+import { HttpError } from '@/lib/httpError'
+import { getPlatformWalletAddress } from '@/lib/verifyPayment'
 import { verifyAndSettleInternal } from '@/lib/x402VerifySettleInternal'
 
 export function buildX402Search402Body(resourceBase: string) {
   const base = resourceBase.replace(/\/$/, '')
-  const payTo = process.env.NEXT_PUBLIC_PLATFORM_WALLET ?? ''
+  const payTo = getPlatformWalletAddress()
   return {
     error: 'X-PAYMENT header is required',
     accepts: [
       {
         scheme: 'gokite-aa',
         network: 'kite-testnet',
-        maxAmountRequired: '50000000000000000',
+        maxAmountRequired: ethers
+          .parseUnits(
+            X402_SEARCH_PRICE_USDT.toFixed(KITE_X402.stablecoinDecimals),
+            KITE_X402.stablecoinDecimals
+          )
+          .toString(),
         resource: `${base}/api/x402/search`,
         description: 'AI Search API - Powered by Tavily via x402',
         mimeType: 'application/json',
@@ -65,7 +73,16 @@ export async function executeX402SearchInternal(opts: {
   const xPay = opts.xPaymentHeader?.trim()
 
   if (!xPay) {
-    return { status: 402, body: buildX402Search402Body(resourceBase) }
+    try {
+      return { status: 402, body: buildX402Search402Body(resourceBase) }
+    } catch (e) {
+      if (e instanceof HttpError) {
+        return { status: e.status, body: { error: e.message } }
+      }
+      const msg =
+        e instanceof Error ? e.message : 'x402 challenge could not be built (platform wallet?)'
+      return { status: 503, body: { error: msg } }
+    }
   }
 
   if (!query) {
@@ -74,11 +91,17 @@ export async function executeX402SearchInternal(opts: {
 
   const settle = await verifyAndSettleInternal(xPay)
   if (!settle.success) {
+    let accepts: unknown
+    try {
+      accepts = buildX402Search402Body(resourceBase).accepts
+    } catch {
+      accepts = []
+    }
     return {
       status: 402,
       body: {
         error: settle.error ?? 'Payment verification or settlement failed',
-        accepts: buildX402Search402Body(resourceBase).accepts,
+        accepts,
         x402Version: 1,
         facilitatorError: settle.facilitatorError,
         directError: settle.directError,
@@ -98,12 +121,13 @@ export async function executeX402SearchInternal(opts: {
       maxResults: 5,
       includeAnswer: true,
     })
+    const rawResults = response.results ?? []
     const body: SearchOkBody = {
       answer: response.answer ?? '',
-      results: response.results.map((r) => ({
+      results: rawResults.map((r) => ({
         title: r.title,
         url: r.url,
-        content: r.content.slice(0, 300),
+        content: (r.content ?? '').slice(0, 300),
         score: r.score,
       })),
       settlementTxHash: settle.txHash,

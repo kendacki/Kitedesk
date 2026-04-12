@@ -5,7 +5,11 @@ import { useState } from 'react'
 import axios from 'axios'
 import { ethers } from 'ethers'
 import { payForTask } from '@/lib/payment'
-import { TASK_CONFIG } from '@/lib/constants'
+import {
+  KITE_CHAIN,
+  KITE_WRONG_NETWORK_PAY_MESSAGE,
+  TASK_CONFIG,
+} from '@/lib/constants'
 import type { AgentStep, GoalResult, TaskResult, TaskType } from '@/types'
 
 export type ClassicTaskType = Exclude<TaskType, 'goal'>
@@ -40,8 +44,27 @@ function isSignerOrConnectionError(err: unknown): boolean {
     lower.includes('signer') ||
     (lower.includes('wallet') && lower.includes('connect')) ||
     lower.includes('disconnected') ||
-    lower.includes('extension id')
+    lower.includes('extension id') ||
+    lower.includes('network changed') ||
+    lower.includes('network_error')
   )
+}
+
+function isWrongNetworkError(err: unknown): boolean {
+  if (err instanceof Error && err.message === KITE_WRONG_NETWORK_PAY_MESSAGE) return true
+  const s = err instanceof Error ? err.message : String(err)
+  return s.toLowerCase().includes('wrong network')
+}
+
+async function requireSignerOnKiteChain(signer: ethers.JsonRpcSigner): Promise<void> {
+  const p = signer.provider
+  if (!p) {
+    throw new Error('Wallet provider unavailable')
+  }
+  const net = await p.getNetwork()
+  if (Number(net.chainId) !== KITE_CHAIN.id) {
+    throw new Error(KITE_WRONG_NETWORK_PAY_MESSAGE)
+  }
 }
 
 export function useTaskExecution() {
@@ -86,13 +109,29 @@ export function useTaskExecution() {
         return
       }
 
+      try {
+        await requireSignerOnKiteChain(signer)
+      } catch (netErr: unknown) {
+        setStatus('error')
+        setError(
+          netErr instanceof Error ? netErr.message : KITE_WRONG_NETWORK_PAY_MESSAGE
+        )
+        return
+      }
+
       const price = TASK_CONFIG[taskType].priceUsdt
 
       setStatus('paying')
       let paymentTxHash: string
       try {
+        await requireSignerOnKiteChain(signer)
         paymentTxHash = await payForTask(signer, price)
       } catch (payErr: unknown) {
+        if (isWrongNetworkError(payErr)) {
+          setStatus('error')
+          setError(KITE_WRONG_NETWORK_PAY_MESSAGE)
+          return
+        }
         if (isWalletUserRejected(payErr)) {
           setStatus('error')
           setError('Transaction was cancelled in your wallet.')
@@ -134,8 +173,8 @@ export function useTaskExecution() {
         throw agentErr
       }
 
-      if (data.error || !data.taskId || !data.output) {
-        throw new Error(data.error || 'Agent request failed')
+      if (!data || data.error || !data.taskId || !data.output) {
+        throw new Error(data?.error || 'Agent request failed')
       }
 
       setStatus('attesting')
@@ -161,6 +200,10 @@ export function useTaskExecution() {
       if (axios.isAxiosError(err)) {
         const serverMsg = (err.response?.data as { error?: string })?.error
         setError(serverMsg || err.message)
+        return
+      }
+      if (isWrongNetworkError(err)) {
+        setError(KITE_WRONG_NETWORK_PAY_MESSAGE)
         return
       }
       if (isSignerOrConnectionError(err)) {
@@ -198,11 +241,31 @@ export function useTaskExecution() {
         return
       }
 
+      try {
+        await requireSignerOnKiteChain(signer)
+      } catch (netErr: unknown) {
+        setStatus('error')
+        setError(
+          netErr instanceof Error ? netErr.message : KITE_WRONG_NETWORK_PAY_MESSAGE
+        )
+        setIsGoalFlow(false)
+        setGoalBudgetUsdt(null)
+        return
+      }
+
       setStatus('paying')
       let paymentTxHash: string
       try {
+        await requireSignerOnKiteChain(signer)
         paymentTxHash = await payForTask(signer, budgetUsdt)
       } catch (payErr: unknown) {
+        if (isWrongNetworkError(payErr)) {
+          setStatus('error')
+          setError(KITE_WRONG_NETWORK_PAY_MESSAGE)
+          setIsGoalFlow(false)
+          setGoalBudgetUsdt(null)
+          return
+        }
         if (isWalletUserRejected(payErr)) {
           setStatus('error')
           setError('Transaction was cancelled in your wallet.')
@@ -254,17 +317,20 @@ export function useTaskExecution() {
         throw agentErr
       }
 
-      if (data.error || !data.goalResult?.taskId) {
-        throw new Error(data.error || 'Goal agent request failed')
+      if (!data || data.error || !data.goalResult?.taskId) {
+        throw new Error(data?.error || 'Goal agent request failed')
       }
 
       const gr = data.goalResult
-      setSteps(gr.steps)
+      const stepsNorm = Array.isArray(gr.steps) ? gr.steps : []
+      setSteps(stepsNorm)
 
       setStatus('attesting')
       await new Promise((r) => setTimeout(r, 450))
 
-      setGoalResult(gr)
+      const finalOutput =
+        typeof gr.finalOutput === 'string' ? gr.finalOutput : String(gr.finalOutput ?? '')
+      setGoalResult({ ...gr, steps: stepsNorm, finalOutput })
       setIsGoalFlow(false)
       setStatus('done')
     } catch (err: unknown) {
@@ -279,6 +345,10 @@ export function useTaskExecution() {
       if (axios.isAxiosError(err)) {
         const serverMsg = (err.response?.data as { error?: string })?.error
         setError(serverMsg || err.message)
+        return
+      }
+      if (isWrongNetworkError(err)) {
+        setError(KITE_WRONG_NETWORK_PAY_MESSAGE)
         return
       }
       if (isSignerOrConnectionError(err)) {

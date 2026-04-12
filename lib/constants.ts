@@ -41,6 +41,12 @@ export const KITE_CHAIN = {
   currency: 'KITE',
 } as const
 
+/** Wallet left Kite testnet; hooks clear the signer until the user is back on `KITE_CHAIN.id`. */
+export const KITE_STAY_ON_TESTNET_MESSAGE = 'Please stay on Kite AI Testnet'
+
+/** Thrown before USDT payment if the wallet chain is not Kite (avoids silent mainnet failures). */
+export const KITE_WRONG_NETWORK_PAY_MESSAGE = 'Wrong network. Switch to Kite AI Testnet'
+
 export const KITE_RELAYER = {
   url: envOr(
     'NEXT_PUBLIC_KITE_RELAYER_URL',
@@ -97,8 +103,13 @@ function x402FacilitatorSettleUrl(): string {
   return base.endsWith('/v2/settle') ? base : `${base}/v2/settle`
 }
 
+/** Human USDT max charge for one x402 search (encoded with stablecoinDecimals in 402 payload) */
+export const X402_SEARCH_PRICE_USDT = 0.05
+
 /** x402 agent payments: EIP-3009 asset, Pieverse settle URL, optional Kite demo resource URL */
 export const KITE_X402 = {
+  /** PYUSD / test USDT on Kite testnet — avoid on-chain decimals() in hot paths */
+  stablecoinDecimals: 6 as const,
   get tokenAddress(): string {
     const fromEnv =
       process.env.KITE_X402_TOKEN?.trim() ||

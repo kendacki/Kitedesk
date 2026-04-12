@@ -12,7 +12,10 @@ export async function claimPaymentTransaction(
 ): Promise<void> {
   const supabase = getSupabaseAdmin()
   if (!supabase) {
-    throw new HttpError('Server storage is not configured', 503)
+    throw new HttpError(
+      'Server storage is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.',
+      503
+    )
   }
   const hash = normalizeHash(paymentTxHash)
   const { error } = await supabase.from('kitedesk_tasks').insert({
@@ -50,7 +53,10 @@ export async function completePaymentTask(
 ): Promise<void> {
   const supabase = getSupabaseAdmin()
   if (!supabase) {
-    throw new HttpError('Server storage is not configured', 503)
+    throw new HttpError(
+      'Server storage is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.',
+      503
+    )
   }
   const hash = normalizeHash(paymentTxHash)
   const { data, error } = await supabase

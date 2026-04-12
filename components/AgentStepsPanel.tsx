@@ -2,6 +2,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { AgentMarkdown } from '@/components/AgentMarkdown'
 import { brandEase, brandLinkLight } from '@/lib/brand'
 import type { AgentStep, ToolCall, ToolName } from '@/types'
 
@@ -41,12 +42,17 @@ function toolBadgeClass(toolName: ToolName): string {
 }
 
 function formatUsdt(n: number): string {
-  return n.toFixed(2)
+  return Number.isFinite(n) ? n.toFixed(2) : '0.00'
 }
 
-function truncate(s: string, max: number): string {
-  if (s.length <= max) return s
-  return `${s.slice(0, max - 1)}…`
+function safeCost(n: number | undefined): number {
+  return typeof n === 'number' && Number.isFinite(n) ? n : 0
+}
+
+function truncate(s: unknown, max: number): string {
+  const t = typeof s === 'string' ? s : s == null ? '' : String(s)
+  if (t.length <= max) return t
+  return `${t.slice(0, max - 1)}…`
 }
 
 type SourceLink = { title: string; url: string }
@@ -82,9 +88,10 @@ function aggregateToolCosts(
     const tc = step.toolCall
     if (!tc) continue
     const prev = map.get(tc.toolName) ?? { calls: 0, cost: 0 }
+    const add = safeCost(tc.costUsdt)
     map.set(tc.toolName, {
       calls: prev.calls + 1,
-      cost: prev.cost + tc.costUsdt,
+      cost: prev.cost + add,
     })
   }
   return Array.from(map.entries())
@@ -209,11 +216,13 @@ export function AgentStepsPanel({
   x402PaymentsCount,
   x402TotalPaidUsdt,
 }: AgentStepsPanelProps) {
+  const budget = Number.isFinite(budgetUsdt) ? budgetUsdt : 0
+  const spent = Number.isFinite(totalSpentUsdt) ? totalSpentUsdt : 0
   const pct =
-    budgetUsdt > 0
-      ? Math.min(100, Math.round((totalSpentUsdt / budgetUsdt) * 1000) / 10)
+    budget > 0
+      ? Math.min(100, Math.round((spent / budget) * 1000) / 10)
       : 0
-  const saved = Math.max(0, budgetUsdt - totalSpentUsdt)
+  const saved = Math.max(0, budget - spent)
   const rows = aggregateToolCosts(steps)
   const tableTotal = rows.reduce((s, r) => s + r.cost, 0)
   const savings =
@@ -241,7 +250,7 @@ export function AgentStepsPanel({
         <div className="mt-3">
           <div className="mb-1 flex justify-between font-sans text-xs text-slate-600 sm:text-sm">
             <span>
-              Spent {formatUsdt(totalSpentUsdt)} USDT of {formatUsdt(budgetUsdt)} budget
+              Spent {formatUsdt(spent)} USDT of {formatUsdt(budget)} budget
             </span>
             <span>{pct}%</span>
           </div>
@@ -289,7 +298,7 @@ export function AgentStepsPanel({
         key={steps.map((s) => s.stepNumber).join('-') || 'empty'}
       >
         {steps.map((step) => {
-          runningCost += step.toolCall?.costUsdt ?? 0
+          runningCost += safeCost(step.toolCall?.costUsdt)
           const sources =
             step.toolCall?.output && step.toolCall.toolName !== 'summarize'
               ? extractSourceLinks(step.toolCall.output)
@@ -343,10 +352,10 @@ export function AgentStepsPanel({
               {step.toolCall ? (
                 <div className="mt-2 flex flex-wrap gap-3 font-sans text-xs">
                   <span className="font-medium text-emerald-800">
-                    {formatUsdt(step.toolCall.costUsdt)} USDT
+                    {formatUsdt(safeCost(step.toolCall.costUsdt))} USDT
                   </span>
                   <span className="text-slate-400">
-                    {(step.toolCall.durationMs / 1000).toFixed(1)}s
+                    {((step.toolCall.durationMs ?? 0) / 1000).toFixed(1)}s
                   </span>
                 </div>
               ) : null}
@@ -395,9 +404,7 @@ export function AgentStepsPanel({
           <h4 className="mb-2 font-sans text-xs font-semibold uppercase tracking-widest text-emerald-800">
             Final output
           </h4>
-          <pre className="max-h-[min(50dvh,480px)] overflow-auto whitespace-pre-wrap break-words rounded-xl border border-slate-200 bg-slate-50 p-3 font-sans text-xs text-slate-900 sm:max-h-[min(60vh,480px)] sm:p-4 sm:text-sm">
-            {finalOutput}
-          </pre>
+          <AgentMarkdown content={finalOutput} />
         </div>
       ) : null}
 
@@ -441,7 +448,9 @@ export function AgentStepsPanel({
             </div>
           ) : null}
           {typeof x402PaymentsCount === 'number' &&
-          typeof x402TotalPaidUsdt === 'number' ? (
+          typeof x402TotalPaidUsdt === 'number' &&
+          Number.isFinite(x402PaymentsCount) &&
+          Number.isFinite(x402TotalPaidUsdt) ? (
             <p className="mt-3 font-sans text-sm text-slate-700">
               x402 payments: {x402PaymentsCount} calls,{' '}
               {x402TotalPaidUsdt.toFixed(4)} USDT paid autonomously

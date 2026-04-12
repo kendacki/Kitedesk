@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
       attestationUrl: r.attestation_url,
       completedAt: new Date(r.completed_at).getTime(),
     }))
+    .filter((e) => Number.isFinite(e.completedAt))
 
   return NextResponse.json({ entries })
 }
