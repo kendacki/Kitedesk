@@ -1,0 +1,2 @@
+# Normalize text files to LF so Prettier `format:check` matches CI (Linux) and Windows devs.
+* text=auto eol=lf
