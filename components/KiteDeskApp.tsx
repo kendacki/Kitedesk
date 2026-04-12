@@ -219,8 +219,8 @@ export function KiteDeskApp() {
             </span>
           </h1>
           <p className="mt-4 max-w-2xl font-sans text-sm leading-relaxed text-slate-600 sm:mt-5 sm:text-base md:mt-6">
-            Set your USDT budget on the Kite testnet, and let the agent handle the
-            rest. It autonomously selects the right tools, clears{' '}
+            Set your USDT budget on the Kite testnet, and let the agent handle the rest.
+            It autonomously selects the right tools, clears{' '}
             <span className="font-semibold text-slate-800">x402</span> API micropayments
             on the fly, and strictly respects your spending limits.
           </p>
