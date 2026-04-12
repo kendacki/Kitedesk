@@ -24,9 +24,6 @@ const CLASSIC_PLACEHOLDERS: Record<Exclude<TaskType, 'goal'>, string> = {
 
 const GOAL_PLACEHOLDER = `e.g. ${GOAL_AGENT_EXAMPLE_GOAL} and write a buying guide`
 
-const DEMO_GOAL_TEXT = 'Find fintech AI agent trends'
-const DEMO_BUDGET_USDT = 0.2
-
 function InfoCircleIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -211,20 +208,6 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
             >
               Goal
             </label>
-            <motion.button
-              type="button"
-              disabled={busy}
-              onClick={() => {
-                setTaskType('goal')
-                setGoalText(DEMO_GOAL_TEXT)
-                setBudgetUsdt(DEMO_BUDGET_USDT)
-              }}
-              whileHover={{ scale: busy ? 1 : 1.01 }}
-              whileTap={{ scale: busy ? 1 : 0.99 }}
-              className="mb-3 w-full rounded-xl border border-dashed border-emerald-300 bg-emerald-50/80 px-4 py-3 text-left font-sans text-sm font-semibold text-emerald-900 transition hover:bg-emerald-50 disabled:opacity-50 sm:w-auto"
-            >
-              Run demo task — goal &amp; budget filled automatically
-            </motion.button>
             <div className="mb-3 flex gap-2 rounded-lg border border-emerald-100 bg-emerald-50/60 px-3 py-2.5">
               <InfoCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
               <p className="font-sans text-xs leading-relaxed text-slate-700">
