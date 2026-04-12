@@ -21,6 +21,22 @@ function logToolApi(tool: string, detail: string) {
   console.error(`[KiteDesk|tool] ${tool}`, detail)
 }
 
+function requireTavilyApiKey(): string {
+  const k = process.env.TAVILY_API_KEY?.trim()
+  if (!k) {
+    throw new HttpError('TAVILY_API_KEY is not configured', 503)
+  }
+  return k
+}
+
+function requireFirecrawlApiKey(): string {
+  const k = process.env.FIRECRAWL_API_KEY?.trim()
+  if (!k) {
+    throw new HttpError('FIRECRAWL_API_KEY is not configured', 503)
+  }
+  return k
+}
+
 /** Structured x402 trace for demos (used from agentOrchestrator.executeX402Tool) */
 export const x402FlowDebug = {
   apiCallStart(phase: 'first_pass' | 'retry', url: string, hasXPayment: boolean) {
@@ -33,7 +49,11 @@ export const x402FlowDebug = {
     console.error('[KiteDesk|x402]', '402_detected', { acceptsLength, error })
   },
   paymentDecision(payload: {
-    action: 'proceed_to_pay' | 'skip_budget' | 'insufficient_agent_balance' | 'build_x_payment'
+    action:
+      | 'proceed_to_pay'
+      | 'skip_budget'
+      | 'insufficient_agent_balance'
+      | 'build_x_payment'
     priceUsdt?: number
     accumulatedUsdt?: number
     budgetUsdt?: number
@@ -63,7 +83,11 @@ export const x402FlowDebug = {
     })
   },
   unexpectedFirstStatus(status: number, preview: string) {
-    console.error('[KiteDesk|x402]', 'unexpected_response', { phase: 'first_pass', status, preview })
+    console.error('[KiteDesk|x402]', 'unexpected_response', {
+      phase: 'first_pass',
+      status,
+      preview,
+    })
   },
 } as const
 
@@ -76,12 +100,11 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
       try {
         console.error('[KiteDesk|x402]', 'tool_registry_web_search', {
           path: 'direct_tavily_fallback',
-          note:
-            'Goal mode never uses this path — orchestrator calls fetchX402Search(INTERNAL_API_BASE_URL + /api/x402/search)',
+          note: 'Goal mode never uses this path — orchestrator calls fetchX402Search(INTERNAL_API_BASE_URL + /api/x402/search)',
           inputChars: input.length,
         })
         logToolApi('web_search', 'Tavily search start')
-        const client = tavily({ apiKey: process.env.TAVILY_API_KEY! })
+        const client = tavily({ apiKey: requireTavilyApiKey() })
         const response = await client.search(input, {
           searchDepth: 'basic',
           maxResults: 5,
@@ -112,7 +135,7 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
     execute: async (input) => {
       try {
         logToolApi('news_fetch', 'Tavily news start')
-        const client = tavily({ apiKey: process.env.TAVILY_API_KEY! })
+        const client = tavily({ apiKey: requireTavilyApiKey() })
         const response = await client.search(input, {
           searchDepth: 'basic',
           topic: 'news',
@@ -141,7 +164,7 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
     execute: async (input) => {
       try {
         logToolApi('price_check', 'Tavily price search start')
-        const client = tavily({ apiKey: process.env.TAVILY_API_KEY! })
+        const client = tavily({ apiKey: requireTavilyApiKey() })
         const response = await client.search(`${input} price buy 2026`, {
           searchDepth: 'advanced',
           maxResults: 6,
@@ -167,7 +190,7 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
     execute: async (input) => {
       try {
         logToolApi('competitor_analysis', 'Tavily competitors start')
-        const client = tavily({ apiKey: process.env.TAVILY_API_KEY! })
+        const client = tavily({ apiKey: requireTavilyApiKey() })
         const response = await client.search(
           `${input} alternatives competitors comparison`,
           {
@@ -196,11 +219,12 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
     execute: async (input) => {
       try {
         logToolApi('deep_read', 'Firecrawl scrape POST start')
+        const fcKey = requireFirecrawlApiKey()
         const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${process.env.FIRECRAWL_API_KEY}`,
+            Authorization: `Bearer ${fcKey}`,
           },
           body: JSON.stringify({
             url: input.startsWith('http') ? input : `https://${input}`,

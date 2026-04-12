@@ -57,7 +57,10 @@ export async function verifyPaymentTransaction(
   const user = ethers.getAddress(userAddress)
 
   if (!tx.from || ethers.getAddress(tx.from) !== user) {
-    throw new HttpError('Payment transaction must be sent from the connected wallet', 400)
+    throw new HttpError(
+      'Payment transaction must be sent from the connected wallet',
+      400
+    )
   }
 
   const usdt = CONTRACTS.usdt

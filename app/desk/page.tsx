@@ -3,9 +3,9 @@ import type { Metadata } from 'next'
 import { KiteDeskApp } from '@/components/KiteDeskApp'
 
 export const metadata: Metadata = {
-  title: 'Console — KiteDesk',
+  title: 'Console',
   description:
-    'Connect MetaMask, pay USDT on Kite testnet, run AI tasks, and view attestations.',
+    'Fund a USDT budget on Kite testnet; the agent plans, pays APIs via x402 on the execution path, and attests on-chain.',
 }
 
 export default function DeskPage() {

@@ -1,5 +1,12 @@
 // KiteDesk | 404 — same brand as landing (logo, fonts, emerald CTAs)
+import type { Metadata } from 'next'
 import Link from 'next/link'
+
+export const metadata: Metadata = {
+  title: 'Page not found · KiteDesk',
+  description: 'The page you requested does not exist.',
+  robots: { index: false, follow: false },
+}
 import { KitedeskLogoMark } from '@/components/landing/KitedeskLogoMark'
 import { brandPrimaryCtaMarketing, brandSecondaryCtaMarketing } from '@/lib/brand'
 

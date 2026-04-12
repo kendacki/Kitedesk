@@ -7,21 +7,21 @@ graph TD
     UserGoal["User Goal & Budget"] --> Agent["Goal Agent Orchestrator"]
     Agent --> ResourceCall["API Resource Call"]
     ResourceCall --> Response{Response?}
-    
+
     Response -- "200 OK" --> Synthesis["Synthesis & Attestation"]
     Response -- "402 Payment Required" --> Extract["Extract Terms (Amount/PayTo)"]
-    
+
     Extract --> BudgetCheck{Within Budget?}
     BudgetCheck -- "No" --> Bounced["Execution Bounced"]
     BudgetCheck -- "Yes" --> Pay["EIP-3009 Authorization"]
-    
+
     Pay --> Facilitator["Pieverse Facilitator Settlement"]
     Facilitator --> Retry["Retry with X-Payment Header"]
     Retry --> PremiumData["Premium Data Retrieved"]
     PremiumData --> Synthesis
-    
+
     Synthesis --> OnChain["Immutable On-Chain Attestation"]
-    
+
     style UserGoal fill:#f9f,stroke:#333,stroke-width:2px
     style OnChain fill:#00ff00,stroke:#333,stroke-width:2px
     style Bounced fill:#ff9999,stroke:#333,stroke-width:2px
@@ -29,7 +29,7 @@ graph TD
 
 ## Why This Matters
 
-Agents that can transact are fundamentally different from agents that only generate text. When an agent holds economic constraints and can choose to pay for access, it participates in real markets—not a simulated chat. The x402 cycle—**402 received → cost evaluated against budget → payment authorized → request retried with proof**—is observable agentic commerce: the same pattern HTTP 402 was designed for, now wired to programmatic settlement on-chain. KiteDesk makes that loop concrete for judges: live budget enforcement, real facilitator settlement, and a chain record of what ran and what was paid.
+Agents that can transact are fundamentally different from agents that only generate text. When an agent holds economic constraints and can choose to pay for access, it participates in real markets—not a simulated chat. The x402 cycle—**402 received → cost evaluated against budget → payment authorized → request retried with proof**—is observable agentic commerce: the same pattern HTTP 402 was designed for, now wired to programmatic settlement on-chain. KiteDesk makes that loop concrete in a live demo: budget enforcement, facilitator settlement, and a chain record of what ran and what was paid.
 
 ## Live Demo
 
@@ -64,16 +64,16 @@ KiteDesk implements a fully autonomous commerce loop that is observable via the 
 
 ## Tech Stack
 
-| Layer        | Choice                                                                 |
-| ------------ | ---------------------------------------------------------------------- |
-| Frontend     | Next.js 14 (App Router), TypeScript, Tailwind CSS, Framer Motion       |
-| Chain        | Kite AI Testnet (chain ID **2368**), ethers.js v6, MetaMask            |
+| Layer        | Choice                                                                            |
+| ------------ | --------------------------------------------------------------------------------- |
+| Frontend     | Next.js 14 (App Router), TypeScript, Tailwind CSS, Framer Motion                  |
+| Chain        | Kite AI Testnet (chain ID **2368**), ethers.js v6, MetaMask                       |
 | User funding | Testnet USDT; gasless user transfers via Kite relayer (EIP-3009) where configured |
-| x402         | HTTP 402 challenges, **X-Payment** payloads, **Pieverse facilitator** settle |
-| Agent        | Groq (`groq-sdk`), planner + tool registry, server-side orchestration  |
-| Data         | Supabase (Postgres) for payment claim replay protection and history    |
-| Contracts    | Solidity 0.8.20, `KiteDeskAttestations` (Hardhat)                        |
-| Deploy       | Vercel (recommended)                                                   |
+| x402         | HTTP 402 challenges, **X-Payment** payloads, **Pieverse facilitator** settle      |
+| Agent        | Groq (`groq-sdk`), planner + tool registry, server-side orchestration             |
+| Data         | Supabase (Postgres) for payment claim replay protection and history               |
+| Contracts    | Solidity 0.8.20, `KiteDeskAttestations` (Hardhat)                                 |
+| Deploy       | Vercel (recommended)                                                              |
 
 ## x402 Integration Details
 
@@ -90,6 +90,24 @@ KiteDesk implements a fully autonomous commerce loop that is observable via the 
 4. Run the Supabase migration `supabase/migrations/001_kitedesk_tasks.sql` in the SQL editor for replay-safe payment claims and history.
 5. Start the app: `npm run dev` and open `http://localhost:3000` (use `/desk` for the full console).
 6. Optional hardening before ship: `npm run validate`. Compile and deploy attestations: `npm run compile:contracts` and `npm run deploy:contracts`, then paste the contract address into `.env.local`.
+
+## Ship checklist (hackathon / production)
+
+| Step                                          | Command or action                                                                                   |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Install                                       | `npm ci`                                                                                            |
+| Format (CI parity)                            | `npm run format:check`                                                                              |
+| Lint + build (CI parity)                      | `npm run ship`                                                                                      |
+| Chain + deployed contracts                    | `npm run verify:chain` (RPC, chain **2368**, USDT + attestation bytecode)                           |
+| Full gate (needs filled `.env.local` + chain) | `npm run validate`                                                                                  |
+| Vercel env                                    | Set all vars from `.env.example`; **`NEXT_PUBLIC_APP_URL`** = canonical HTTPS origin                |
+| Agent wallet                                  | Fund **`ATTESTATION_SIGNER_PRIVATE_KEY`** address with KITE + USDT; `npm run print:agent-wallet`    |
+| Supabase                                      | Run `supabase/migrations/001_kitedesk_tasks.sql` (or task history + replay protection stay limited) |
+| Demo                                          | `/` marketing, **`/desk`** wallet + goal agent + fixed-price tasks                                  |
+
+Copy-paste checklist: [docs/CHECKLIST.md](docs/CHECKLIST.md).
+
+Without Supabase, the app still runs: payment verification and agent execution work; the API uses an **in-memory** payment-claim and history store (fine for **local `next dev`**; on **Vercel** use Supabase so replay protection and `/api/history` stay consistent across instances). **Task history** on `/desk` still merges **browser local storage** with server entries when available.
 
 ## On-Chain Attestation
 

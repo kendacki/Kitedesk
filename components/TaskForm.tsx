@@ -23,6 +23,9 @@ const CLASSIC_PLACEHOLDERS: Record<Exclude<TaskType, 'goal'>, string> = {
 
 const GOAL_PLACEHOLDER = 'e.g. Find the best GPU under $500 and write a buying guide'
 
+const DEMO_GOAL_TEXT = 'Find fintech AI agent trends'
+const DEMO_BUDGET_USDT = 0.2
+
 function InfoCircleIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -106,7 +109,7 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
     >
       <div className="w-full">
         <p className="mb-3 text-center font-sans text-xs font-semibold uppercase tracking-widest text-emerald-800 sm:text-left">
-          Task type
+          Primary mode — Agentic Commerce
         </p>
         <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3 sm:items-stretch">
           <motion.button
@@ -144,7 +147,7 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
               Describe any goal. Agent plans, picks tools, and executes autonomously.
             </p>
             <p className="mt-2 font-sans text-xs font-medium text-emerald-800">
-              Pay your budget - agent spends only what&apos;s needed
+              Fund a budget cap — the agent buys API access via x402 inside that cap
             </p>
           </motion.button>
 
@@ -191,8 +194,9 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
         </div>
         {taskType === 'goal' ? (
           <p className="mt-3 max-w-3xl font-sans text-xs leading-relaxed text-slate-500">
-            Agent autonomously discovers, evaluates, and pays for APIs using x402 protocol - no
-            human approval needed
+            Goal mode: the agent hits paid APIs, settles x402 autonomously when a 402
+            appears, and only proceeds when cost ≤ remaining budget — no second human
+            approval for each API purchase.
           </p>
         ) : null}
       </div>
@@ -206,10 +210,25 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
             >
               Goal
             </label>
+            <motion.button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                setTaskType('goal')
+                setGoalText(DEMO_GOAL_TEXT)
+                setBudgetUsdt(DEMO_BUDGET_USDT)
+              }}
+              whileHover={{ scale: busy ? 1 : 1.01 }}
+              whileTap={{ scale: busy ? 1 : 0.99 }}
+              className="mb-3 w-full rounded-xl border border-dashed border-emerald-300 bg-emerald-50/80 px-4 py-3 text-left font-sans text-sm font-semibold text-emerald-900 transition hover:bg-emerald-50 disabled:opacity-50 sm:w-auto"
+            >
+              Run demo task — goal &amp; budget filled automatically
+            </motion.button>
             <div className="mb-3 flex gap-2 rounded-lg border border-emerald-100 bg-emerald-50/60 px-3 py-2.5">
               <InfoCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
               <p className="font-sans text-xs leading-relaxed text-slate-700">
-                Agent pays per API call via x402 - budget is enforced autonomously
+                Core execution path: agent pays APIs via x402 when required; your budget
+                is the hard ceiling.
               </p>
             </div>
             <textarea
@@ -236,9 +255,12 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
               min={0.1}
               max={2}
               step={0.05}
-              value={budgetUsdt}
+              value={Number.isFinite(budgetUsdt) ? budgetUsdt : 0.5}
               disabled={busy}
-              onChange={(e) => setBudgetUsdt(parseFloat(e.target.value))}
+              onChange={(e) => {
+                const v = parseFloat(e.target.value)
+                setBudgetUsdt(Number.isFinite(v) ? Math.min(2, Math.max(0.1, v)) : 0.5)
+              }}
               className="h-2 w-full cursor-pointer accent-emerald-600 disabled:opacity-60"
               aria-label="Budget in USDT"
             />
@@ -276,19 +298,24 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
         ) : (
           <PriceTag taskType={taskType} />
         )}
-        <motion.button
-          type="submit"
-          disabled={submitDisabled}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className={`${brandPrimaryButton} w-full sm:min-h-0 sm:w-auto`}
-        >
-          {busy
-            ? 'Working…'
-            : taskType === 'goal'
-              ? 'Launch Agentic Commerce'
-              : 'Pay and run agent'}
-        </motion.button>
+        <div className="flex w-full flex-col items-stretch gap-2 sm:items-end">
+          <motion.button
+            type="submit"
+            disabled={submitDisabled}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className={`${brandPrimaryButton} w-full sm:min-h-0 sm:w-auto`}
+          >
+            {busy
+              ? 'Working…'
+              : taskType === 'goal'
+                ? 'Launch Agentic Commerce'
+                : 'Pay and run agent'}
+          </motion.button>
+          <p className="max-w-md text-center font-sans text-xs leading-relaxed text-slate-500 sm:text-right">
+            Agent plans, pays APIs via x402 when required, and stays under your budget.
+          </p>
+        </div>
       </div>
     </motion.form>
   )

@@ -2,8 +2,13 @@
   "name": "kitedesk",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
+    "clean:next": "node scripts/clean-next.cjs",
+    "dev:clean": "node scripts/clean-next.cjs && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -16,6 +21,7 @@
     "verify:chain": "node scripts/verify-kitedesk.cjs",
     "verify:backend": "node scripts/verify-backend.cjs",
     "simulate": "npm run verify:chain && npm run verify:backend",
+    "ship": "npm run lint && npm run build",
     "validate": "npm run format:check && npm run lint && npm run simulate && npm run build",
     "logo:assets": "node scripts/generate-logo-assets.cjs",
     "test:goal": "tsx scripts/test-goal-agent.ts",

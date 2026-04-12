@@ -20,22 +20,34 @@ const md: Partial<Components> = {
     </h1>
   ),
   h2: ({ children, ...props }) => (
-    <h2 className="mt-4 font-sans text-base font-bold text-slate-900 first:mt-0" {...props}>
+    <h2
+      className="mt-4 font-sans text-base font-bold text-slate-900 first:mt-0"
+      {...props}
+    >
       {children}
     </h2>
   ),
   h3: ({ children, ...props }) => (
-    <h3 className="mt-3 font-sans text-sm font-semibold text-slate-900 first:mt-0" {...props}>
+    <h3
+      className="mt-3 font-sans text-sm font-semibold text-slate-900 first:mt-0"
+      {...props}
+    >
       {children}
     </h3>
   ),
   h4: ({ children, ...props }) => (
-    <h4 className="mt-3 font-sans text-sm font-semibold text-slate-800 first:mt-0" {...props}>
+    <h4
+      className="mt-3 font-sans text-sm font-semibold text-slate-800 first:mt-0"
+      {...props}
+    >
       {children}
     </h4>
   ),
   p: ({ children, ...props }) => (
-    <p className="my-2 font-sans text-sm leading-relaxed text-slate-800 last:mb-0" {...props}>
+    <p
+      className="my-2 font-sans text-sm leading-relaxed text-slate-800 last:mb-0"
+      {...props}
+    >
       {children}
     </p>
   ),
@@ -50,12 +62,18 @@ const md: Partial<Components> = {
     </em>
   ),
   ul: ({ children, ...props }) => (
-    <ul className="my-2 list-disc space-y-1 pl-5 font-sans text-sm text-slate-800" {...props}>
+    <ul
+      className="my-2 list-disc space-y-1 pl-5 font-sans text-sm text-slate-800"
+      {...props}
+    >
       {children}
     </ul>
   ),
   ol: ({ children, ...props }) => (
-    <ol className="my-2 list-decimal space-y-1 pl-5 font-sans text-sm text-slate-800" {...props}>
+    <ol
+      className="my-2 list-decimal space-y-1 pl-5 font-sans text-sm text-slate-800"
+      {...props}
+    >
       {children}
     </ol>
   ),
@@ -89,7 +107,10 @@ const md: Partial<Components> = {
   },
   table: ({ children, ...props }) => (
     <div className="my-3 overflow-x-auto rounded-lg border border-slate-200">
-      <table className="w-full min-w-[520px] border-collapse font-sans text-xs sm:text-sm" {...props}>
+      <table
+        className="w-full min-w-[520px] border-collapse font-sans text-xs sm:text-sm"
+        {...props}
+      >
         {children}
       </table>
     </div>
@@ -99,8 +120,16 @@ const md: Partial<Components> = {
       {children}
     </thead>
   ),
-  tbody: ({ children, ...props }) => <tbody className="divide-y divide-slate-100 bg-white" {...props}>{children}</tbody>,
-  tr: ({ children, ...props }) => <tr className="border-b border-slate-100 last:border-0" {...props}>{children}</tr>,
+  tbody: ({ children, ...props }) => (
+    <tbody className="divide-y divide-slate-100 bg-white" {...props}>
+      {children}
+    </tbody>
+  ),
+  tr: ({ children, ...props }) => (
+    <tr className="border-b border-slate-100 last:border-0" {...props}>
+      {children}
+    </tr>
+  ),
   th: ({ children, ...props }) => (
     <th className="whitespace-normal px-3 py-2 font-semibold text-slate-900" {...props}>
       {children}
@@ -132,7 +161,10 @@ const md: Partial<Components> = {
       )
     }
     return (
-      <code className={`font-mono text-xs text-slate-100 ${className || ''}`} {...props}>
+      <code
+        className={`font-mono text-xs text-slate-100 ${className || ''}`}
+        {...props}
+      >
         {children}
       </code>
     )

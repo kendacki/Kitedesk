@@ -6,16 +6,86 @@ function normalizeHash(hash: string): string {
   return hash.trim().toLowerCase()
 }
 
+export type TaskHistoryRow = {
+  task_id: string
+  task_type: string
+  prompt_preview: string
+  attestation_url: string
+  completed_at: string
+}
+
+/** In-process store when Supabase is unset (local dev / single-instance only; not durable across restarts or serverless cold starts). */
+const memoryPendingUserByPaymentHash = new Map<string, string>()
+const memoryCompletedPaymentHashes = new Set<string>()
+const memoryCompletedRowsByUser = new Map<string, TaskHistoryRow[]>()
+let loggedMemoryStoreNotice = false
+
+function logMemoryStoreOnce() {
+  if (loggedMemoryStoreNotice) return
+  loggedMemoryStoreNotice = true
+  console.error(
+    '[KiteDesk] Using in-memory task store (Supabase unset). OK for local dev; use Supabase in production for replay-safe history.'
+  )
+}
+
+function claimPaymentTransactionMemory(
+  paymentTxHash: string,
+  userAddress: string
+): void {
+  logMemoryStoreOnce()
+  const hash = normalizeHash(paymentTxHash)
+  const user = userAddress.toLowerCase()
+  if (memoryCompletedPaymentHashes.has(hash)) {
+    throw new HttpError('Payment already consumed', 400)
+  }
+  if (memoryPendingUserByPaymentHash.has(hash)) {
+    throw new HttpError('Payment already consumed', 400)
+  }
+  memoryPendingUserByPaymentHash.set(hash, user)
+}
+
+function releasePaymentClaimMemory(paymentTxHash: string): void {
+  const hash = normalizeHash(paymentTxHash)
+  memoryPendingUserByPaymentHash.delete(hash)
+}
+
+function completePaymentTaskMemory(
+  paymentTxHash: string,
+  row: {
+    taskId: string
+    taskType: string
+    promptPreview: string
+    attestationUrl: string
+  }
+): void {
+  const hash = normalizeHash(paymentTxHash)
+  const user = memoryPendingUserByPaymentHash.get(hash)
+  if (!user) {
+    throw new HttpError('Task claim out of sync; try again with a new payment', 500)
+  }
+  memoryPendingUserByPaymentHash.delete(hash)
+  memoryCompletedPaymentHashes.add(hash)
+  const completedAt = new Date().toISOString()
+  const historyRow: TaskHistoryRow = {
+    task_id: row.taskId,
+    task_type: row.taskType,
+    prompt_preview: row.promptPreview,
+    attestation_url: row.attestationUrl,
+    completed_at: completedAt,
+  }
+  const list = memoryCompletedRowsByUser.get(user) ?? []
+  list.unshift(historyRow)
+  memoryCompletedRowsByUser.set(user, list.slice(0, 500))
+}
+
 export async function claimPaymentTransaction(
   paymentTxHash: string,
   userAddress: string
 ): Promise<void> {
   const supabase = getSupabaseAdmin()
   if (!supabase) {
-    throw new HttpError(
-      'Server storage is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.',
-      503
-    )
+    claimPaymentTransactionMemory(paymentTxHash, userAddress)
+    return
   }
   const hash = normalizeHash(paymentTxHash)
   const { error } = await supabase.from('kitedesk_tasks').insert({
@@ -33,7 +103,10 @@ export async function claimPaymentTransaction(
 
 export async function releasePaymentClaim(paymentTxHash: string): Promise<void> {
   const supabase = getSupabaseAdmin()
-  if (!supabase) return
+  if (!supabase) {
+    releasePaymentClaimMemory(paymentTxHash)
+    return
+  }
   const hash = normalizeHash(paymentTxHash)
   await supabase
     .from('kitedesk_tasks')
@@ -53,10 +126,8 @@ export async function completePaymentTask(
 ): Promise<void> {
   const supabase = getSupabaseAdmin()
   if (!supabase) {
-    throw new HttpError(
-      'Server storage is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.',
-      503
-    )
+    completePaymentTaskMemory(paymentTxHash, row)
+    return
   }
   const hash = normalizeHash(paymentTxHash)
   const { data, error } = await supabase
@@ -81,20 +152,15 @@ export async function completePaymentTask(
   }
 }
 
-export type TaskHistoryRow = {
-  task_id: string
-  task_type: string
-  prompt_preview: string
-  attestation_url: string
-  completed_at: string
-}
-
 export async function fetchCompletedTasksForUser(
   userAddress: string,
   limit = 10
 ): Promise<TaskHistoryRow[]> {
   const supabase = getSupabaseAdmin()
-  if (!supabase) return []
+  if (!supabase) {
+    const rows = memoryCompletedRowsByUser.get(userAddress.toLowerCase()) ?? []
+    return rows.slice(0, limit)
+  }
   const { data, error } = await supabase
     .from('kitedesk_tasks')
     .select('task_id, task_type, prompt_preview, attestation_url, completed_at')

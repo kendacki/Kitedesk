@@ -20,11 +20,11 @@ export function MobileLandingDock() {
         >
           Top
         </button>
-        <a href="#product" className={itemClass}>
-          Product
-        </a>
         <a href="#how" className={itemClass}>
           Flow
+        </a>
+        <a href="#commerce" className={itemClass}>
+          Commerce
         </a>
         <Link href="/desk" className={`${itemClass} text-emerald-800`} prefetch>
           Console

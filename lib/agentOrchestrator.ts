@@ -11,7 +11,9 @@ import type { AgentStep, GoalResult, ToolName } from '@/types'
 
 const DEFAULT_MODEL = 'openai/gpt-oss-120b'
 
-const ERC20_BALANCE_ABI = ['function balanceOf(address owner) view returns (uint256)'] as const
+const ERC20_BALANCE_ABI = [
+  'function balanceOf(address owner) view returns (uint256)',
+] as const
 
 const PLANNER_SYSTEM_PROMPT = `You are an autonomous economic agent with access to real external APIs.
 Your job: achieve the user's goal with minimum cost while staying within budget.
@@ -241,7 +243,9 @@ export async function executeX402Tool(
   x402FlowDebug.responseStatus('first_pass', first.status)
 
   if (first.status === 200) {
-    agentLog('Expected 402 on first request — got 200 (refusing free path)', { stepLabel: label })
+    agentLog('Expected 402 on first request — got 200 (refusing free path)', {
+      stepLabel: label,
+    })
     return {
       ok: false,
       error:
@@ -301,10 +305,17 @@ export async function executeX402Tool(
     return { ok: false, error: 'Could not derive price from 402 maxAmountRequired' }
   }
 
-  agentLog(`Cost: ${priceUsdt.toFixed(4)} USDT (from 402)`, { budgetUsdt, accumulatedUsdt })
+  agentLog(`Cost: ${priceUsdt.toFixed(4)} USDT (from 402)`, {
+    budgetUsdt,
+    accumulatedUsdt,
+  })
 
   if (accumulatedUsdt + priceUsdt > budgetUsdt) {
-    agentLog('Over budget — skipping x402 payment', { priceUsdt, budgetUsdt, accumulatedUsdt })
+    agentLog('Over budget — skipping x402 payment', {
+      priceUsdt,
+      budgetUsdt,
+      accumulatedUsdt,
+    })
     x402FlowDebug.paymentDecision({
       action: 'skip_budget',
       priceUsdt,
@@ -338,7 +349,10 @@ export async function executeX402Tool(
       asset,
       detail: `balance ${formattedBalance} need ${formattedNeeded}`,
     })
-    console.error('[x402] agent wallet for settlement (fund this address for x402 USDT):', wallet.address)
+    console.error(
+      '[x402] agent wallet for settlement (fund this address for x402 USDT):',
+      wallet.address
+    )
     return {
       ok: false,
       error: `Agent wallet ${wallet.address} has insufficient testnet USDT balance. Fund it at https://faucet.gokite.ai — balance: ${formattedBalance}, needed: ${formattedNeeded}`,
@@ -364,7 +378,12 @@ export async function executeX402Tool(
 
   let xPayment: string
   try {
-    x402FlowDebug.paymentDecision({ action: 'build_x_payment', payTo, asset, priceUsdt })
+    x402FlowDebug.paymentDecision({
+      action: 'build_x_payment',
+      payTo,
+      asset,
+      priceUsdt,
+    })
     xPayment = await buildXPaymentHeaderForFacilitator(wallet, provider, {
       asset,
       payTo,
@@ -388,7 +407,9 @@ export async function executeX402Tool(
     })
   } catch (e) {
     x402FlowDebug.networkError('retry', e)
-    agentLog('Retry request failed', { error: e instanceof Error ? e.message : String(e) })
+    agentLog('Retry request failed', {
+      error: e instanceof Error ? e.message : String(e),
+    })
     const msg = e instanceof Error ? e.message : String(e)
     x402FlowDebug.retryResult({ status: 0, ok: false, errorPreview: msg })
     return { ok: false, error: msg }

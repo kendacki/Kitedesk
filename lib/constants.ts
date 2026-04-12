@@ -8,8 +8,7 @@ const envOr = (key: string, fallback: string): string => {
 }
 
 /** Kite testnet default USDT (PYUSD / test USD) when no contract env is set — same token as x402 default */
-const KITE_TESTNET_DEFAULT_USDT =
-  '0x0fF5393387ad2f9f691FD6Fd28e07E3969e27e63'
+const KITE_TESTNET_DEFAULT_USDT = '0x0fF5393387ad2f9f691FD6Fd28e07E3969e27e63'
 
 function resolveUsdtTokenAddress(): string {
   const candidates = [
@@ -99,7 +98,10 @@ export const CONTRACTS = {
 const X402_FACILITATOR_DEFAULT = 'https://facilitator.pieverse.io'
 
 function x402FacilitatorSettleUrl(): string {
-  const base = envOr('KITE_FACILITATOR_URL', X402_FACILITATOR_DEFAULT).replace(/\/$/, '')
+  const base = envOr('KITE_FACILITATOR_URL', X402_FACILITATOR_DEFAULT).replace(
+    /\/$/,
+    ''
+  )
   return base.endsWith('/v2/settle') ? base : `${base}/v2/settle`
 }
 

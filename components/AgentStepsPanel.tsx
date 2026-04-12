@@ -218,10 +218,7 @@ export function AgentStepsPanel({
 }: AgentStepsPanelProps) {
   const budget = Number.isFinite(budgetUsdt) ? budgetUsdt : 0
   const spent = Number.isFinite(totalSpentUsdt) ? totalSpentUsdt : 0
-  const pct =
-    budget > 0
-      ? Math.min(100, Math.round((spent / budget) * 1000) / 10)
-      : 0
+  const pct = budget > 0 ? Math.min(100, Math.round((spent / budget) * 1000) / 10) : 0
   const saved = Math.max(0, budget - spent)
   const rows = aggregateToolCosts(steps)
   const tableTotal = rows.reduce((s, r) => s + r.cost, 0)
@@ -240,13 +237,40 @@ export function AgentStepsPanel({
     <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-md shadow-slate-200/50 sm:p-6">
       <div className="mb-6 border-b border-slate-200 pb-4">
         <h3 className="font-sans text-sm font-semibold text-slate-900">
-          Agent execution trace
+          Agent execution timeline
         </h3>
         {showX402CommerceBanner ? (
           <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 font-sans text-xs leading-snug text-emerald-800">
-            Agent autonomously handled API payments via x402 protocol
+            Agentic commerce: the agent settles x402 on the execution path — no extra
+            human step between 402 and retry.
           </p>
         ) : null}
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 font-sans text-xs sm:text-sm">
+            <div className="font-medium uppercase tracking-wide text-slate-500">
+              Total budget
+            </div>
+            <div className="mt-0.5 font-semibold text-slate-900">
+              {formatUsdt(budget)} USDT
+            </div>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 font-sans text-xs sm:text-sm">
+            <div className="font-medium uppercase tracking-wide text-slate-500">
+              Total spent
+            </div>
+            <div className="mt-0.5 font-semibold text-slate-900">
+              {formatUsdt(spent)} USDT
+            </div>
+          </div>
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 px-3 py-2 font-sans text-xs sm:text-sm">
+            <div className="font-medium uppercase tracking-wide text-emerald-800">
+              Saved
+            </div>
+            <div className="mt-0.5 font-semibold text-emerald-950">
+              {formatUsdt(savings)} USDT
+            </div>
+          </div>
+        </div>
         <div className="mt-3">
           <div className="mb-1 flex justify-between font-sans text-xs text-slate-600 sm:text-sm">
             <span>
@@ -330,7 +354,9 @@ export function AgentStepsPanel({
                   </span>
                 ) : null}
               </div>
-              {step.toolCall?.paymentStatus === 'paid_via_x402' ? <X402FlowSequence /> : null}
+              {step.toolCall?.paymentStatus === 'paid_via_x402' ? (
+                <X402FlowSequence />
+              ) : null}
               {step.toolCall &&
               (step.toolCall.paymentStatus === 'paid_via_x402' ||
                 step.toolCall.paymentStatus === 'budget_exceeded') ? (
@@ -394,13 +420,33 @@ export function AgentStepsPanel({
       </motion.ol>
 
       {skippedTools && skippedTools.length > 0 ? (
-        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 font-sans text-xs text-amber-800">
-          {`Agent skipped ${skippedTools.join(', ')} to stay within budget — saved $${savings.toFixed(2)} USDT`}
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 font-sans text-xs text-amber-900">
+          <p className="font-semibold">
+            Agent skipped expensive APIs to stay within budget.
+          </p>
+          <p className="mt-1 text-amber-800/95">
+            Skipped: {skippedTools.join(', ')} — budget savings {formatUsdt(savings)}{' '}
+            USDT
+          </p>
         </div>
       ) : null}
 
       {finalOutput ? (
         <div className="mt-6">
+          {typeof x402PaymentsCount === 'number' &&
+          x402PaymentsCount > 0 &&
+          Number.isFinite(x402PaymentsCount) ? (
+            <div className="mb-4 rounded-xl border-2 border-emerald-400 bg-gradient-to-br from-emerald-50 to-white px-4 py-3 shadow-sm sm:px-5 sm:py-4">
+              <p className="font-sans text-sm font-semibold text-emerald-950">
+                {x402PaymentsCount === 1
+                  ? '1 API access purchase completed without human approval (x402).'
+                  : `${x402PaymentsCount} API access purchases completed without human approval (x402).`}
+              </p>
+              <p className="mt-1.5 font-sans text-xs leading-relaxed text-emerald-900/90">
+                The agent acted as the buyer: 402 → pay → retry → result.
+              </p>
+            </div>
+          ) : null}
           <h4 className="mb-2 font-sans text-xs font-semibold uppercase tracking-widest text-emerald-800">
             Final output
           </h4>
@@ -411,7 +457,7 @@ export function AgentStepsPanel({
       {steps.length > 0 ? (
         <div className="mt-6 border-t border-slate-200 pt-4">
           <h4 className="mb-3 font-sans text-xs font-semibold uppercase tracking-widest text-slate-600">
-            Cost summary
+            Cost breakdown (by tool)
           </h4>
           {rows.length > 0 ? (
             <div className="overflow-x-auto rounded-xl border border-slate-200">
@@ -452,8 +498,8 @@ export function AgentStepsPanel({
           Number.isFinite(x402PaymentsCount) &&
           Number.isFinite(x402TotalPaidUsdt) ? (
             <p className="mt-3 font-sans text-sm text-slate-700">
-              x402 payments: {x402PaymentsCount} calls,{' '}
-              {x402TotalPaidUsdt.toFixed(4)} USDT paid autonomously
+              x402 payments: {x402PaymentsCount} calls, {x402TotalPaidUsdt.toFixed(4)}{' '}
+              USDT paid autonomously
             </p>
           ) : null}
           <p className="mt-3 font-sans text-sm text-slate-600">

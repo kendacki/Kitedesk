@@ -29,7 +29,8 @@ async function readErc20Decimals(token: ethers.Contract): Promise<number> {
 function getPlatformWallet(): string {
   const w =
     typeof process !== 'undefined'
-      ? process.env.NEXT_PUBLIC_PLATFORM_WALLET?.trim() || process.env.PLATFORM_WALLET?.trim()
+      ? process.env.NEXT_PUBLIC_PLATFORM_WALLET?.trim() ||
+        process.env.PLATFORM_WALLET?.trim()
       : undefined
   if (!w || !ethers.isAddress(w)) {
     throw new Error(

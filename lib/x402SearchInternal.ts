@@ -80,7 +80,9 @@ export async function executeX402SearchInternal(opts: {
         return { status: e.status, body: { error: e.message } }
       }
       const msg =
-        e instanceof Error ? e.message : 'x402 challenge could not be built (platform wallet?)'
+        e instanceof Error
+          ? e.message
+          : 'x402 challenge could not be built (platform wallet?)'
       return { status: 503, body: { error: msg } }
     }
   }

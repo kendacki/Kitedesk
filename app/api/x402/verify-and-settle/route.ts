@@ -24,11 +24,15 @@ export async function POST(req: NextRequest) {
   try {
     body = (await req.json()) as SettleRequestBody
   } catch {
-    return NextResponse.json({ success: false, error: 'Invalid JSON body' }, { status: 400 })
+    return NextResponse.json(
+      { success: false, error: 'Invalid JSON body' },
+      { status: 400 }
+    )
   }
 
   try {
-    const headerValue = typeof body.xPaymentHeader === 'string' ? body.xPaymentHeader : ''
+    const headerValue =
+      typeof body.xPaymentHeader === 'string' ? body.xPaymentHeader : ''
     if (!headerValue.trim()) {
       return NextResponse.json(
         { success: false, error: 'xPaymentHeader is required' },

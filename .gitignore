@@ -18,6 +18,9 @@ coverage/
 .env.*
 !.env.example
 
+# Local scratch / exports (do not ship)
+digest.txt
+
 # Misc
 .DS_Store
 *.pem

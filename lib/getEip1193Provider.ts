@@ -16,7 +16,9 @@ export function getPreferredEip1193Provider(): BrowserEip1193Provider | undefine
 
   const list = root.providers
   if (Array.isArray(list) && list.length > 0) {
-    const metaMask = list.find((p) => p?.isMetaMask === true && typeof p.request === 'function')
+    const metaMask = list.find(
+      (p) => p?.isMetaMask === true && typeof p.request === 'function'
+    )
     if (metaMask) return metaMask as BrowserEip1193Provider
     const first = list.find((p) => typeof p?.request === 'function')
     if (first) return first as BrowserEip1193Provider

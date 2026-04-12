@@ -81,7 +81,9 @@ function printOrchestratorNarrative(lines: string[]) {
   const joined = lines.join('\n')
   const had402 =
     joined.includes('402_detected') ||
-    (joined.includes('response_status') && joined.includes('"phase":"first_pass"') && joined.includes('402'))
+    (joined.includes('response_status') &&
+      joined.includes('"phase":"first_pass"') &&
+      joined.includes('402'))
   const hadPay =
     joined.includes('proceed_to_pay') ||
     joined.includes('build_x_payment') ||
@@ -92,16 +94,24 @@ function printOrchestratorNarrative(lines: string[]) {
 
   console.log('\n--- Interpretation ---')
   if (had402) console.log('  • 402: first pass reported HTTP 402 (payment required).')
-  else console.log('  • 402: no explicit "402" in captured logs (first pass may have been 200).')
-  if (hadPay) console.log('  • Payment: agent decided to pay (build X-Payment / settle path).')
-  if (retryOk) console.log('  • Retry: paid request completed (retry success or HTTP 200).')
-  else if (had402 && hadPay) console.log('  • Retry: check logs above — retry may have failed.')
+  else
+    console.log(
+      '  • 402: no explicit "402" in captured logs (first pass may have been 200).'
+    )
+  if (hadPay)
+    console.log('  • Payment: agent decided to pay (build X-Payment / settle path).')
+  if (retryOk)
+    console.log('  • Retry: paid request completed (retry success or HTTP 200).')
+  else if (had402 && hadPay)
+    console.log('  • Retry: check logs above — retry may have failed.')
 }
 
 function printStepDetail(s: AgentStep, index: number) {
   console.log(`\n  [Step ${index + 1}] #${s.stepNumber} ${s.description}`)
   const reasoning = typeof s.reasoning === 'string' ? s.reasoning : ''
-  console.log(`    reasoning: ${reasoning.slice(0, 220)}${reasoning.length > 220 ? '…' : ''}`)
+  console.log(
+    `    reasoning: ${reasoning.slice(0, 220)}${reasoning.length > 220 ? '…' : ''}`
+  )
   if (s.stepKind) console.log(`    stepKind: ${s.stepKind}`)
   const tc = s.toolCall
   if (!tc) return
@@ -128,10 +138,14 @@ function printX402SummaryFromResult(result: ExecuteGoalResult) {
   )
 
   if (paid.length > 0) {
-    console.log(`  Paid x402 path: ${paid.length} step(s), total tracked USDT: ${result.x402TotalPaidUsdt}`)
+    console.log(
+      `  Paid x402 path: ${paid.length} step(s), total tracked USDT: ${result.x402TotalPaidUsdt}`
+    )
     for (const s of paid) {
       const tc = s.toolCall!
-      console.log(`    - ${tc.toolName} cost ${tc.costUsdt} tx ${tc.x402TxHash ?? '(none)'}`)
+      console.log(
+        `    - ${tc.toolName} cost ${tc.costUsdt} tx ${tc.x402TxHash ?? '(none)'}`
+      )
     }
   } else {
     console.log('  No steps with paymentStatus=paid_via_x402.')
@@ -163,7 +177,9 @@ async function probeInternalX402Search(base: string): Promise<void> {
         '[test:goal] Probe: 402 Payment Required — endpoint reachable; x402 challenge flow can start.'
       )
     } else if (res.status === 200) {
-      console.log('[test:goal] Probe: 200 — server returned search without 402 for this query.')
+      console.log(
+        '[test:goal] Probe: 200 — server returned search without 402 for this query.'
+      )
     } else {
       console.log(
         `[test:goal] Probe body (first 400 chars): ${text.slice(0, 400)}${text.length > 400 ? '…' : ''}`
@@ -191,7 +207,10 @@ async function main() {
     process.exitCode = 1
     return
   }
-  console.log('[test:goal] Required env present:', REQUIRED_ENV.map((e) => e.key).join(', '))
+  console.log(
+    '[test:goal] Required env present:',
+    REQUIRED_ENV.map((e) => e.key).join(', ')
+  )
 
   let base: string
   try {
@@ -229,7 +248,9 @@ async function main() {
     console.log('Budget USDT:', budget)
 
     try {
-      const { result, lines } = await runWithOrchestratorLogs(() => executeGoal(goal, budget))
+      const { result, lines } = await runWithOrchestratorLogs(() =>
+        executeGoal(goal, budget)
+      )
 
       printOrchestratorNarrative(lines)
 
@@ -250,7 +271,9 @@ async function main() {
 
       console.log('\n--- Final output (first 400 chars) ---')
       const fo =
-        typeof result.finalOutput === 'string' ? result.finalOutput : String(result.finalOutput ?? '')
+        typeof result.finalOutput === 'string'
+          ? result.finalOutput
+          : String(result.finalOutput ?? '')
       console.log(fo.slice(0, 400).replace(/\s+/g, ' ') + (fo.length > 400 ? '…' : ''))
     } catch (e) {
       console.error('\n[test:goal] --- GOAL RUN FAILED ---')

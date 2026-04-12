@@ -1,9 +1,14 @@
-// KiteDesk | recent tasks from Supabase via API (light theme)
+// KiteDesk | recent tasks from Supabase API + browser-local fallback
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import useSWR from 'swr'
 import { TASK_CONFIG } from '@/lib/constants'
+import {
+  isKnownTaskType,
+  mergeTaskHistoryEntries,
+  readLocalTaskHistory,
+} from '@/lib/taskHistoryLocal'
 import type { TaskHistoryEntry, TaskType } from '@/types'
 
 function badgeClass(taskType: TaskType): string {
@@ -12,10 +17,23 @@ function badgeClass(taskType: TaskType): string {
       return 'border-emerald-200 bg-emerald-50 text-emerald-900'
     case 'code_review':
       return 'border-emerald-300 bg-emerald-50 text-emerald-900'
+    case 'content_gen':
+      return 'border-teal-200 bg-teal-50 text-teal-900'
     case 'goal':
       return 'border-violet-200 bg-violet-50 text-violet-900'
     default:
       return 'border-slate-200 bg-slate-100 text-slate-800'
+  }
+}
+
+function isSafeExplorerUrl(url: string): boolean {
+  const t = url.trim()
+  if (!t) return false
+  try {
+    const u = new URL(t)
+    return u.protocol === 'https:' || u.protocol === 'http:'
+  } catch {
+    return false
   }
 }
 
@@ -54,11 +72,27 @@ export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps
     if (userAddress) void mutate()
   }, [refreshSignal, userAddress, mutate])
 
+  const localEntries = useMemo(() => {
+    void refreshSignal
+    return userAddress ? readLocalTaskHistory(userAddress) : []
+  }, [userAddress, refreshSignal])
+
+  const mergedEntries = useMemo(
+    () => mergeTaskHistoryEntries(data?.entries ?? [], localEntries),
+    [data?.entries, localEntries]
+  )
+
+  const showBrowserFallbackHint =
+    !isLoading &&
+    mergedEntries.length > 0 &&
+    localEntries.length > 0 &&
+    (error || (Array.isArray(data?.entries) && data.entries.length === 0))
+
   if (!userAddress) {
     return null
   }
 
-  if (isLoading && !data) {
+  if (isLoading && !data && mergedEntries.length === 0) {
     return (
       <div className="mt-8">
         <div className="mb-3 h-4 w-28 animate-pulse rounded bg-slate-200" aria-hidden />
@@ -74,7 +108,7 @@ export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps
     )
   }
 
-  if (error) {
+  if (error && mergedEntries.length === 0) {
     return (
       <div
         className="mt-8 rounded-xl border border-amber-200 bg-amber-50 p-4 font-sans text-sm text-amber-950"
@@ -85,12 +119,13 @@ export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps
     )
   }
 
-  const entries = data?.entries ?? []
+  const entries = mergedEntries.filter((e) => isKnownTaskType(e.taskType))
 
   if (entries.length === 0) {
     return (
       <div className="mt-8 rounded-2xl border border-dashed border-slate-200 p-4 text-center font-sans text-sm text-slate-500 sm:p-6">
-        Completed tasks will appear here with attestation links.
+        Completed tasks will appear here with attestation links. They are also saved in
+        this browser after each run.
       </div>
     )
   }
@@ -100,6 +135,13 @@ export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps
       <h3 className="mb-3 font-sans text-sm font-semibold text-slate-900">
         Recent tasks
       </h3>
+      {showBrowserFallbackHint ? (
+        <p className="mb-3 font-sans text-xs text-slate-600" role="status">
+          {error
+            ? 'Server history unavailable — showing tasks saved in this browser.'
+            : 'No server-side history yet — showing tasks saved in this browser. Configure Supabase to sync across devices.'}
+        </p>
+      ) : null}
       <ul className="space-y-2">
         {entries.map((e) => (
           <li
@@ -123,14 +165,23 @@ export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps
                   timeStyle: 'short',
                 })}
               </span>
-              <a
-                href={e.attestationUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-emerald-800 transition hover:text-emerald-900 hover:underline"
-              >
-                Attestation
-              </a>
+              {isSafeExplorerUrl(e.attestationUrl) ? (
+                <a
+                  href={e.attestationUrl.trim()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-emerald-800 transition hover:text-emerald-900 hover:underline"
+                >
+                  Attestation
+                </a>
+              ) : (
+                <span
+                  className="font-medium text-slate-400"
+                  title="No valid explorer link"
+                >
+                  No link
+                </span>
+              )}
             </div>
           </li>
         ))}

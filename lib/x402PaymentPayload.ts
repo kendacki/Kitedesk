@@ -39,7 +39,11 @@ export function parseXPaymentHeader(raw: string): ParsedXPayment {
   const o = parsed as Record<string, unknown>
   const authorization = o.authorization
   const signature = o.signature
-  if (authorization === undefined || authorization === null || typeof authorization !== 'object') {
+  if (
+    authorization === undefined ||
+    authorization === null ||
+    typeof authorization !== 'object'
+  ) {
     throw new Error('Missing authorization in X-PAYMENT payload')
   }
   if (typeof signature !== 'string' || !signature.startsWith('0x')) {
@@ -58,7 +62,8 @@ export function parseXPaymentHeader(raw: string): ParsedXPayment {
   if (!value || !/^\d+$/.test(value)) {
     throw new Error('Invalid value in authorization')
   }
-  const asset = typeof o.asset === 'string' && isHexAddress(o.asset) ? o.asset : undefined
+  const asset =
+    typeof o.asset === 'string' && isHexAddress(o.asset) ? o.asset : undefined
   return {
     authorization: { from, to, value, validAfter, validBefore, nonce },
     signature,

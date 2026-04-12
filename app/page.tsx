@@ -4,9 +4,11 @@ import { LottieBackground } from '@/components/LottieBackground'
 import { MarketingHome } from '@/components/landing/MarketingHome'
 
 export const metadata: Metadata = {
-  title: 'KiteDesk — Secure Web3 AI Tasks & On-Chain Attestation',
+  title: {
+    absolute: 'KiteDesk — Autonomous AI Agents & Agentic Commerce on Kite',
+  },
   description:
-    'AI agents do the work; blockchain proves it. USDT-secured tasks with instant, verifiable on-chain receipts for every milestone on Kite testnet.',
+    'AI agents that plan, pay for APIs via x402, and execute under budget on Kite testnet — every step verifiable on-chain.',
 }
 
 export default function Home() {

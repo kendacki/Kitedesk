@@ -8,18 +8,16 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { KitedeskLogoMark } from '@/components/landing/KitedeskLogoMark'
 import { HeroCtas } from '@/components/landing/HeroCtas'
 import { MobileLandingDock } from '@/components/landing/MobileLandingDock'
-import {
-  IconMilestonePayments,
-  IconOnChainAttestation,
-} from '@/components/landing/HeroFeatureIcons'
+import { IconGoalBudget, IconAgentApiPay } from '@/components/landing/HeroFeatureIcons'
 import {
   brandEase,
   brandPrimaryCtaMarketing,
   brandSecondaryCtaMarketing,
 } from '@/lib/brand'
+import { GITHUB_REPO_URL, githubLicenseUrl } from '@/lib/publicLinks'
 import { LottieHeader } from '@/components/LottieHeader'
 
-const MotionLink = motion(Link)
+const MotionLink = motion.create(Link)
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -83,6 +81,20 @@ export function MarketingHome() {
 
   return (
     <div className="min-h-screen bg-white/95 pb-[calc(4.5rem+env(safe-area-inset-bottom))] font-sans text-slate-900 antialiased backdrop-blur-[2px] md:pb-0">
+      <a
+        href="#marketing-main"
+        className="fixed left-4 top-0 z-[100] -translate-y-[180%] rounded-md bg-emerald-900 px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-transform duration-200 focus:translate-y-4 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+        onClick={(e) => {
+          const el = document.getElementById('marketing-main')
+          if (el) {
+            e.preventDefault()
+            el.focus({ preventScroll: true })
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+        }}
+      >
+        Skip to main content
+      </a>
       <header className="safe-t sticky top-0 z-50 border-b border-slate-100/80 bg-white/90 backdrop-blur-md">
         <div className="relative mx-auto flex min-h-[3.25rem] max-w-6xl items-center justify-between px-4 py-3 sm:min-h-[3.5rem] sm:px-6 sm:py-4 safe-x">
           <Link
@@ -105,8 +117,13 @@ export function MarketingHome() {
                 </a>
               </li>
               <li>
-                <a href="#trust" className="transition hover:text-emerald-700">
-                  Security
+                <a href="#commerce" className="transition hover:text-emerald-700">
+                  Commerce
+                </a>
+              </li>
+              <li>
+                <a href="#why-kite" className="transition hover:text-emerald-700">
+                  Why Kite
                 </a>
               </li>
             </ul>
@@ -192,11 +209,18 @@ export function MarketingHome() {
                   How it works
                 </a>
                 <a
-                  href="#trust"
+                  href="#commerce"
                   className="rounded-lg px-3 py-3 active:bg-emerald-50"
                   onClick={() => setMenuOpen(false)}
                 >
-                  Security
+                  Commerce
+                </a>
+                <a
+                  href="#why-kite"
+                  className="rounded-lg px-3 py-3 active:bg-emerald-50"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Why Kite
                 </a>
               </nav>
             </motion.aside>
@@ -204,7 +228,7 @@ export function MarketingHome() {
         ) : null}
       </AnimatePresence>
 
-      <main>
+      <main id="marketing-main" tabIndex={-1} className="outline-none">
         <section className="relative overflow-hidden pb-20 pt-4 sm:pb-24 sm:pt-6 md:pb-32 md:pt-10">
           <LottieHeader />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.12)_0%,_transparent_55%)]" />
@@ -218,9 +242,11 @@ export function MarketingHome() {
                   variants={fadeUp}
                   className="flex w-full max-w-xl flex-col gap-2.5 text-left text-[clamp(1.35rem,3.6vw+0.35rem,2.5rem)] font-semibold leading-[1.15] tracking-tight text-slate-900 sm:gap-3 sm:text-4xl lg:max-w-none lg:text-[2.65rem]"
                 >
-                  <span className="block">Escrow-grade trust for</span>
+                  <span className="block">
+                    Autonomous AI agents that plan, pay, and execute tasks
+                  </span>
                   <span className="block bg-gradient-to-br from-emerald-900 to-emerald-500 bg-clip-text text-transparent">
-                    freelance AI work
+                    under budget constraints
                   </span>
                 </motion.h1>
                 <motion.p
@@ -230,8 +256,8 @@ export function MarketingHome() {
                   variants={fadeUp}
                   className="w-full max-w-xl text-sm font-normal leading-[1.65] text-slate-600 sm:text-base lg:max-w-none"
                 >
-                  AI agents do the work. Blockchain proves it. Secure your tasks with USDT
-                  and get instant, verifiable receipts for every milestone.
+                  AI agents execute tasks and pay for APIs autonomously — every step
+                  verifiable on-chain.
                 </motion.p>
                 <motion.div
                   custom={3}
@@ -241,10 +267,10 @@ export function MarketingHome() {
                   className="flex w-full max-w-xl flex-col gap-3 text-sm text-slate-600 xs:flex-row xs:flex-wrap xs:items-center xs:justify-start xs:gap-x-4 xs:gap-y-3 lg:max-w-none"
                 >
                   <span className="inline-flex w-fit max-w-full shrink-0 items-center gap-2.5 rounded-full bg-slate-50 px-4 py-2">
-                    <IconMilestonePayments /> USDT-secured milestones
+                    <IconGoalBudget /> Goal-based execution with budgets
                   </span>
                   <span className="inline-flex w-fit max-w-full shrink-0 items-center gap-2.5 rounded-full bg-slate-50 px-4 py-2">
-                    <IconOnChainAttestation /> Instant verifiable receipts
+                    <IconAgentApiPay /> Agent-to-API micro-payments (x402)
                   </span>
                 </motion.div>
                 <motion.div
@@ -266,7 +292,7 @@ export function MarketingHome() {
               >
                 <Image
                   src="/images/hero-delivery-robot.png"
-                  alt="KiteDesk agent mascot with cart"
+                  alt="KiteDesk autonomous agent"
                   width={1024}
                   height={682}
                   priority
@@ -281,21 +307,36 @@ export function MarketingHome() {
             >
               <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-4 shadow-xl shadow-emerald-900/5 sm:rounded-3xl sm:p-8">
                 <div className="mb-4 flex flex-col gap-2 border-b border-slate-100 pb-4 text-left text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-                  <span className="font-semibold text-slate-800">Task console</span>
+                  <span className="font-semibold text-slate-800">Agent console</span>
                   <span className="rounded bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800">
                     Proof on Kite testnet
                   </span>
                 </div>
                 <div className="grid gap-3 text-left sm:grid-cols-3 sm:gap-4">
-                  {['Research', 'Code review', 'Content'].map((label) => (
+                  {[
+                    {
+                      label: 'Plan',
+                      body: 'The agent breaks your goal into steps and estimates spend against your budget.',
+                    },
+                    {
+                      label: 'Pay APIs',
+                      body: 'Tool and data calls settle via x402-style flows on Kite — no manual invoicing.',
+                    },
+                    {
+                      label: 'Prove',
+                      body: 'Outputs are committed on-chain so execution is auditable, not hand-waved.',
+                    },
+                  ].map((card) => (
                     <div
-                      key={label}
+                      key={card.label}
                       className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
                     >
                       <div className="mb-2 h-2 w-8 rounded-full bg-gradient-to-br from-emerald-900 to-emerald-500" />
-                      <p className="text-sm font-semibold text-slate-800">{label}</p>
+                      <p className="text-sm font-semibold text-slate-800">
+                        {card.label}
+                      </p>
                       <p className="mt-1 text-xs font-normal text-slate-500">
-                        Agents execute your task—each milestone gets an on-chain receipt.
+                        {card.body}
                       </p>
                     </div>
                   ))}
@@ -310,7 +351,7 @@ export function MarketingHome() {
           className="border-t border-slate-100 bg-slate-50/50 px-4 py-12 sm:px-6 sm:py-16"
         >
           <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-            Trusted execution layer for builders
+            Agentic Commerce on Kite
           </p>
           <div className="mx-auto mt-10 flex max-w-4xl flex-wrap items-center justify-center gap-10 opacity-60 grayscale">
             {['MetaMask', 'Kite', 'Groq', 'USDT', 'Solidity'].map((name) => (
@@ -321,85 +362,40 @@ export function MarketingHome() {
           </div>
         </section>
 
-        <section className="px-4 py-16 sm:px-6 sm:py-24" id="trust">
-          <div className="mx-auto grid max-w-6xl gap-8 sm:gap-12 lg:grid-cols-2 lg:items-start">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
-                Why teams choose KiteDesk
-              </h2>
-              <p className="mt-4 font-normal leading-relaxed text-slate-600">
-                Built for freelancers and squads who need clear scope, verified
-                delivery, and payments that only move when work is complete.
-              </p>
-            </div>
-            <p className="text-sm font-normal leading-relaxed text-slate-600">
-              Every completed task comes with a secure, permanent receipt. We
-              automatically log exactly what was requested and what was delivered
-              directly on the Kite network. No guesswork, no changing the story, just
-              complete confidence for both sides.
-            </p>
-          </div>
-          <div className="mx-auto mt-10 grid max-w-6xl gap-4 sm:mt-14 sm:gap-6 md:grid-cols-2">
-            <motion.div
-              whileHover={{ y: -4 }}
-              className="rounded-2xl bg-gradient-to-br from-emerald-900 to-emerald-500 p-6 text-white shadow-lg shadow-emerald-900/20 sm:rounded-3xl sm:p-8"
-            >
-              <h3 className="text-xl font-semibold">Verifiable Proof of Payment</h3>
-              <p className="mt-3 font-normal leading-relaxed text-white/90">
-                Watch your USDT move securely on the Kite testnet. Every milestone and
-                transaction generates an instant Proof giving you, your clients, and
-                evaluators cryptographic receipts, not just promises.
-              </p>
-            </motion.div>
-            <motion.div
-              whileHover={{ y: -4 }}
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:rounded-3xl sm:p-8"
-            >
-              <h3 className="text-xl font-semibold text-slate-900">
-                Agents with receipts
-              </h3>
-              <p className="mt-3 font-normal leading-relaxed text-slate-600">
-                Groq-powered tasks return structured output; the attestation contract
-                stores a commitment to that output so your workflow stays
-                trust-minimized end to end.
-              </p>
-            </motion.div>
-          </div>
-        </section>
-
         <section
           className="border-t border-slate-100 bg-white px-4 py-16 sm:px-6 sm:py-24"
           id="how"
         >
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="text-2xl font-semibold text-slate-900 sm:text-3xl md:text-4xl">
-              Launch in four streamlined steps
+              How agent-driven execution works
             </h2>
             <p className="mt-4 font-normal text-slate-600">
-              From wallet to attestation—no opaque black boxes.
+              Goal first, then planning, paid APIs, and on-chain proof — not a single
+              blind &quot;run prompt&quot; button.
             </p>
           </div>
           <ol className="mx-auto mt-10 grid max-w-5xl gap-4 sm:mt-14 sm:gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
             {[
               {
                 step: '01',
-                title: 'Connect',
-                body: 'Add Kite testnet and link the wallet that will pay and sign.',
+                title: 'Set goal + budget',
+                body: 'Define what success means and the USDT envelope the agent may spend.',
               },
               {
                 step: '02',
-                title: 'Pay USDT',
-                body: 'Transfer the quoted USDT to the platform wallet for your task.',
+                title: 'Agent plans execution',
+                body: 'The agent sequences tools, search, and model calls before spending.',
               },
               {
                 step: '03',
-                title: 'Run agent',
-                body: 'The agent executes your prompt via Groq and returns the output.',
+                title: 'Agent pays APIs (x402)',
+                body: 'Paid endpoints settle on Kite rails so access is machine-native, not ad hoc.',
               },
               {
                 step: '04',
-                title: 'Attest',
-                body: 'A signed transaction writes the result hash to KiteDeskAttestations.',
+                title: 'Result + on-chain proof',
+                body: 'Structured output plus attestation hash — auditable end to end.',
               },
             ].map((item) => (
               <li
@@ -418,49 +414,202 @@ export function MarketingHome() {
           </ol>
         </section>
 
-        <section className="border-t border-slate-100 bg-slate-50/60 px-4 py-16 sm:px-6 sm:py-24">
-          <div className="mx-auto grid max-w-6xl gap-8 sm:gap-10 lg:grid-cols-2">
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="rounded-2xl bg-gradient-to-br from-emerald-900 to-emerald-500 p-6 text-white sm:rounded-3xl sm:p-10"
-            >
-              <p className="text-lg font-semibold leading-relaxed">
-                &ldquo;We needed clients to see the same proof we see internally.
-                KiteDesk turned our AI deliverables into explorer links we can drop into
-                Slack.&rdquo;
+        <section
+          id="commerce"
+          className="border-t border-slate-100 bg-slate-50/60 px-4 py-16 sm:px-6 sm:py-24"
+        >
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-2xl font-semibold text-slate-900 sm:text-3xl md:text-4xl">
+              Agentic Commerce in action
+            </h2>
+            <p className="mt-4 font-normal text-slate-600">
+              A concrete loop: the agent spends real budget on real APIs and reports
+              what it used.
+            </p>
+          </div>
+          <div className="mx-auto mt-10 max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm sm:rounded-3xl sm:p-8">
+            <p className="text-sm font-semibold text-slate-800">
+              Goal: &ldquo;Find the best GPU under $500&rdquo;
+            </p>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Agent
+            </p>
+            <ul className="mt-2 space-y-2 text-sm font-normal text-slate-600">
+              <li>searches APIs and data sources</li>
+              <li>evaluates cost per call</li>
+              <li>pays via x402</li>
+              <li>retrieves specs and evidence</li>
+              <li>stays within budget</li>
+            </ul>
+            <div className="mt-6 flex flex-wrap gap-8 border-t border-slate-100 pt-6 text-sm">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Total spent
+                </p>
+                <p className="mt-1 font-semibold text-emerald-800">$0.12</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Saved
+                </p>
+                <p className="mt-1 font-semibold text-slate-800">$0.38</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="why-kite"
+          className="border-t border-slate-100 bg-white px-4 py-16 sm:px-6 sm:py-24"
+        >
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-2xl font-semibold text-slate-900 sm:text-3xl md:text-4xl">
+              Why Kite chain?
+            </h2>
+            <p className="mt-4 font-normal text-slate-600">
+              Agentic Commerce needs money and proofs that software can enforce — not
+              spreadsheets and honor codes.
+            </p>
+          </div>
+          <div className="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-2">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-6 sm:p-8">
+              <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+                Agents need
               </p>
-              <p className="mt-6 text-sm font-normal text-white/85">
-                — Web3 delivery lead, pilot cohort
+              <ul className="mt-4 space-y-3 text-sm font-normal text-slate-600">
+                <li>programmable money</li>
+                <li>enforceable budgets</li>
+                <li>verifiable execution</li>
+              </ul>
+            </div>
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-6 sm:p-8">
+              <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+                Kite enables
+              </p>
+              <ul className="mt-4 space-y-3 text-sm font-normal text-slate-600">
+                <li>cost-bound execution</li>
+                <li>cryptographic proof</li>
+                <li>trustless verification</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section
+          className="border-t border-slate-100 bg-slate-50/50 px-4 py-16 sm:px-6 sm:py-24"
+          id="features"
+        >
+          <div className="mx-auto grid max-w-6xl gap-8 sm:gap-12 lg:grid-cols-2 lg:items-start">
+            <div>
+              <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
+                Built for autonomous economic agents
+              </h2>
+              <p className="mt-4 font-normal leading-relaxed text-slate-600">
+                KiteDesk is not a gig marketplace. It is an execution surface where
+                agents reason about cost, call paid APIs, and finish jobs under rules
+                you set — with cryptography backing every step.
+              </p>
+            </div>
+            <ul className="space-y-3 text-sm font-normal leading-relaxed text-slate-600">
+              <li className="flex gap-2">
+                <span className="text-emerald-600" aria-hidden>
+                  ·
+                </span>
+                Goal-based execution with budgets
+              </li>
+              <li className="flex gap-2">
+                <span className="text-emerald-600" aria-hidden>
+                  ·
+                </span>
+                Agent-to-API micro-payments (x402)
+              </li>
+              <li className="flex gap-2">
+                <span className="text-emerald-600" aria-hidden>
+                  ·
+                </span>
+                Dynamic cost optimization
+              </li>
+              <li className="flex gap-2">
+                <span className="text-emerald-600" aria-hidden>
+                  ·
+                </span>
+                Multi-step autonomous workflows
+              </li>
+              <li className="flex gap-2">
+                <span className="text-emerald-600" aria-hidden>
+                  ·
+                </span>
+                On-chain execution proof
+              </li>
+            </ul>
+          </div>
+          <div className="mx-auto mt-10 grid max-w-6xl gap-4 sm:mt-14 sm:gap-6 md:grid-cols-2">
+            <motion.div
+              whileHover={{ y: -4 }}
+              className="rounded-2xl bg-gradient-to-br from-emerald-900 to-emerald-500 p-6 text-white shadow-lg shadow-emerald-900/20 sm:rounded-3xl sm:p-8"
+            >
+              <h3 className="text-xl font-semibold">Verifiable agent spend</h3>
+              <p className="mt-3 font-normal leading-relaxed text-white/90">
+                Stablecoin flows on Kite testnet show what the agent paid and when.
+                Operators and auditors get explorer-grade evidence instead of opaque API
+                keys and manual reimbursements.
               </p>
             </motion.div>
-            <div className="grid gap-4">
+            <motion.div
+              whileHover={{ y: -4 }}
+              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:rounded-3xl sm:p-8"
+            >
+              <h3 className="text-xl font-semibold text-slate-900">
+                Outputs you can anchor
+              </h3>
+              <p className="mt-3 font-normal leading-relaxed text-slate-600">
+                LLM and tool results are hashed into KiteDeskAttestations so the same
+                payload cannot be silently swapped later — critical when agents act on
+                your behalf.
+              </p>
+            </motion.div>
+          </div>
+        </section>
+
+        <section className="border-t border-slate-100 bg-slate-50/60 px-4 py-16 sm:px-6 sm:py-24">
+          <div className="mx-auto max-w-6xl">
+            <h2 className="text-center text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+              What this build is meant to show
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-center text-sm font-normal leading-relaxed text-slate-600">
+              KiteDesk is a working console for agentic commerce: real wallet flows,
+              agent-paid APIs via x402 on the execution path, and on-chain attestations
+              — not placeholder quotes or simulated checkout.
+            </p>
+            <div className="mt-10 grid gap-4 sm:gap-6 md:grid-cols-3">
               {[
                 {
-                  name: 'Analyst',
-                  role: 'Research ops',
-                  quote: 'Milestone pricing in USDT keeps scope and budget aligned.',
+                  title: 'Autonomous payment path',
+                  body: 'When a tool hits HTTP 402, the agent can settle with USDT on Kite testnet and retry with proof — the same pattern paid APIs use on the open web.',
                 },
                 {
-                  name: 'Engineer',
-                  role: 'Security review',
-                  quote:
-                    'Having attestation hashes beats screenshots for audit trails.',
+                  title: 'Budget as the guardrail',
+                  body: 'You fund a USDT envelope; the agent plans and spends inside it. The desk surfaces spend against that budget so limits are visible, not buried in logs.',
                 },
-              ].map((t) => (
+                {
+                  title: 'Attestations, not screenshots',
+                  body: 'Execution metadata and outputs are anchored on-chain so results are harder to swap after the fact when an autonomous system is the actor.',
+                },
+              ].map((card, i) => (
                 <motion.div
-                  key={t.name}
+                  key={card.title}
                   initial={{ opacity: 0, y: 12 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  className="rounded-2xl border border-slate-200 bg-white p-6"
+                  transition={{ delay: i * 0.05 }}
+                  className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8"
                 >
-                  <p className="text-sm font-normal text-slate-600">
-                    &ldquo;{t.quote}&rdquo;
+                  <h3 className="text-base font-semibold text-slate-900">
+                    {card.title}
+                  </h3>
+                  <p className="mt-3 text-sm font-normal leading-relaxed text-slate-600">
+                    {card.body}
                   </p>
-                  <p className="mt-3 text-sm font-semibold text-slate-900">{t.name}</p>
-                  <p className="text-xs font-normal text-slate-500">{t.role}</p>
                 </motion.div>
               ))}
             </div>
@@ -475,11 +624,12 @@ export function MarketingHome() {
             className="mx-auto max-w-4xl rounded-2xl bg-gradient-to-br from-emerald-900 to-emerald-500 px-5 py-10 text-center text-white shadow-xl sm:rounded-3xl sm:px-8 sm:py-14"
           >
             <h2 className="text-2xl font-semibold sm:text-3xl md:text-4xl">
-              Ready to run your first attested task?
+              Run an agent with on-chain economics
             </h2>
             <p className="mx-auto mt-4 max-w-xl font-normal text-white/90">
-              Connect, pay USDT on Kite, and ship AI work with on-chain proof - built for
-              the Agentic Commerce track and production-minded teams.
+              Set a goal and budget on Kite testnet, let the agent plan and pay APIs,
+              then inspect spend and attestations — built for the Agentic Commerce
+              track.
             </p>
             <div className="mt-8 flex justify-center">
               <MotionLink
@@ -503,18 +653,30 @@ export function MarketingHome() {
               <span className="font-semibold">KiteDesk</span>
             </div>
             <p className="mt-3 max-w-xs text-sm font-normal text-slate-500">
-              Pay-per-task AI with USDT on Kite and on-chain attestations for
-              trust-minimized delivery.
+              Autonomous agents that pay APIs and anchor results on Kite — Agentic
+              Commerce, not gig work.
             </p>
             <div className="mt-4 flex gap-4 text-sm text-slate-400">
-              <a href="https://twitter.com" className="hover:text-emerald-700">
+              <a
+                href="https://x.com/GoKiteAI"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-emerald-700"
+                title="Kite AI on X"
+              >
                 X
               </a>
-              <a href="https://linkedin.com" className="hover:text-emerald-700">
+              <a
+                href="https://www.linkedin.com/company/gokiteai/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-emerald-700"
+                title="Kite AI on LinkedIn"
+              >
                 LinkedIn
               </a>
               <a
-                href="https://github.com/kendacki/Kitedesk"
+                href={GITHUB_REPO_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-emerald-700"
@@ -532,6 +694,16 @@ export function MarketingHome() {
                 <li>
                   <a href="#how" className="hover:text-emerald-700">
                     How it works
+                  </a>
+                </li>
+                <li>
+                  <a href="#commerce" className="hover:text-emerald-700">
+                    Agentic Commerce
+                  </a>
+                </li>
+                <li>
+                  <a href="#why-kite" className="hover:text-emerald-700">
+                    Why Kite
                   </a>
                 </li>
                 <li>
@@ -575,7 +747,7 @@ export function MarketingHome() {
               <ul className="mt-3 space-y-2 text-sm font-normal text-slate-600">
                 <li>
                   <a
-                    href="https://github.com/twbs/bootstrap/blob/main/LICENSE"
+                    href={githubLicenseUrl}
                     className="text-slate-400 transition hover:text-emerald-700"
                     target="_blank"
                     rel="noopener noreferrer"

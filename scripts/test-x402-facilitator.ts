@@ -30,10 +30,13 @@ async function main() {
   }
   console.log('full 402 response body:', JSON.stringify(wBody, null, 2))
 
-  const accepts = (wBody as { accepts?: Array<{ scheme?: string; network?: string }> })?.accepts
+  const accepts = (wBody as { accepts?: Array<{ scheme?: string; network?: string }> })
+    ?.accepts
   const demo0 = Array.isArray(accepts) ? accepts[0] : undefined
 
-  console.log('\n--- Scheme / network: demo weather vs KiteDesk 402 vs verify-and-settle ---')
+  console.log(
+    '\n--- Scheme / network: demo weather vs KiteDesk 402 vs verify-and-settle ---'
+  )
   console.log(
     JSON.stringify(
       {
@@ -55,7 +58,9 @@ async function main() {
   )
 
   if (demo0?.network && demo0.network !== KITEDESK_402_NETWORK) {
-    console.log('\n[compare] Demo network differs from KiteDesk challenge network string.')
+    console.log(
+      '\n[compare] Demo network differs from KiteDesk challenge network string.'
+    )
   }
   if (demo0?.scheme && demo0.scheme !== KITEDESK_402_SCHEME) {
     console.log(

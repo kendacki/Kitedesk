@@ -135,7 +135,8 @@ export function useWallet() {
     if (!eth) {
       setState((s) => ({
         ...s,
-        error: 'No wallet found. Install MetaMask (or disable conflicting wallet extensions).',
+        error:
+          'No wallet found. Install MetaMask (or disable conflicting wallet extensions).',
       }))
       return
     }
@@ -180,7 +181,8 @@ export function useWallet() {
     if (!eth) {
       setState((s) => ({
         ...s,
-        error: 'No wallet found. Install MetaMask (or disable conflicting wallet extensions).',
+        error:
+          'No wallet found. Install MetaMask (or disable conflicting wallet extensions).',
       }))
       return
     }
@@ -285,15 +287,7 @@ export function useWallet() {
         if (msg.includes('network changed') || msg.includes('NETWORK_ERROR')) {
           try {
             const next = await readKiteWalletState(eth)
-            setState((s) => ({
-              ...s,
-              address: next.address,
-              provider: next.provider,
-              signer: next.wrongNetwork ? null : next.signer,
-              wrongNetwork: next.wrongNetwork,
-              isConnecting: false,
-              error: next.wrongNetwork ? KITE_STAY_ON_TESTNET_MESSAGE : null,
-            }))
+            applyKiteState(next)
           } catch {
             disconnect()
           }

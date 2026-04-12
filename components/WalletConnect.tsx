@@ -7,6 +7,7 @@ import type { ethers } from 'ethers'
 import { checkUsdtBalance } from '@/lib/payment'
 import { brandEase, brandLinkLight, brandPrimaryButton } from '@/lib/brand'
 import { KITE_CHAIN } from '@/lib/constants'
+import { formatWalletUsdtForDisplay } from '@/lib/formatWalletUsdt'
 
 function truncateAddress(address: string): string {
   if (address.length < 10) return address
@@ -110,7 +111,8 @@ export function WalletConnect({
       {wrongNetwork && switchToKite ? (
         <div className="flex w-full flex-col gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 sm:items-end">
           <p className="text-left font-sans text-xs text-amber-900 sm:text-right">
-            Wrong network — switch to Kite. You must use chain ID 2368 to see USDT and pay.
+            Wrong network — switch to Kite. You must use chain ID 2368 to see USDT and
+            pay.
           </p>
           <button
             type="button"
@@ -123,7 +125,9 @@ export function WalletConnect({
         </div>
       ) : null}
       {error && address ? (
-        <p className="max-w-full text-left text-xs text-red-600 sm:max-w-sm sm:text-right">{error}</p>
+        <p className="max-w-full text-left text-xs text-red-600 sm:max-w-sm sm:text-right">
+          {error}
+        </p>
       ) : null}
       <div className="flex w-full flex-wrap items-center gap-2 sm:justify-end sm:gap-3">
         <div className="flex items-center gap-2 font-sans text-xs text-slate-600">
@@ -166,12 +170,14 @@ export function WalletConnect({
               USDT unavailable
             </span>
           ) : (
-            <span>
-              {usdtBalance.toLocaleString(undefined, {
-                maximumFractionDigits: 4,
-              })}{' '}
-              USDT
-            </span>
+            (() => {
+              const { line, title } = formatWalletUsdtForDisplay(usdtBalance)
+              return (
+                <span className="text-emerald-900" title={title}>
+                  {line}
+                </span>
+              )
+            })()
           )}
         </div>
       </div>

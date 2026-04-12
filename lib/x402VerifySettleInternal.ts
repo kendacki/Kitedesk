@@ -130,7 +130,9 @@ export type VerifySettleInternalResult = {
  *          authorization.value wei; asset is root-level `asset` on the X-Payment JSON (not inside authorization).
  * PATH C: Both failed — error "Both settlement paths failed" plus facilitatorError and directError.
  */
-export async function verifyAndSettleInternal(xPaymentHeader: string): Promise<VerifySettleInternalResult> {
+export async function verifyAndSettleInternal(
+  xPaymentHeader: string
+): Promise<VerifySettleInternalResult> {
   let parsed: ReturnType<typeof parseXPaymentHeader>
   try {
     parsed = parseXPaymentHeader(xPaymentHeader)

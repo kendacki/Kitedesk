@@ -20,11 +20,14 @@ export async function fetchX402Search(opts: {
   const phase = opts.phase ?? 'first_pass'
   const hasPayment = Boolean(opts.xPaymentHeader?.trim())
 
-  agentLog(`${phase === 'first_pass' ? 'Step: calling x402 resource' : 'Retrying request with X-Payment'}`, {
-    url,
-    phase,
-    hasXPayment: hasPayment,
-  })
+  agentLog(
+    `${phase === 'first_pass' ? 'Step: calling x402 resource' : 'Retrying request with X-Payment'}`,
+    {
+      url,
+      phase,
+      hasXPayment: hasPayment,
+    }
+  )
 
   let res: Response
   try {

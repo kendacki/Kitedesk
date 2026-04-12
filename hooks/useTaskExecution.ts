@@ -1,8 +1,10 @@
-// KiteDesk | client flow: pay USDT, call agent API, optional attesting UI beat
+// KiteDesk | client flow: fund USDT, call agent API, timeline + result UI
 'use client'
 
 import { useState } from 'react'
 import axios from 'axios'
+
+const AGENT_REQUEST_MS = 125_000
 import { ethers } from 'ethers'
 import { payForTask } from '@/lib/payment'
 import {
@@ -51,7 +53,8 @@ function isSignerOrConnectionError(err: unknown): boolean {
 }
 
 function isWrongNetworkError(err: unknown): boolean {
-  if (err instanceof Error && err.message === KITE_WRONG_NETWORK_PAY_MESSAGE) return true
+  if (err instanceof Error && err.message === KITE_WRONG_NETWORK_PAY_MESSAGE)
+    return true
   const s = err instanceof Error ? err.message : String(err)
   return s.toLowerCase().includes('wrong network')
 }
@@ -157,12 +160,16 @@ export function useTaskExecution() {
         error?: string
       }
       try {
-        const res = await axios.post<typeof data>('/api/agent', {
-          taskType,
-          prompt,
-          userAddress: address,
-          paymentTxHash,
-        })
+        const res = await axios.post<typeof data>(
+          '/api/agent',
+          {
+            taskType,
+            prompt,
+            userAddress: address,
+            paymentTxHash,
+          },
+          { timeout: AGENT_REQUEST_MS }
+        )
         data = res.data
       } catch (agentErr: unknown) {
         if (axios.isAxiosError(agentErr) && isWalletUserRejected(agentErr)) {
@@ -198,6 +205,12 @@ export function useTaskExecution() {
         return
       }
       if (axios.isAxiosError(err)) {
+        if (err.code === 'ECONNABORTED') {
+          setError(
+            'Request timed out — the agent may still be running. Wait a minute, check your network, then try again with a smaller goal or budget.'
+          )
+          return
+        }
         const serverMsg = (err.response?.data as { error?: string })?.error
         setError(serverMsg || err.message)
         return
@@ -297,13 +310,17 @@ export function useTaskExecution() {
         error?: string
       }
       try {
-        const res = await axios.post<typeof data>('/api/agent', {
-          taskType: 'goal',
-          goal: goal.trim(),
-          budgetUsdt,
-          userAddress: address,
-          paymentTxHash,
-        })
+        const res = await axios.post<typeof data>(
+          '/api/agent',
+          {
+            taskType: 'goal',
+            goal: goal.trim(),
+            budgetUsdt,
+            userAddress: address,
+            paymentTxHash,
+          },
+          { timeout: AGENT_REQUEST_MS }
+        )
         data = res.data
       } catch (agentErr: unknown) {
         if (axios.isAxiosError(agentErr) && isWalletUserRejected(agentErr)) {
@@ -329,7 +346,9 @@ export function useTaskExecution() {
       await new Promise((r) => setTimeout(r, 450))
 
       const finalOutput =
-        typeof gr.finalOutput === 'string' ? gr.finalOutput : String(gr.finalOutput ?? '')
+        typeof gr.finalOutput === 'string'
+          ? gr.finalOutput
+          : String(gr.finalOutput ?? '')
       setGoalResult({ ...gr, steps: stepsNorm, finalOutput })
       setIsGoalFlow(false)
       setStatus('done')
@@ -343,6 +362,12 @@ export function useTaskExecution() {
         return
       }
       if (axios.isAxiosError(err)) {
+        if (err.code === 'ECONNABORTED') {
+          setError(
+            'Request timed out — the agent may still be running. Wait a minute, check your network, then try again with a smaller goal or budget.'
+          )
+          return
+        }
         const serverMsg = (err.response?.data as { error?: string })?.error
         setError(serverMsg || err.message)
         return

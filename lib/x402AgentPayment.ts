@@ -62,9 +62,13 @@ export async function buildXPaymentHeaderForFacilitator(
     nonce,
   }
 
-  const signature = await wallet.signTypedData(domain, {
-    TransferWithAuthorization: TRANSFER_WITH_AUTHORIZATION_TYPE,
-  }, message)
+  const signature = await wallet.signTypedData(
+    domain,
+    {
+      TransferWithAuthorization: TRANSFER_WITH_AUTHORIZATION_TYPE,
+    },
+    message
+  )
 
   const authorization = {
     from: message.from,
@@ -132,7 +136,12 @@ export async function testFacilitatorConnectivity(): Promise<{
     verifyBody = { error: e instanceof Error ? e.message : String(e) }
   }
 
-  console.error('[x402:test] POST', PIEVERSE_FACILITATOR_VERIFY_URL, 'status:', verifyStatus)
+  console.error(
+    '[x402:test] POST',
+    PIEVERSE_FACILITATOR_VERIFY_URL,
+    'status:',
+    verifyStatus
+  )
   console.error('[x402:test] POST body:', verifyBody)
 
   return { facilitatorReachable, verifyStatus, verifyBody }
