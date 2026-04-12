@@ -39,10 +39,10 @@ const floatTransition = {
   ease: [0.45, 0, 0.55, 1] as [number, number, number, number],
 }
 
-function EmeraldSquareBullet() {
+function EmeraldCircleBullet() {
   return (
     <span
-      className="mt-1.5 h-2.5 w-2.5 shrink-0 bg-gradient-to-br from-emerald-900 to-emerald-500"
+      className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-gradient-to-br from-emerald-900 to-emerald-500"
       aria-hidden
     />
   )
@@ -495,15 +495,15 @@ export function MarketingHome() {
               </p>
               <ul className="mt-5 flex flex-1 flex-col gap-3 text-sm font-normal text-slate-600 sm:text-base">
                 <li className="flex items-start gap-3">
-                  <EmeraldSquareBullet />
+                  <EmeraldCircleBullet />
                   <span>programmable money</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <EmeraldSquareBullet />
+                  <EmeraldCircleBullet />
                   <span>enforceable budgets</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <EmeraldSquareBullet />
+                  <EmeraldCircleBullet />
                   <span>verifiable execution</span>
                 </li>
               </ul>
@@ -514,15 +514,15 @@ export function MarketingHome() {
               </p>
               <ul className="mt-5 flex flex-1 flex-col gap-3 text-sm font-normal text-slate-600 sm:text-base">
                 <li className="flex items-start gap-3">
-                  <EmeraldSquareBullet />
+                  <EmeraldCircleBullet />
                   <span>cost bound execution</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <EmeraldSquareBullet />
+                  <EmeraldCircleBullet />
                   <span>cryptographic proof</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <EmeraldSquareBullet />
+                  <EmeraldCircleBullet />
                   <span>trustless verification</span>
                 </li>
               </ul>
