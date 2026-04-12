@@ -282,7 +282,7 @@ export function MarketingHome() {
                     <IconGoalBudget /> Goals and budgets
                   </span>
                   <span className="flex min-h-0 w-full min-w-0 items-center gap-2 rounded-full bg-slate-50 px-2.5 py-1.5 sm:px-3 sm:py-2">
-                    <IconAgentApiPay /> x402 API pay
+                    <IconAgentApiPay /> x402-Gated API Execution
                   </span>
                 </motion.div>
                 <motion.div
