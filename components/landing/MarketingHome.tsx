@@ -529,7 +529,7 @@ export function MarketingHome() {
           id="features"
         >
           <div className="mx-auto max-w-6xl">
-            <div>
+            <div className="mx-auto max-w-3xl text-center">
               <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
                 Built for autonomous economic agents
               </h2>
