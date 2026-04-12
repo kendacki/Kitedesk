@@ -43,5 +43,16 @@ typechain-types/
 # Cursor (local)
 .cursor/
 
+# Local agent / IDE tooling (not project source)
+.agents/
+.claude/
+.factory/
+.goose/
+.kiro/
+.qoder/
+.qwen/
+.windsurf/
+skills-lock.json
+
 # Optional raw logo for npm run logo:assets (processed output is in public/ + app/)
 scripts/source-logo.png
