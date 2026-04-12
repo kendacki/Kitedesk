@@ -269,7 +269,7 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
 
       <div className="sticky bottom-0 z-10 -mx-6 mt-4 flex flex-col gap-3 border-t border-slate-200 bg-white/95 px-6 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-sm sm:static sm:z-0 sm:mx-0 sm:flex-row sm:items-center sm:justify-between sm:border-slate-200 sm:bg-transparent sm:px-0 sm:pb-0 sm:backdrop-blur-none">
         {taskType === 'goal' ? (
-          <div className="font-sans text-sm text-slate-700">
+          <div className="shrink-0 whitespace-nowrap font-sans text-sm text-slate-700">
             Pay up to {budgetUsdt.toFixed(2)} USDT for this run
           </div>
         ) : (
