@@ -110,7 +110,7 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
     >
       <div className="w-full">
         <p className="mb-3 text-center font-sans text-xs font-semibold uppercase tracking-widest text-emerald-800 sm:text-left">
-          Primary mode — Agentic Commerce
+          Primary mode
         </p>
         <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3 sm:items-stretch">
           <motion.button
