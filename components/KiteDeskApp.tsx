@@ -160,7 +160,7 @@ export function KiteDeskApp() {
   const hideTaskForm = showResult || showGoalResult || showGoalLive || showGoalAttesting
 
   return (
-    <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-4xl flex-col px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 font-sans safe-x sm:px-6 sm:py-12 md:py-16">
+    <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-4xl flex-col px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-2 font-sans safe-x sm:px-6 sm:pb-12 sm:pt-4 md:pb-16 md:pt-5">
       <a
         href="#kitedesk-main"
         className="fixed left-4 top-0 z-[100] -translate-y-[180%] rounded-md bg-emerald-900 px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-transform duration-200 focus:translate-y-4 focus:outline-none focus:ring-2 focus:ring-emerald-200"
@@ -179,19 +179,19 @@ export function KiteDeskApp() {
         initial="hidden"
         animate="show"
         variants={blockShow}
-        className="mb-8 flex flex-col gap-5 border-b border-slate-200 pb-6 sm:mb-10 sm:gap-6 sm:pb-8 md:mb-12"
+        className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-5 sm:mb-8 sm:gap-5 sm:pb-6 md:mb-10"
       >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <Link
             href="/"
-            className="inline-flex w-fit items-center gap-2 font-sans text-sm text-emerald-800 transition hover:text-emerald-700"
+            className="inline-flex w-fit shrink-0 items-center gap-2 font-sans text-sm text-emerald-800 transition hover:text-emerald-700"
           >
             <span aria-hidden className="text-lg">
               ←
             </span>
             Back to landing
           </Link>
-          <div className="w-full sm:flex sm:w-auto sm:shrink-0 sm:justify-end">
+          <div className="flex w-full shrink-0 justify-end sm:w-auto">
             <WalletConnect
               address={wallet.address}
               provider={wallet.provider}
@@ -205,19 +205,15 @@ export function KiteDeskApp() {
           </div>
         </div>
 
-        <div className="w-full">
-          <div className="flex items-start gap-3">
-            <KitedeskLogoMark size={44} className="mt-0.5" />
-            <div>
-              <p className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800">
-                KiteDesk · Kite AI Testnet
-              </p>
-              <h1 className="mt-2 font-sans text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
-                AI agents that plan, pay, and execute tasks under budget — autonomously
-              </h1>
-            </div>
-          </div>
-          <p className="mt-8 max-w-2xl font-sans text-sm leading-relaxed text-slate-600 sm:mt-10 sm:text-base md:mt-12">
+        <div className="flex w-full flex-col items-start text-left">
+          <KitedeskLogoMark size={44} className="shrink-0" />
+          <p className="mt-3 font-sans text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800">
+            KITEDESK
+          </p>
+          <h1 className="mt-2 max-w-2xl font-sans text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
+            AI agents that plan, pay, and execute tasks under budget — autonomously
+          </h1>
+          <p className="mt-4 max-w-2xl font-sans text-sm leading-relaxed text-slate-600 sm:mt-5 sm:text-base md:mt-6">
             You fund a USDT budget on Kite testnet. The agent chooses tools, pays APIs
             via <span className="font-semibold text-slate-800">x402</span> when a call
             requires it (core execution path), stays inside your cap, and anchors proof
