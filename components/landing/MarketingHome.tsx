@@ -38,6 +38,15 @@ const floatTransition = {
   ease: [0.45, 0, 0.55, 1] as [number, number, number, number],
 }
 
+function EmeraldSquareBullet() {
+  return (
+    <span
+      className="mt-1.5 h-2.5 w-2.5 shrink-0 bg-gradient-to-br from-emerald-900 to-emerald-500"
+      aria-hidden
+    />
+  )
+}
+
 function MenuIcon({ open }: { open: boolean }) {
   return (
     <svg
@@ -473,25 +482,43 @@ export function MarketingHome() {
               beyond spreadsheets and human honor codes.
             </p>
           </div>
-          <div className="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-6 sm:p-8">
-              <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+          <div className="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-2 md:items-stretch">
+            <div className="flex h-full flex-col rounded-2xl border border-slate-100 bg-slate-50/80 p-6 sm:p-8">
+              <p className="text-base font-semibold uppercase tracking-wider text-emerald-800 sm:text-lg">
                 Agents need
               </p>
-              <ul className="mt-4 space-y-3 text-sm font-normal text-slate-600">
-                <li>programmable money</li>
-                <li>enforceable budgets</li>
-                <li>verifiable execution</li>
+              <ul className="mt-5 flex flex-1 flex-col gap-3 text-sm font-normal text-slate-600 sm:text-base">
+                <li className="flex items-start gap-3">
+                  <EmeraldSquareBullet />
+                  <span>programmable money</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <EmeraldSquareBullet />
+                  <span>enforceable budgets</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <EmeraldSquareBullet />
+                  <span>verifiable execution</span>
+                </li>
               </ul>
             </div>
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-6 sm:p-8">
-              <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+            <div className="flex h-full flex-col rounded-2xl border border-slate-100 bg-slate-50/80 p-6 sm:p-8">
+              <p className="text-base font-semibold uppercase tracking-wider text-emerald-800 sm:text-lg">
                 Kite enables
               </p>
-              <ul className="mt-4 space-y-3 text-sm font-normal text-slate-600">
-                <li>cost bound execution</li>
-                <li>cryptographic proof</li>
-                <li>trustless verification</li>
+              <ul className="mt-5 flex flex-1 flex-col gap-3 text-sm font-normal text-slate-600 sm:text-base">
+                <li className="flex items-start gap-3">
+                  <EmeraldSquareBullet />
+                  <span>cost bound execution</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <EmeraldSquareBullet />
+                  <span>cryptographic proof</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <EmeraldSquareBullet />
+                  <span>trustless verification</span>
+                </li>
               </ul>
             </div>
           </div>
