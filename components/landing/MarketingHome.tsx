@@ -16,6 +16,7 @@ import {
 } from '@/lib/brand'
 import { GITHUB_REPO_URL, githubLicenseUrl } from '@/lib/publicLinks'
 import { LottieHeader } from '@/components/LottieHeader'
+import { AgentExecutionDiagram } from '@/components/landing/AgentExecutionDiagram'
 
 const MotionLink = motion.create(Link)
 
@@ -455,35 +456,7 @@ export function MarketingHome() {
               what it used.
             </p>
           </div>
-          <div className="mx-auto mt-10 max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm sm:rounded-3xl sm:p-8">
-            <p className="text-sm font-semibold text-slate-800">
-              Goal: &ldquo;Find the best GPU under $500&rdquo;
-            </p>
-            <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Agent
-            </p>
-            <ul className="mt-2 space-y-2 text-sm font-normal text-slate-600">
-              <li>searches APIs and data sources</li>
-              <li>evaluates cost per call</li>
-              <li>pays via x402</li>
-              <li>retrieves specs and evidence</li>
-              <li>stays within budget</li>
-            </ul>
-            <div className="mt-6 flex flex-wrap gap-8 border-t border-slate-100 pt-6 text-sm">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Total spent
-                </p>
-                <p className="mt-1 font-semibold text-emerald-800">$0.12</p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Saved
-                </p>
-                <p className="mt-1 font-semibold text-slate-800">$0.38</p>
-              </div>
-            </div>
-          </div>
+          <AgentExecutionDiagram className="mx-auto mt-10 max-w-6xl px-0 sm:px-2" />
         </section>
 
         <section
