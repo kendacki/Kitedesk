@@ -20,9 +20,9 @@ function metadataBaseUrl(): URL {
   return new URL(`${defaultSite}/`)
 }
 
-const title = 'KiteDesk — Autonomous AI Agents & Agentic Commerce on Kite'
+const title = 'KiteDesk: Autonomous AI Agents & Agentic Commerce on Kite'
 const description =
-  'AI agents that plan, pay for APIs via x402, and execute under budget on Kite testnet — verifiable on-chain.'
+  'AI agents that plan, pay for APIs via x402, and execute under budget on Kite testnet; verifiable on-chain.'
 
 export const metadata: Metadata = {
   metadataBase: metadataBaseUrl(),

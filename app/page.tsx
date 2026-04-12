@@ -1,14 +1,14 @@
-// KiteDesk | marketing landing at / — product console lives at /desk
+// KiteDesk | marketing landing at /; product console lives at /desk
 import type { Metadata } from 'next'
 import { LottieBackground } from '@/components/LottieBackground'
 import { MarketingHome } from '@/components/landing/MarketingHome'
 
 export const metadata: Metadata = {
   title: {
-    absolute: 'KiteDesk — Autonomous AI Agents & Agentic Commerce on Kite',
+    absolute: 'KiteDesk: Autonomous AI Agents & Agentic Commerce on Kite',
   },
   description:
-    'AI agents that plan, pay for APIs via x402, and execute under budget on Kite testnet — every step verifiable on-chain.',
+    'AI agents that plan, pay for APIs via x402, and execute under budget on Kite testnet; every step verifiable on-chain.',
 }
 
 export default function Home() {

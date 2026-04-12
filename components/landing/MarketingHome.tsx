@@ -258,7 +258,7 @@ export function MarketingHome() {
                   variants={fadeUp}
                   className="w-full max-w-xl text-sm font-normal leading-[1.65] text-slate-600 sm:text-base lg:max-w-none"
                 >
-                  AI agents execute tasks and pay for APIs autonomously — every step
+                  AI agents execute tasks and pay for APIs autonomously; every step
                   verifiable on-chain.
                 </motion.p>
                 <motion.div
@@ -269,10 +269,10 @@ export function MarketingHome() {
                   className="grid w-full max-w-xl grid-cols-1 gap-3 text-sm text-slate-600 xs:grid-cols-2 xs:items-stretch xs:gap-3 sm:gap-4 lg:max-w-none"
                 >
                   <span className="flex min-h-[3.25rem] w-full min-w-0 items-center gap-2.5 rounded-full bg-slate-50 px-3 py-2.5 sm:px-4">
-                    <IconGoalBudget /> Goal-based execution with budgets
+                    <IconGoalBudget /> Goal based execution with budgets
                   </span>
                   <span className="flex min-h-[3.25rem] w-full min-w-0 items-center gap-2.5 rounded-full bg-slate-50 px-3 py-2.5 sm:px-4">
-                    <IconAgentApiPay /> Agent-to-API micro-payments (x402)
+                    <IconAgentApiPay /> Agent to API micropayments (x402)
                   </span>
                 </motion.div>
                 <motion.div
@@ -322,11 +322,11 @@ export function MarketingHome() {
                     },
                     {
                       label: 'Pay APIs',
-                      body: 'Tool and data calls settle via x402-style flows on Kite — no manual invoicing.',
+                      body: 'Tool and data calls settle via x402 style flows on Kite, with no manual invoicing.',
                     },
                     {
                       label: 'Prove',
-                      body: 'Outputs are committed on-chain so execution is auditable, not hand-waved.',
+                      body: 'Outputs are committed on-chain so execution is auditable, not hand waved.',
                     },
                   ].map((card) => (
                     <div
@@ -373,7 +373,7 @@ export function MarketingHome() {
               How agent driven execution works
             </h2>
             <p className="mt-4 font-normal text-slate-600">
-              Goal first, then planning, paid APIs, and on chain proof, not a single blind
+              Goal first, then planning, paid APIs, and on-chain proof, not a single blind
               &quot;run prompt&quot; button.
             </p>
           </div>
@@ -392,12 +392,12 @@ export function MarketingHome() {
               {
                 step: '03',
                 title: 'Agent pays APIs (x402)',
-                body: 'Paid endpoints settle on Kite rails so access is machine-native, not ad hoc.',
+                body: 'Paid endpoints settle on Kite rails so access is machine native, not ad hoc.',
               },
               {
                 step: '04',
                 title: 'Result + on-chain proof',
-                body: 'Structured output plus attestation hash — auditable end to end.',
+                body: 'Structured output plus attestation hash, auditable end to end.',
               },
             ].map((item) => (
               <li
@@ -489,7 +489,7 @@ export function MarketingHome() {
                 Kite enables
               </p>
               <ul className="mt-4 space-y-3 text-sm font-normal text-slate-600">
-                <li>cost-bound execution</li>
+                <li>cost bound execution</li>
                 <li>cryptographic proof</li>
                 <li>trustless verification</li>
               </ul>
@@ -509,7 +509,7 @@ export function MarketingHome() {
               <p className="mt-4 font-normal leading-relaxed text-slate-600">
                 KiteDesk is not a gig marketplace. It is an execution surface where
                 agents reason about cost, call paid APIs, and finish jobs under rules
-                you set — with cryptography backing every step.
+                you set, with cryptography backing every step.
               </p>
             </div>
           </div>
@@ -521,7 +521,7 @@ export function MarketingHome() {
               <h3 className="text-xl font-semibold">Verifiable agent spend</h3>
               <p className="mt-3 font-normal leading-relaxed text-white/90">
                 Stablecoin flows on Kite testnet show what the agent paid and when.
-                Operators and auditors get explorer-grade evidence instead of opaque API
+                Operators and auditors get explorer grade evidence instead of opaque API
                 keys and manual reimbursements.
               </p>
             </motion.div>
@@ -534,7 +534,7 @@ export function MarketingHome() {
               </h3>
               <p className="mt-3 font-normal leading-relaxed text-slate-600">
                 LLM and tool results are hashed into KiteDeskAttestations so the same
-                payload cannot be silently swapped later — critical when agents act on
+                payload cannot be silently swapped later, critical when agents act on
                 your behalf.
               </p>
             </motion.div>
@@ -548,14 +548,14 @@ export function MarketingHome() {
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-center text-sm font-normal leading-relaxed text-slate-600">
               KiteDesk is the operational console for agentic commerce. We deliver live
-              wallet routing, x402-enabled API micropayments, and verifiable on-chain
+              wallet routing, x402 enabled API micropayments, and verifiable on-chain
               attestations replacing simulated staging with deterministic execution.
             </p>
             <div className="mt-10 grid gap-4 sm:gap-6 md:grid-cols-3">
               {[
                 {
                   title: 'Autonomous payment path',
-                  body: 'When a tool hits HTTP 402, the agent can settle with USDT on Kite testnet and retry with proof — the same pattern paid APIs use on the open web.',
+                  body: 'When a tool hits HTTP 402, the agent can settle with USDT on Kite testnet and retry with proof, the same pattern paid APIs use on the open web.',
                 },
                 {
                   title: 'Budget as the guardrail',
@@ -598,7 +598,7 @@ export function MarketingHome() {
             </h2>
             <p className="mx-auto mt-4 max-w-xl font-normal text-white/90">
               Set a goal and budget on Kite testnet, let the agent plan and pay APIs,
-              then inspect spend and attestations — built for the Agentic Commerce
+              then inspect spend and attestations, built for the Agentic Commerce
               track.
             </p>
             <div className="mt-8 flex justify-center">
@@ -623,7 +623,7 @@ export function MarketingHome() {
               <span className="font-semibold">KiteDesk</span>
             </div>
             <p className="mt-3 max-w-xs text-sm font-normal text-slate-500">
-              Autonomous agents that pay APIs and anchor results on Kite — Agentic
+              Autonomous agents that pay APIs and anchor results on Kite; Agentic
               Commerce, not gig work.
             </p>
             <div className="mt-4 flex gap-4 text-sm text-slate-400">
