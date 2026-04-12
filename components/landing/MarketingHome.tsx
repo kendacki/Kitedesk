@@ -243,10 +243,12 @@ export function MarketingHome() {
                   className="flex w-full max-w-xl flex-col gap-2.5 text-left text-[clamp(1.35rem,3.6vw+0.35rem,2.5rem)] font-semibold leading-[1.15] tracking-tight text-slate-900 sm:gap-3 sm:text-4xl lg:max-w-none lg:text-[2.65rem]"
                 >
                   <span className="block">
-                    Autonomous AI agents that plan, pay, and execute tasks
-                  </span>
-                  <span className="block bg-gradient-to-br from-emerald-900 to-emerald-500 bg-clip-text text-transparent">
-                    under budget constraints
+                    <span className="text-slate-900">
+                      Autonomous agents that plan, fund, and{' '}
+                    </span>
+                    <span className="bg-gradient-to-br from-emerald-900 to-emerald-500 bg-clip-text text-transparent">
+                      execute within budget
+                    </span>
                   </span>
                 </motion.h1>
                 <motion.p
