@@ -368,11 +368,11 @@ export function MarketingHome() {
         >
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="text-2xl font-semibold text-slate-900 sm:text-3xl md:text-4xl">
-              How agent-driven execution works
+              How agent driven execution works
             </h2>
             <p className="mt-4 font-normal text-slate-600">
-              Goal first, then planning, paid APIs, and on-chain proof — not a single
-              blind &quot;run prompt&quot; button.
+              Goal first, then planning, paid APIs, and on chain proof, not a single blind
+              &quot;run prompt&quot; button.
             </p>
           </div>
           <ol className="mx-auto mt-10 grid max-w-5xl gap-4 sm:mt-14 sm:gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
