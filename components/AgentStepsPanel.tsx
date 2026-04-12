@@ -4,6 +4,10 @@
 import { motion } from 'framer-motion'
 import { AgentMarkdown } from '@/components/AgentMarkdown'
 import { brandEase, brandLinkLight } from '@/lib/brand'
+import {
+  GOAL_AGENT_CAPABILITY_LINES,
+  GOAL_AGENT_SECTION_LABELS,
+} from '@/lib/goalAgentSummaryCopy'
 import type { AgentStep, ToolCall, ToolName } from '@/types'
 
 const KITE_TESTNET_TX_BASE = 'https://testnet.kitescan.ai/tx'
@@ -13,6 +17,8 @@ export interface AgentStepsPanelProps {
   totalSpentUsdt: number
   budgetUsdt: number
   isRunning: boolean
+  /** User goal text — enables the summary header (goal + agent capabilities + spent/saved). */
+  goalTitle?: string | null
   finalOutput?: string
   attestationUrl?: string
   planReasoning?: string
@@ -208,6 +214,7 @@ export function AgentStepsPanel({
   totalSpentUsdt,
   budgetUsdt,
   isRunning,
+  goalTitle,
   finalOutput,
   attestationUrl,
   planReasoning,
@@ -233,8 +240,56 @@ export function AgentStepsPanel({
 
   let runningCost = 0
 
+  const trimmedGoal = typeof goalTitle === 'string' ? goalTitle.trim() : ''
+  const showGoalSummary = trimmedGoal.length > 0
+
   return (
     <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-md shadow-slate-200/50 sm:p-6">
+      {showGoalSummary ? (
+        <section
+          className="mx-auto mb-6 max-w-lg border-b border-slate-200 pb-6 text-center"
+          aria-label="Goal agent summary"
+        >
+          <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-800">
+            {GOAL_AGENT_SECTION_LABELS.goal}
+          </p>
+          <p className="mt-2 font-sans text-base font-medium leading-snug text-slate-900 sm:text-lg">
+            <span className="text-slate-400">&ldquo;</span>
+            {trimmedGoal}
+            <span className="text-slate-400">&rdquo;</span>
+          </p>
+          <h4 className="mt-6 font-sans text-xs font-semibold uppercase tracking-widest text-slate-500">
+            {GOAL_AGENT_SECTION_LABELS.agent}
+          </h4>
+          <ul className="mx-auto mt-3 max-w-sm list-none space-y-2 text-left font-sans text-sm leading-relaxed text-slate-600">
+            {GOAL_AGENT_CAPABILITY_LINES.map((line) => (
+              <li key={line} className="flex gap-2">
+                <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-emerald-500" aria-hidden />
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
+          <dl className="mx-auto mt-6 grid w-full max-w-sm grid-cols-2 gap-3 sm:gap-4">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-3 text-center">
+              <dt className="font-sans text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                {GOAL_AGENT_SECTION_LABELS.totalSpent}
+              </dt>
+              <dd className="mt-1 font-sans text-lg font-semibold tabular-nums text-emerald-900">
+                ${formatUsdt(spent)}
+              </dd>
+            </div>
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-3 text-center">
+              <dt className="font-sans text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                {GOAL_AGENT_SECTION_LABELS.saved}
+              </dt>
+              <dd className="mt-1 font-sans text-lg font-semibold tabular-nums text-emerald-900">
+                ${formatUsdt(savings)}
+              </dd>
+            </div>
+          </dl>
+        </section>
+      ) : null}
+
       <div className="mb-6 border-b border-slate-200 pb-4">
         <h3 className="font-sans text-sm font-semibold text-slate-900">
           Agent execution timeline

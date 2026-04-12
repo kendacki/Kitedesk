@@ -77,6 +77,7 @@ export function useTaskExecution() {
   const [steps, setSteps] = useState<AgentStep[]>([])
   const [goalBudgetUsdt, setGoalBudgetUsdt] = useState<number | null>(null)
   const [isGoalFlow, setIsGoalFlow] = useState(false)
+  const [activeGoalText, setActiveGoalText] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const reset = () => {
@@ -87,6 +88,7 @@ export function useTaskExecution() {
     setSteps([])
     setGoalBudgetUsdt(null)
     setIsGoalFlow(false)
+    setActiveGoalText(null)
   }
 
   const execute = async (
@@ -251,6 +253,7 @@ export function useTaskExecution() {
         setError('Wallet disconnected. Refresh the page and connect your wallet again.')
         setIsGoalFlow(false)
         setGoalBudgetUsdt(null)
+        setActiveGoalText(null)
         return
       }
 
@@ -263,9 +266,11 @@ export function useTaskExecution() {
         )
         setIsGoalFlow(false)
         setGoalBudgetUsdt(null)
+        setActiveGoalText(null)
         return
       }
 
+      setActiveGoalText(goal.trim())
       setStatus('paying')
       let paymentTxHash: string
       try {
@@ -277,6 +282,7 @@ export function useTaskExecution() {
           setError(KITE_WRONG_NETWORK_PAY_MESSAGE)
           setIsGoalFlow(false)
           setGoalBudgetUsdt(null)
+          setActiveGoalText(null)
           return
         }
         if (isWalletUserRejected(payErr)) {
@@ -284,6 +290,7 @@ export function useTaskExecution() {
           setError('Transaction was cancelled in your wallet.')
           setIsGoalFlow(false)
           setGoalBudgetUsdt(null)
+          setActiveGoalText(null)
           return
         }
         if (isSignerOrConnectionError(payErr)) {
@@ -293,6 +300,7 @@ export function useTaskExecution() {
           )
           setIsGoalFlow(false)
           setGoalBudgetUsdt(null)
+          setActiveGoalText(null)
           return
         }
         throw payErr
@@ -328,6 +336,7 @@ export function useTaskExecution() {
           setError('Request was cancelled.')
           setIsGoalFlow(false)
           setGoalBudgetUsdt(null)
+          setActiveGoalText(null)
           setSteps([])
           return
         }
@@ -350,6 +359,7 @@ export function useTaskExecution() {
           ? gr.finalOutput
           : String(gr.finalOutput ?? '')
       setGoalResult({ ...gr, steps: stepsNorm, finalOutput })
+      setActiveGoalText(null)
       setIsGoalFlow(false)
       setStatus('done')
     } catch (err: unknown) {
@@ -357,6 +367,7 @@ export function useTaskExecution() {
       setSteps([])
       setIsGoalFlow(false)
       setGoalBudgetUsdt(null)
+      setActiveGoalText(null)
       if (isWalletUserRejected(err)) {
         setError('Transaction was cancelled in your wallet.')
         return
@@ -396,6 +407,7 @@ export function useTaskExecution() {
     steps,
     goalBudgetUsdt,
     isGoalFlow,
+    activeGoalText,
     error,
   }
 }

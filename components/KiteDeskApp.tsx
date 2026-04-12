@@ -155,6 +155,8 @@ export function KiteDeskApp() {
   const panelGoalBudget =
     lastGoalBudgetUsdt ?? task.goalResult?.budgetUsdt ?? task.goalBudgetUsdt ?? 0
 
+  const goalPanelTitle = task.activeGoalText ?? task.goalResult?.goal ?? null
+
   const hideTaskForm = showResult || showGoalResult || showGoalLive || showGoalAttesting
 
   return (
@@ -271,6 +273,7 @@ export function KiteDeskApp() {
                   totalSpentUsdt={liveSpent}
                   budgetUsdt={panelGoalBudget || liveBudget}
                   isRunning
+                  goalTitle={goalPanelTitle}
                   budgetSavings={safeBudgetSavings(
                     panelGoalBudget || liveBudget,
                     liveSpent
@@ -288,6 +291,7 @@ export function KiteDeskApp() {
                   totalSpentUsdt={liveSpent}
                   budgetUsdt={panelGoalBudget || liveBudget}
                   isRunning={false}
+                  goalTitle={goalPanelTitle}
                   budgetSavings={safeBudgetSavings(
                     panelGoalBudget || liveBudget,
                     liveSpent
@@ -334,6 +338,7 @@ export function KiteDeskApp() {
                   totalSpentUsdt={task.goalResult.totalSpentUsdt}
                   budgetUsdt={lastGoalBudgetUsdt ?? task.goalResult.budgetUsdt}
                   isRunning={false}
+                  goalTitle={goalPanelTitle}
                   finalOutput={task.goalResult.finalOutput}
                   attestationUrl={task.goalResult.attestationUrl}
                   planReasoning={task.goalResult.planReasoning}

@@ -4,6 +4,7 @@
 import { useState, type FormEvent } from 'react'
 import { motion } from 'framer-motion'
 import { TASK_CONFIG } from '@/lib/constants'
+import { GOAL_AGENT_EXAMPLE_GOAL } from '@/lib/goalAgentSummaryCopy'
 import { PriceTag } from '@/components/PriceTag'
 import { TaskTypeIcon } from '@/components/TaskTypeIcons'
 import { brandEase, brandPrimaryButton } from '@/lib/brand'
@@ -21,7 +22,7 @@ const CLASSIC_PLACEHOLDERS: Record<Exclude<TaskType, 'goal'>, string> = {
   content_gen: 'Topic or brief for social and blog content',
 }
 
-const GOAL_PLACEHOLDER = 'e.g. Find the best GPU under $500 and write a buying guide'
+const GOAL_PLACEHOLDER = `e.g. ${GOAL_AGENT_EXAMPLE_GOAL} and write a buying guide`
 
 const DEMO_GOAL_TEXT = 'Find fintech AI agent trends'
 const DEMO_BUDGET_USDT = 0.2
