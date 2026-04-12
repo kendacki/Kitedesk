@@ -67,54 +67,61 @@ export async function POST(req: NextRequest) {
       paymentTxHashForRelease = paymentTxHash
       await claimPaymentTransaction(paymentTxHash, userAddress)
 
-      const partial = await executeGoal(goal.trim(), budgetUsdt)
-      const taskId = uuidv4()
-      const goalPreview = goal.trim().slice(0, 80)
+      try {
+        const partial = await executeGoal(goal.trim(), budgetUsdt)
+        const taskId = uuidv4()
+        const goalPreview = goal.trim().slice(0, 80)
 
-      const { attestationHash } = await writeGoalAttestation(
-        taskId,
-        userAddress,
-        partial.finalOutput,
-        partial.steps,
-        partial.totalSpentUsdt,
-        goalPreview
-      )
-      attestationWritten = true
+        const { attestationHash } = await writeGoalAttestation(
+          taskId,
+          userAddress,
+          partial.finalOutput,
+          partial.steps,
+          partial.totalSpentUsdt,
+          goalPreview
+        )
+        attestationWritten = true
 
-      const attestationUrl = explorerTxUrl(attestationHash)
+        const attestationUrl = explorerTxUrl(attestationHash)
 
-      await completePaymentTask(paymentTxHash, {
-        taskId,
-        taskType: 'goal',
-        promptPreview: goal.trim().slice(0, 120),
-        attestationUrl,
-      })
+        await completePaymentTask(paymentTxHash, {
+          taskId,
+          taskType: 'goal',
+          promptPreview: goal.trim().slice(0, 120),
+          attestationUrl,
+        })
 
-      paymentTxHashForRelease = null
+        paymentTxHashForRelease = null
 
-      const goalResult: GoalResult = {
-        taskId,
-        goal: partial.goal,
-        budgetUsdt: partial.budgetUsdt,
-        steps: partial.steps,
-        totalSpentUsdt: partial.totalSpentUsdt,
-        remainingBudget: partial.remainingBudget,
-        finalOutput: partial.finalOutput,
-        txHash: paymentTxHash,
-        attestationHash,
-        attestationUrl,
-        completedAt: partial.completedAt,
-        planReasoning: partial.planReasoning,
-        skippedTools: partial.skippedTools,
-        x402PaymentsCount: partial.x402PaymentsCount,
-        x402TotalPaidUsdt: partial.x402TotalPaidUsdt,
+        const goalResult: GoalResult = {
+          taskId,
+          goal: partial.goal,
+          budgetUsdt: partial.budgetUsdt,
+          steps: partial.steps,
+          totalSpentUsdt: partial.totalSpentUsdt,
+          remainingBudget: partial.remainingBudget,
+          finalOutput: partial.finalOutput,
+          txHash: paymentTxHash,
+          attestationHash,
+          attestationUrl,
+          completedAt: partial.completedAt,
+          planReasoning: partial.planReasoning,
+          skippedTools: partial.skippedTools,
+          x402PaymentsCount: partial.x402PaymentsCount,
+          x402TotalPaidUsdt: partial.x402TotalPaidUsdt,
+        }
+
+        return NextResponse.json({
+          success: true,
+          taskId,
+          goalResult,
+        })
+      } catch (rollbackErr: unknown) {
+        if (!attestationWritten) {
+          await releasePaymentClaim(paymentTxHash)
+        }
+        throw rollbackErr
       }
-
-      return NextResponse.json({
-        success: true,
-        taskId,
-        goalResult,
-      })
     }
 
     const { taskType, prompt, userAddress, paymentTxHash } = body as {
@@ -153,34 +160,41 @@ export async function POST(req: NextRequest) {
     paymentTxHashForRelease = paymentTxHash
     await claimPaymentTransaction(paymentTxHash, userAddress)
 
-    const output = await executeAgentTask(classicType, prompt)
-    const taskId = uuidv4()
-    const attestationHash = await writeAttestation(
-      taskId,
-      userAddress,
-      output,
-      taskType
-    )
-    attestationWritten = true
+    try {
+      const output = await executeAgentTask(classicType, prompt)
+      const taskId = uuidv4()
+      const attestationHash = await writeAttestation(
+        taskId,
+        userAddress,
+        output,
+        taskType
+      )
+      attestationWritten = true
 
-    const attestationUrl = explorerTxUrl(attestationHash)
+      const attestationUrl = explorerTxUrl(attestationHash)
 
-    await completePaymentTask(paymentTxHash, {
-      taskId,
-      taskType,
-      promptPreview: prompt.trim().slice(0, 120),
-      attestationUrl,
-    })
+      await completePaymentTask(paymentTxHash, {
+        taskId,
+        taskType,
+        promptPreview: prompt.trim().slice(0, 120),
+        attestationUrl,
+      })
 
-    paymentTxHashForRelease = null
+      paymentTxHashForRelease = null
 
-    return NextResponse.json({
-      success: true,
-      taskId,
-      output,
-      attestationHash,
-      attestationUrl,
-    })
+      return NextResponse.json({
+        success: true,
+        taskId,
+        output,
+        attestationHash,
+        attestationUrl,
+      })
+    } catch (rollbackErr: unknown) {
+      if (!attestationWritten) {
+        await releasePaymentClaim(paymentTxHash)
+      }
+      throw rollbackErr
+    }
   } catch (err: unknown) {
     if (paymentTxHashForRelease && !attestationWritten) {
       await releasePaymentClaim(paymentTxHashForRelease)

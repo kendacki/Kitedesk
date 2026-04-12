@@ -18,3 +18,10 @@ create index if not exists kitedesk_tasks_user_completed_idx
 alter table public.kitedesk_tasks enable row level security;
 
 -- No public policies: only service role (server) accesses this table.
+
+-- =============================================================================
+-- V2 Future Architecture (optional follow-up; keep commented until adopted)
+-- Realtime fan-out + authenticated client reads for lighter API usage.
+-- =============================================================================
+-- alter publication supabase_realtime add table kitedesk_tasks;
+-- create policy "Users can view own tasks" on kitedesk_tasks for select using (lower(user_address) = lower(auth.jwt() ->> 'wallet_address'));

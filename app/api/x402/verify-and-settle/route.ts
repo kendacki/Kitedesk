@@ -1,6 +1,7 @@
 // KiteDesk | x402 settlement: PATH A facilitator, PATH B direct ERC20, PATH C both failed (see lib)
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAndSettleInternal } from '@/lib/x402VerifySettleInternal'
+import { HttpError } from '@/lib/httpError'
 
 export const runtime = 'nodejs'
 
@@ -45,6 +46,12 @@ export async function POST(req: NextRequest) {
       ...(result.path ? { path: result.path } : {}),
     })
   } catch (e) {
+    if (e instanceof HttpError) {
+      return NextResponse.json(
+        { success: false, error: e.message },
+        { status: e.status }
+      )
+    }
     const msg = e instanceof Error ? e.message : 'Unknown error'
     return NextResponse.json({ success: false, error: msg }, { status: 500 })
   }
