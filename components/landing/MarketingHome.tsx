@@ -275,13 +275,13 @@ export function MarketingHome() {
                   initial="hidden"
                   animate="show"
                   variants={fadeUp}
-                  className="grid w-full max-w-xl grid-cols-1 gap-3 text-sm text-slate-600 xs:grid-cols-2 xs:items-stretch xs:gap-3 sm:gap-4 lg:max-w-none"
+                  className="grid w-full max-w-md grid-cols-1 gap-2 text-xs text-slate-600 xs:grid-cols-2 xs:items-stretch xs:gap-2 sm:max-w-lg sm:gap-2.5 sm:text-sm lg:max-w-none"
                 >
-                  <span className="flex min-h-[3.25rem] w-full min-w-0 items-center gap-2.5 rounded-full bg-slate-50 px-3 py-2.5 sm:px-4">
-                    <IconGoalBudget /> Goal based execution with budgets
+                  <span className="flex min-h-0 w-full min-w-0 items-center gap-2 rounded-full bg-slate-50 px-2.5 py-1.5 sm:px-3 sm:py-2">
+                    <IconGoalBudget /> Goals and budgets
                   </span>
-                  <span className="flex min-h-[3.25rem] w-full min-w-0 items-center gap-2.5 rounded-full bg-slate-50 px-3 py-2.5 sm:px-4">
-                    <IconAgentApiPay /> Agent to API micropayments (x402)
+                  <span className="flex min-h-0 w-full min-w-0 items-center gap-2 rounded-full bg-slate-50 px-2.5 py-1.5 sm:px-3 sm:py-2">
+                    <IconAgentApiPay /> x402 API pay
                   </span>
                 </motion.div>
                 <motion.div

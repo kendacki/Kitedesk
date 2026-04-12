@@ -1,9 +1,9 @@
-// KiteDesk | hero pill icons (replace ✓) — payments & on-chain attestation
+// KiteDesk | hero pill icons (budget + API pay)
 'use client'
 
-const base = 'h-4 w-4 shrink-0 text-emerald-600'
+const base = 'h-3.5 w-3.5 shrink-0 text-emerald-600 sm:h-4 sm:w-4'
 
-/** Goal + budget envelope */
+/** Budget caps and spend tracking */
 export function IconGoalBudget({ className }: { className?: string }) {
   return (
     <svg
@@ -18,13 +18,13 @@ export function IconGoalBudget({ className }: { className?: string }) {
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
-        d="M2.25 8.25h19.5M2.25 9h19.5m-18.75 3.75v10.125a2.25 2.25 0 002.25 2.25h9.75a2.25 2.25 0 002.25-2.25V12.75m-18.75 3.75h19.5m-18.75 3.75h19.5"
+        d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75c0 .621-.504 1.125-1.125 1.125h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
       />
     </svg>
   )
 }
 
-/** Agent-to-API / payment flow */
+/** Programmatic payment to an API (x402-style) */
 export function IconAgentApiPay({ className }: { className?: string }) {
   return (
     <svg
@@ -39,13 +39,13 @@ export function IconAgentApiPay({ className }: { className?: string }) {
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
-        d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+        d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
       />
     </svg>
   )
 }
 
-/** Chain link — attested outputs on-chain */
+/** Chain link, attested outputs on-chain */
 export function IconOnChainAttestation({ className }: { className?: string }) {
   return (
     <svg
