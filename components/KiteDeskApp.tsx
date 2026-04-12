@@ -219,10 +219,10 @@ export function KiteDeskApp() {
             </span>
           </h1>
           <p className="mt-4 max-w-2xl font-sans text-sm leading-relaxed text-slate-600 sm:mt-5 sm:text-base md:mt-6">
-            You fund a USDT budget on Kite testnet. The agent chooses tools, pays APIs
-            via <span className="font-semibold text-slate-800">x402</span> when a call
-            requires it (core execution path), stays inside your cap, and anchors proof
-            on-chain — a buyer in a market, not a chat box with a card on file.
+            Set your USDT budget on the Kite testnet, and let the agent handle the
+            rest. It autonomously selects the right tools, clears{' '}
+            <span className="font-semibold text-slate-800">x402</span> API micropayments
+            on the fly, and strictly respects your spending limits.
           </p>
         </div>
       </motion.header>
