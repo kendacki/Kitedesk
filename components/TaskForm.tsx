@@ -190,13 +190,6 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
             )
           })}
         </div>
-        {taskType === 'goal' ? (
-          <p className="mt-3 max-w-3xl font-sans text-xs leading-relaxed text-slate-500">
-            Goal mode: the agent hits paid APIs, settles x402 autonomously when a 402
-            appears, and only proceeds when cost ≤ remaining budget — no second human
-            approval for each API purchase.
-          </p>
-        ) : null}
       </div>
 
       {taskType === 'goal' ? (
