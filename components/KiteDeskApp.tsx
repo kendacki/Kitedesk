@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { useWallet } from '@/hooks/useWallet'
+import { useWallet } from '@/components/WalletProvider'
 import { useTaskExecution } from '@/hooks/useTaskExecution'
 import { WalletConnect } from '@/components/WalletConnect'
 import { TaskForm } from '@/components/TaskForm'

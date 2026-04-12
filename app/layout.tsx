@@ -1,6 +1,7 @@
 // KiteDesk | root layout, fonts, metadata
 
 import type { Metadata, Viewport } from 'next'
+import { WalletProvider } from '@/components/WalletProvider'
 import { jetbrainsMono, poppins } from '@/lib/fonts'
 import './globals.css'
 
@@ -64,7 +65,7 @@ export default function RootLayout({
       <body
         className={`${poppins.variable} ${jetbrainsMono.variable} min-h-[100dvh] font-sans antialiased`}
       >
-        {children}
+        <WalletProvider>{children}</WalletProvider>
       </body>
     </html>
   )
