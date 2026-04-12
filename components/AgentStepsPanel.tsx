@@ -264,7 +264,10 @@ export function AgentStepsPanel({
           <ul className="mx-auto mt-3 max-w-sm list-none space-y-2 text-left font-sans text-sm leading-relaxed text-slate-600">
             {GOAL_AGENT_CAPABILITY_LINES.map((line) => (
               <li key={line} className="flex gap-2">
-                <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-emerald-500" aria-hidden />
+                <span
+                  className="mt-2 h-1 w-1 shrink-0 rounded-full bg-emerald-500"
+                  aria-hidden
+                />
                 <span>{line}</span>
               </li>
             ))}

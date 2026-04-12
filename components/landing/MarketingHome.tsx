@@ -382,8 +382,8 @@ export function MarketingHome() {
               How agent driven execution works
             </h2>
             <p className="mt-4 font-normal text-slate-600">
-              Goal first, then planning, paid APIs, and on-chain proof, not a single blind
-              &quot;run prompt&quot; button.
+              Goal first, then planning, paid APIs, and on-chain proof, not a single
+              blind &quot;run prompt&quot; button.
             </p>
           </div>
           <ol className="mx-auto mt-10 grid max-w-5xl gap-4 sm:mt-14 sm:gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
@@ -478,8 +478,8 @@ export function MarketingHome() {
               Why Kite chain?
             </h2>
             <p className="mt-4 font-normal text-slate-600">
-              Agentic commerce executes on programmable funds and verifiable states, moving
-              beyond spreadsheets and human honor codes.
+              Agentic commerce executes on programmable funds and verifiable states,
+              moving beyond spreadsheets and human honor codes.
             </p>
           </div>
           <div className="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-2 md:items-stretch">
@@ -625,8 +625,7 @@ export function MarketingHome() {
             </h2>
             <p className="mx-auto mt-4 max-w-xl font-normal text-white/90">
               Set a goal and budget on Kite testnet, let the agent plan and pay APIs,
-              then inspect spend and attestations, built for the Agentic Commerce
-              track.
+              then inspect spend and attestations, built for the Agentic Commerce track.
             </p>
             <div className="mt-8 flex justify-center">
               <MotionLink
