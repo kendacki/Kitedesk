@@ -9,8 +9,8 @@ export type AgentExecutionDiagramProps = {
   className?: string
 }
 
-const stagger = 0.12
-const nodeView = { once: true, margin: '-40px' } as const
+const stagger = 0.16
+const nodeView = { once: true, margin: '-80px' } as const
 
 /** Primary marketing node shell: theme `deep-green-gradient` + emerald-tinted depth */
 function NodeShell({
@@ -37,10 +37,10 @@ function FlowLine({
   gradientId: string
 }) {
   const dashAnimate = {
-    strokeDashoffset: [0, -38],
+    strokeDashoffset: [0, -52],
   }
   const dashTransition = {
-    duration: 1.8,
+    duration: 1.15,
     repeat: Infinity,
     ease: 'linear' as const,
   }
@@ -48,64 +48,66 @@ function FlowLine({
   if (orientation === 'horizontal') {
     return (
       <svg
-        className="h-10 w-full min-w-[2.5rem] max-w-[3.25rem] shrink lg:max-w-[3.75rem] xl:max-w-[4.25rem]"
-        viewBox="0 0 72 28"
+        className="h-12 w-full min-w-[2.75rem] max-w-[3.75rem] shrink drop-shadow-[0_0_10px_rgba(16,185,129,0.45)] lg:max-w-[4.25rem] xl:max-w-[4.75rem]"
+        viewBox="0 0 80 32"
         preserveAspectRatio="none"
         aria-hidden
       >
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#064e3b" stopOpacity="0.85" />
-            <stop offset="100%" stopColor="#10b981" stopOpacity="0.95" />
+            <stop offset="0%" stopColor="#047857" stopOpacity="1" />
+            <stop offset="55%" stopColor="#10b981" stopOpacity="1" />
+            <stop offset="100%" stopColor="#6ee7b7" stopOpacity="1" />
           </linearGradient>
         </defs>
         <motion.line
-          x1="3"
-          y1="14"
-          x2="66"
-          y2="14"
+          x1="4"
+          y1="16"
+          x2="68"
+          y2="16"
           stroke={`url(#${gradientId})`}
-          strokeWidth="3"
+          strokeWidth="4.5"
           strokeLinecap="round"
-          strokeDasharray="8 10"
+          strokeDasharray="11 13"
           vectorEffect="nonScalingStroke"
           initial={{ strokeDashoffset: 0 }}
           animate={dashAnimate}
           transition={dashTransition}
         />
-        <polygon points="62,9 72,14 62,19" fill="#10b981" fillOpacity="0.9" />
+        <polygon points="68,10 80,16 68,22" fill="#6ee7b7" fillOpacity="1" />
       </svg>
     )
   }
 
   return (
     <svg
-      className="h-[4.25rem] w-10 shrink-0"
-      viewBox="0 0 28 68"
+      className="h-[5rem] w-11 shrink-0 drop-shadow-[0_0_10px_rgba(16,185,129,0.45)]"
+      viewBox="0 0 32 76"
       preserveAspectRatio="none"
       aria-hidden
     >
       <defs>
         <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#064e3b" stopOpacity="0.85" />
-          <stop offset="100%" stopColor="#10b981" stopOpacity="0.95" />
+          <stop offset="0%" stopColor="#047857" stopOpacity="1" />
+          <stop offset="55%" stopColor="#10b981" stopOpacity="1" />
+          <stop offset="100%" stopColor="#6ee7b7" stopOpacity="1" />
         </linearGradient>
       </defs>
       <motion.line
-        x1="14"
-        y1="3"
-        x2="14"
-        y2="60"
+        x1="16"
+        y1="4"
+        x2="16"
+        y2="64"
         stroke={`url(#${gradientId})`}
-        strokeWidth="3"
+        strokeWidth="4.5"
         strokeLinecap="round"
-        strokeDasharray="8 10"
+        strokeDasharray="11 13"
         vectorEffect="nonScalingStroke"
         initial={{ strokeDashoffset: 0 }}
         animate={dashAnimate}
         transition={dashTransition}
       />
-      <polygon points="9,56 14,66 19,56" fill="#10b981" fillOpacity="0.9" />
+      <polygon points="10,60 16,74 22,60" fill="#6ee7b7" fillOpacity="1" />
     </svg>
   )
 }
@@ -122,10 +124,10 @@ export function AgentExecutionDiagram({ className = '' }: AgentExecutionDiagramP
   const v4 = `${uid}-v4`
 
   const item = (i: number) => ({
-    initial: { opacity: 0, y: 22, scale: 0.98 },
+    initial: { opacity: 0, y: 36, scale: 0.93 },
     whileInView: { opacity: 1, y: 0, scale: 1 },
     viewport: nodeView,
-    transition: { delay: i * stagger, duration: 0.5, ease: brandEase },
+    transition: { delay: i * stagger, duration: 0.68, ease: brandEase },
   })
 
   return (
@@ -149,7 +151,7 @@ export function AgentExecutionDiagram({ className = '' }: AgentExecutionDiagramP
         <div className="flex justify-center py-2 lg:hidden" aria-hidden>
           <FlowLine orientation="vertical" gradientId={v1} />
         </div>
-        <div className="hidden min-h-[3.5rem] w-12 shrink-0 items-center justify-center px-2 sm:w-14 lg:flex xl:w-16 xl:px-3">
+        <div className="hidden min-h-[4rem] w-12 shrink-0 items-center justify-center px-2 sm:w-14 lg:flex xl:w-16 xl:px-3">
           <FlowLine orientation="horizontal" gradientId={h1} />
         </div>
 
@@ -179,7 +181,7 @@ export function AgentExecutionDiagram({ className = '' }: AgentExecutionDiagramP
         <div className="flex justify-center py-2 lg:hidden" aria-hidden>
           <FlowLine orientation="vertical" gradientId={v2} />
         </div>
-        <div className="hidden min-h-[3.5rem] w-12 shrink-0 items-center justify-center px-2 sm:w-14 lg:flex xl:w-16 xl:px-3">
+        <div className="hidden min-h-[4rem] w-12 shrink-0 items-center justify-center px-2 sm:w-14 lg:flex xl:w-16 xl:px-3">
           <FlowLine orientation="horizontal" gradientId={h2} />
         </div>
 
@@ -189,13 +191,13 @@ export function AgentExecutionDiagram({ className = '' }: AgentExecutionDiagramP
           className="relative w-full max-w-xs shrink-0 lg:w-40 xl:w-48"
         >
           <motion.div
-            className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-emerald-300/35 via-emerald-400/30 to-teal-300/35 opacity-90 blur-md"
+            className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-emerald-200/55 via-emerald-300/50 to-teal-200/50 blur-lg"
             animate={{
-              opacity: [0.5, 0.95, 0.5],
-              scale: [1, 1.04, 1],
+              opacity: [0.65, 1, 0.65],
+              scale: [1, 1.09, 1],
             }}
             transition={{
-              duration: 2.2,
+              duration: 1.75,
               repeat: Infinity,
               ease: 'easeInOut',
             }}
@@ -222,7 +224,7 @@ export function AgentExecutionDiagram({ className = '' }: AgentExecutionDiagramP
         <div className="flex justify-center py-2 lg:hidden" aria-hidden>
           <FlowLine orientation="vertical" gradientId={v3} />
         </div>
-        <div className="hidden min-h-[3.5rem] w-12 shrink-0 items-center justify-center px-2 sm:w-14 lg:flex xl:w-16 xl:px-3">
+        <div className="hidden min-h-[4rem] w-12 shrink-0 items-center justify-center px-2 sm:w-14 lg:flex xl:w-16 xl:px-3">
           <FlowLine orientation="horizontal" gradientId={h3} />
         </div>
 
@@ -252,7 +254,7 @@ export function AgentExecutionDiagram({ className = '' }: AgentExecutionDiagramP
         <div className="flex justify-center py-2 lg:hidden" aria-hidden>
           <FlowLine orientation="vertical" gradientId={v4} />
         </div>
-        <div className="hidden min-h-[3.5rem] w-12 shrink-0 items-center justify-center px-2 sm:w-14 lg:flex xl:w-16 xl:px-3">
+        <div className="hidden min-h-[4rem] w-12 shrink-0 items-center justify-center px-2 sm:w-14 lg:flex xl:w-16 xl:px-3">
           <FlowLine orientation="horizontal" gradientId={h4} />
         </div>
 
