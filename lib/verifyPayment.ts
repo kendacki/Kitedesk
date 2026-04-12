@@ -53,7 +53,9 @@ export async function verifyPaymentTransaction(
 
   const user = ethers.getAddress(userAddress)
 
-  // Do not require tx.from === user: gasless EIP-3009 submissions are sent by the relayer.
+  if (!tx.from || ethers.getAddress(tx.from) !== user) {
+    throw new HttpError('Payment transaction must be sent from the connected wallet', 400)
+  }
 
   const usdt = CONTRACTS.usdt
   if (!usdt || !ethers.isAddress(usdt)) {
