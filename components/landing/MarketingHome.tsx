@@ -547,9 +547,9 @@ export function MarketingHome() {
               What this build is meant to show
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-center text-sm font-normal leading-relaxed text-slate-600">
-              KiteDesk is a working console for agentic commerce: real wallet flows,
-              agent-paid APIs via x402 on the execution path, and on-chain attestations
-              — not placeholder quotes or simulated checkout.
+              KiteDesk is the operational console for agentic commerce. We deliver live
+              wallet routing, x402-enabled API micropayments, and verifiable on-chain
+              attestations replacing simulated staging with deterministic execution.
             </p>
             <div className="mt-10 grid gap-4 sm:gap-6 md:grid-cols-3">
               {[
