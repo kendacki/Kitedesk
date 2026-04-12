@@ -2,11 +2,14 @@
 'use client'
 
 import Link from 'next/link'
+import { useWallet } from '@/components/WalletProvider'
 
 const itemClass =
   'flex min-h-[44px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-2 text-[11px] font-semibold leading-tight text-slate-600 transition active:bg-emerald-50 active:text-emerald-900 sm:text-xs'
 
 export function MobileLandingDock() {
+  const wallet = useWallet()
+
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200/90 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_24px_rgba(15,23,42,0.06)] backdrop-blur-md md:hidden"
@@ -26,9 +29,20 @@ export function MobileLandingDock() {
         <a href="#commerce" className={itemClass}>
           Commerce
         </a>
-        <Link href="/desk" className={`${itemClass} text-emerald-800`} prefetch>
-          Console
-        </Link>
+        {wallet.address ? (
+          <Link href="/desk" className={`${itemClass} text-emerald-800`} prefetch>
+            Console
+          </Link>
+        ) : (
+          <button
+            type="button"
+            className={`${itemClass} text-emerald-800 disabled:opacity-50`}
+            disabled={wallet.isConnecting}
+            onClick={() => void wallet.connect()}
+          >
+            {wallet.isConnecting ? '…' : 'Sign in'}
+          </button>
+        )}
       </div>
     </nav>
   )

@@ -17,8 +17,10 @@ import {
 import { GITHUB_REPO_URL, githubLicenseUrl } from '@/lib/publicLinks'
 import { LottieHeader } from '@/components/LottieHeader'
 import { AgentExecutionDiagram } from '@/components/landing/AgentExecutionDiagram'
+import { useWallet } from '@/components/WalletProvider'
 
 const MotionLink = motion.create(Link)
+const MotionButton = motion.button
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -79,6 +81,7 @@ function MenuIcon({ open }: { open: boolean }) {
 
 export function MarketingHome() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const wallet = useWallet()
 
   useEffect(() => {
     if (!menuOpen) return
@@ -139,14 +142,18 @@ export function MarketingHome() {
             </ul>
           </nav>
           <div className="relative z-30 flex shrink-0 items-center gap-2 sm:gap-3">
-            <MotionLink
-              href="/desk"
-              className={`${brandSecondaryCtaMarketing} hidden md:inline-flex`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Sign in
-            </MotionLink>
+            {!wallet.address ? (
+              <MotionButton
+                type="button"
+                disabled={wallet.isConnecting}
+                className={`${brandSecondaryCtaMarketing} hidden md:inline-flex`}
+                whileHover={{ scale: wallet.isConnecting ? 1 : 1.05 }}
+                whileTap={{ scale: wallet.isConnecting ? 1 : 0.95 }}
+                onClick={() => void wallet.connect()}
+              >
+                {wallet.isConnecting ? 'Connecting…' : 'Sign in'}
+              </MotionButton>
+            ) : null}
             <MotionLink
               href="/desk"
               className={`${brandPrimaryCtaMarketing} hidden min-h-[44px] sm:inline-flex`}
@@ -232,6 +239,26 @@ export function MarketingHome() {
                 >
                   Why Kite
                 </a>
+                {!wallet.address ? (
+                  <button
+                    type="button"
+                    className="rounded-lg px-3 py-3 text-left text-emerald-900 active:bg-emerald-50"
+                    disabled={wallet.isConnecting}
+                    onClick={() => {
+                      void wallet.connect()
+                    }}
+                  >
+                    {wallet.isConnecting ? 'Connecting…' : 'Sign in'}
+                  </button>
+                ) : (
+                  <Link
+                    href="/desk"
+                    className="rounded-lg px-3 py-3 text-emerald-900 active:bg-emerald-50"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Open console
+                  </Link>
+                )}
               </nav>
             </motion.aside>
           </motion.div>

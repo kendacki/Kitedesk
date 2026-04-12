@@ -130,6 +130,49 @@ export function useWallet() {
     })
   }, [])
 
+  /** Rehydrate from the extension after refresh, new tabs, or remounts (silent `eth_accounts`). */
+  useEffect(() => {
+    const eth = getPreferredEip1193Provider()
+    if (!eth) return
+
+    let cancelled = false
+
+    void (async () => {
+      try {
+        const next = await readKiteWalletState(eth)
+        if (cancelled) return
+        if (!next.address) return
+
+        if (next.wrongNetwork || !next.signer) {
+          setState({
+            address: next.address,
+            provider: next.provider,
+            signer: null,
+            wrongNetwork: true,
+            isConnecting: false,
+            error: KITE_STAY_ON_TESTNET_MESSAGE,
+          })
+          return
+        }
+
+        setState({
+          address: next.address,
+          provider: next.provider,
+          signer: next.signer,
+          wrongNetwork: false,
+          isConnecting: false,
+          error: null,
+        })
+      } catch {
+        /* wallet not injectable yet */
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const switchToKite = useCallback(async () => {
     const eth = getPreferredEip1193Provider()
     if (!eth) {
@@ -300,7 +343,19 @@ export function useWallet() {
     const onAccountsChanged = (accounts: unknown) => {
       const list = Array.isArray(accounts) ? accounts : []
       if (list.length === 0) {
-        disconnect()
+        void (async () => {
+          await new Promise((r) => setTimeout(r, 150))
+          try {
+            const acc = (await eth.request({ method: 'eth_accounts' })) as unknown
+            if (Array.isArray(acc) && acc.length > 0) {
+              await refreshFromProvider()
+              return
+            }
+          } catch {
+            /* treat as disconnected */
+          }
+          disconnect()
+        })()
         return
       }
       void refreshFromProvider()
