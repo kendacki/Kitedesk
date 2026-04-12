@@ -207,7 +207,7 @@ export function KiteDeskApp() {
 
         <div className="flex w-full flex-col items-start text-left">
           <div className="mb-6 flex w-full flex-row items-center justify-start gap-3 sm:mb-8">
-            <KitedeskLogoMark size={44} className="shrink-0" />
+            <KitedeskLogoMark size={44} alignMarkLeft className="-ml-2 shrink-0" />
             <p className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800">
               KITEDESK
             </p>
