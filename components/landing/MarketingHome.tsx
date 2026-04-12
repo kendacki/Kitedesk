@@ -364,11 +364,28 @@ export function MarketingHome() {
           <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
             Agentic Commerce on Kite
           </p>
-          <div className="mx-auto mt-10 flex max-w-4xl flex-wrap items-center justify-center gap-10 opacity-60 grayscale">
-            {['MetaMask', 'Kite', 'Groq', 'USDT', 'Solidity'].map((name) => (
-              <span key={name} className="text-sm font-semibold text-slate-400">
-                {name}
-              </span>
+          <div className="mx-auto mt-10 flex max-w-4xl flex-wrap items-center justify-center gap-x-8 gap-y-5 opacity-60 grayscale sm:gap-x-12 sm:gap-y-6">
+            {(
+              [
+                { src: '/images/partners/metamask.png', alt: 'MetaMask' },
+                { src: '/images/partners/kite.png', alt: 'Kite' },
+                { src: '/images/partners/groq.png', alt: 'Groq' },
+                { src: '/images/partners/usdt.png', alt: 'USDT' },
+                { src: '/images/partners/solidity.png', alt: 'Solidity' },
+              ] as const
+            ).map(({ src, alt }) => (
+              <div
+                key={src}
+                className="flex h-9 w-[6.5rem] shrink-0 items-center justify-center sm:h-10 sm:w-[7.5rem]"
+              >
+                <Image
+                  src={src}
+                  alt={alt}
+                  width={150}
+                  height={40}
+                  className="max-h-full w-auto max-w-full object-contain object-center"
+                />
+              </div>
             ))}
           </div>
         </section>

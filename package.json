@@ -24,6 +24,7 @@
     "ship": "npm run lint && npm run build",
     "validate": "npm run format:check && npm run lint && npm run simulate && npm run build",
     "logo:assets": "node scripts/generate-logo-assets.cjs",
+    "partners:logos": "node scripts/generate-partner-logos.cjs",
     "test:goal": "tsx scripts/test-goal-agent.ts",
     "test:goal:cjs": "tsx scripts/test-goal-agent.ts",
     "test:x402:facilitator": "node scripts/test-x402-facilitator.cjs",
@@ -59,6 +60,7 @@
     "postcss": "^8",
     "prettier": "^3.8.2",
     "sharp": "^0.34.5",
+    "simple-icons": "^11.15.0",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.21.0",
     "typescript": "^5"
