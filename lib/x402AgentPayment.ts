@@ -2,6 +2,10 @@
 import { ethers } from 'ethers'
 import { KITE_CHAIN, KITE_RELAYER } from '@/lib/constants'
 
+const PIEVERSE_FACILITATOR_ORIGIN = 'https://facilitator.pieverse.io'
+const PIEVERSE_FACILITATOR_GET_URL = `${PIEVERSE_FACILITATOR_ORIGIN}/`
+const PIEVERSE_FACILITATOR_VERIFY_URL = `${PIEVERSE_FACILITATOR_ORIGIN}/v2/verify`
+
 const TRANSFER_WITH_AUTHORIZATION_TYPE: Array<{ name: string; type: string }> = [
   { name: 'from', type: 'address' },
   { name: 'to', type: 'address' },
@@ -71,6 +75,65 @@ export async function buildXPaymentHeaderForFacilitator(
     nonce: message.nonce,
   }
 
-  const payload = { authorization, signature }
+  const payload = { authorization, signature, asset: tokenAddress }
   return Buffer.from(JSON.stringify(payload), 'utf8').toString('base64')
+}
+
+export async function testFacilitatorConnectivity(): Promise<{
+  facilitatorReachable: boolean
+  verifyStatus: number
+  verifyBody: unknown
+}> {
+  let facilitatorReachable = false
+  let getStatus = 0
+  let getBodyText = ''
+
+  try {
+    const getRes = await fetch(PIEVERSE_FACILITATOR_GET_URL, { method: 'GET' })
+    getStatus = getRes.status
+    getBodyText = await getRes.text()
+    facilitatorReachable = true
+  } catch (e) {
+    facilitatorReachable = false
+    getBodyText = e instanceof Error ? e.message : String(e)
+  }
+
+  let getBodyParsed: unknown = getBodyText
+  if (getBodyText) {
+    try {
+      getBodyParsed = JSON.parse(getBodyText) as unknown
+    } catch {
+      // keep raw text
+    }
+  }
+
+  console.error('[x402:test] GET', PIEVERSE_FACILITATOR_GET_URL, 'status:', getStatus)
+  console.error('[x402:test] GET body:', getBodyParsed)
+
+  let verifyStatus = 0
+  let verifyBody: unknown = null
+
+  try {
+    const verifyRes = await fetch(PIEVERSE_FACILITATOR_VERIFY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ network: 'kite-testnet' }),
+    })
+    verifyStatus = verifyRes.status
+    const text = await verifyRes.text()
+    if (text) {
+      try {
+        verifyBody = JSON.parse(text) as unknown
+      } catch {
+        verifyBody = { raw: text.slice(0, 2000) }
+      }
+    }
+  } catch (e) {
+    verifyBody = { error: e instanceof Error ? e.message : String(e) }
+  }
+
+  console.error('[x402:test] POST', PIEVERSE_FACILITATOR_VERIFY_URL, 'status:', verifyStatus)
+  console.error('[x402:test] POST body:', verifyBody)
+
+  return { facilitatorReachable, verifyStatus, verifyBody }
 }

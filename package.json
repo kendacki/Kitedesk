@@ -17,7 +17,9 @@
     "validate": "npm run format:check && npm run lint && npm run simulate && npm run build",
     "logo:assets": "node scripts/generate-logo-assets.cjs",
     "test:goal": "tsx scripts/test-goal-agent.ts",
-    "test:goal:cjs": "node scripts/test-goal-agent.cjs"
+    "test:goal:cjs": "node scripts/test-goal-agent.cjs",
+    "test:x402:facilitator": "node scripts/test-x402-facilitator.cjs",
+    "print:agent-wallet": "node scripts/print-agent-wallet.cjs"
   },
   "dependencies": {
     "@stitches/react": "^1.2.8",

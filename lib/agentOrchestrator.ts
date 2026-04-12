@@ -5,9 +5,15 @@ import { HttpError } from '@/lib/httpError'
 import { getTotalCost, TOOL_REGISTRY } from '@/lib/tools'
 import { KITE_CHAIN } from '@/lib/constants'
 import { buildXPaymentHeaderForFacilitator } from '@/lib/x402AgentPayment'
+import { executeX402SearchInternal } from '@/lib/x402SearchInternal'
 import type { AgentStep, GoalResult, ToolName } from '@/types'
 
 const DEFAULT_MODEL = 'openai/gpt-oss-120b'
+
+const ERC20_BALANCE_ABI = [
+  'function balanceOf(address owner) view returns (uint256)',
+  'function decimals() view returns (uint8)',
+] as const
 
 const PLANNER_SYSTEM_PROMPT = `You are an autonomous economic agent with access to real external APIs.
 Your job: achieve the user's goal with minimum cost while staying within budget.
@@ -147,8 +153,7 @@ async function readTokenDecimals(
 }
 
 /**
- * x402 tool execution: probe /api/x402/search without payment, pay via agent wallet
- * EIP-3009 authorization in X-Payment (Pieverse facilitator settle — not a raw ERC20.transfer).
+ * x402 tool execution: internal paid search (no self-HTTP); EIP-3009 X-Payment + facilitator or direct USDT transfer.
  */
 export async function executeX402Tool(
   toolName: ToolName,
@@ -167,17 +172,14 @@ export async function executeX402Tool(
   }
 
   const base = getInternalApiBaseUrl()
-  const url = `${base}/api/x402/search`
-  const body = JSON.stringify({ query: input.trim() })
 
-  const first = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body,
+  const first = await executeX402SearchInternal({
+    query: input.trim(),
+    resourceBase: base,
   })
 
   if (first.status === 200) {
-    const raw = (await first.json()) as SearchApiOk
+    const raw = first.body as SearchApiOk
     const out = JSON.stringify({
       answer: raw.answer ?? '',
       results: raw.results ?? [],
@@ -186,19 +188,17 @@ export async function executeX402Tool(
   }
 
   if (first.status !== 402) {
-    const t = await first.text()
+    const preview =
+      typeof first.body === 'object' && first.body !== null && 'error' in first.body
+        ? String((first.body as { error?: string }).error ?? '')
+        : JSON.stringify(first.body).slice(0, 500)
     return {
       ok: false,
-      error: `x402 search unexpected status ${first.status}: ${t.slice(0, 500)}`,
+      error: `x402 search unexpected status ${first.status}: ${preview}`,
     }
   }
 
-  let challenge: X402ChallengeBody
-  try {
-    challenge = (await first.json()) as X402ChallengeBody
-  } catch {
-    return { ok: false, error: 'Invalid JSON in 402 response' }
-  }
+  const challenge = first.body as X402ChallengeBody
 
   const acc = challenge.accepts?.[0]
   if (!acc?.maxAmountRequired || !acc.payTo || !acc.asset) {
@@ -239,6 +239,26 @@ export async function executeX402Tool(
   }
 
   const wallet = new ethers.Wallet(pk, provider)
+
+  const tokenRead = new ethers.Contract(asset, ERC20_BALANCE_ABI, provider)
+  let balance: bigint
+  try {
+    balance = await tokenRead.balanceOf(wallet.address)
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    return { ok: false, error: `Could not read agent USDT balance: ${msg}` }
+  }
+
+  if (balance < maxWei) {
+    const formattedBalance = ethers.formatUnits(balance, decimals)
+    const formattedNeeded = ethers.formatUnits(maxWei, decimals)
+    console.error('[x402] agent wallet for settlement (fund this address for x402 USDT):', wallet.address)
+    return {
+      ok: false,
+      error: `Agent wallet ${wallet.address} has insufficient testnet USDT balance. Fund it at https://faucet.gokite.ai — balance: ${formattedBalance}, needed: ${formattedNeeded}`,
+    }
+  }
+
   let xPayment: string
   try {
     xPayment = await buildXPaymentHeaderForFacilitator(wallet, provider, {
@@ -251,24 +271,24 @@ export async function executeX402Tool(
     return { ok: false, error: `Failed to build X-Payment: ${msg}` }
   }
 
-  const second = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Payment': xPayment,
-    },
-    body,
+  const second = await executeX402SearchInternal({
+    query: input.trim(),
+    resourceBase: base,
+    xPaymentHeader: xPayment,
   })
 
-  if (!second.ok) {
-    const t = await second.text()
+  if (second.status !== 200) {
+    const preview =
+      typeof second.body === 'object' && second.body !== null && 'error' in second.body
+        ? String((second.body as { error?: string }).error ?? '')
+        : JSON.stringify(second.body).slice(0, 500)
     return {
       ok: false,
-      error: `x402 search after payment failed ${second.status}: ${t.slice(0, 500)}`,
+      error: `x402 search after payment failed ${second.status}: ${preview}`,
     }
   }
 
-  const data = (await second.json()) as SearchApiOk
+  const data = second.body as SearchApiOk
   const out = JSON.stringify({
     answer: data.answer ?? '',
     results: data.results ?? [],
