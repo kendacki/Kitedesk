@@ -213,7 +213,10 @@ export function KiteDeskApp() {
             </p>
           </div>
           <h1 className="max-w-2xl font-sans text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
-            AI agents that plan, pay, and execute tasks under budget — autonomously
+            AI agents that plan, pay, and execute tasks under budget{' '}
+            <span className="bg-gradient-to-br from-emerald-900 to-emerald-500 bg-clip-text text-transparent">
+              autonomously
+            </span>
           </h1>
           <p className="mt-4 max-w-2xl font-sans text-sm leading-relaxed text-slate-600 sm:mt-5 sm:text-base md:mt-6">
             You fund a USDT budget on Kite testnet. The agent chooses tools, pays APIs
