@@ -181,16 +181,13 @@ export function KiteDeskApp() {
         variants={blockShow}
         className="mb-6 flex flex-col gap-3 border-b border-slate-200 pb-5 sm:mb-8 sm:gap-4 sm:pb-6 md:mb-10"
       >
-        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <Link
-            href="/"
-            className="inline-flex w-fit shrink-0 items-center gap-2 font-sans text-sm text-emerald-800 transition hover:text-emerald-700"
-          >
-            <span aria-hidden className="text-lg">
-              ←
-            </span>
-            Back to landing
-          </Link>
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 flex-row items-center justify-start gap-3">
+            <KitedeskLogoMark size={44} alignMarkLeft className="-ml-2 shrink-0" />
+            <p className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800">
+              KITEDESK
+            </p>
+          </div>
           <div className="flex w-full shrink-0 justify-end sm:w-auto">
             <WalletConnect
               address={wallet.address}
@@ -206,12 +203,15 @@ export function KiteDeskApp() {
         </div>
 
         <div className="flex w-full flex-col items-start text-left">
-          <div className="mb-6 flex w-full flex-row items-center justify-start gap-3 sm:mb-8">
-            <KitedeskLogoMark size={44} alignMarkLeft className="-ml-2 shrink-0" />
-            <p className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800">
-              KITEDESK
-            </p>
-          </div>
+          <Link
+            href="/"
+            className="mb-6 inline-flex w-fit shrink-0 items-center gap-2 font-sans text-sm text-emerald-800 transition hover:text-emerald-700 sm:mb-8"
+          >
+            <span aria-hidden className="text-lg">
+              ←
+            </span>
+            Back to landing
+          </Link>
           <h1 className="max-w-2xl font-sans text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
             AI agents that plan, pay, and execute tasks under budget{' '}
             <span className="bg-gradient-to-br from-emerald-900 to-emerald-500 bg-clip-text text-transparent">
