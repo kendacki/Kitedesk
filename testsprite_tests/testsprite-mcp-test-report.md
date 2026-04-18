@@ -1,12 +1,12 @@
 ## 1️⃣ Document Metadata
 
-| Field            | Value                                      |
-| ---------------- | ------------------------------------------ |
-| Project          | KiteDesk (Next.js 14 + Hardhat / Solidity) |
+| Field            | Value                                       |
+| ---------------- | ------------------------------------------- |
+| Project          | KiteDesk (Next.js 14 + Hardhat / Solidity)  |
 | Workspace        | `app/`, `components/`, `lib/`, `contracts/` |
-| Test tooling     | TestSprite MCP (`user-TestSprite`)         |
-| Report date      | 2026-04-18                                 |
-| Account (masked) | Starter plan, credits verified via MCP   |
+| Test tooling     | TestSprite MCP (`user-TestSprite`)          |
+| Report date      | 2026-04-18                                  |
+| Account (masked) | Starter plan, credits verified via MCP      |
 
 **Initialization**
 
@@ -23,11 +23,11 @@
 
 ### Requirement R1 — HTTP API discoverability & path correctness
 
-| Test ID | Title                               | Result | Failure condition (exact)                                                                 |
-| ------- | ----------------------------------- | ------ | ------------------------------------------------------------------------------------------- |
-| TC001   | `test_agent_api_post_and_get_requests` | Failed | `AssertionError: Expected 400 or 422 for malformed JSON, got 404` — requests targeted **`/app/api/agent`** while Next.js exposes **`/api/agent`**. |
-| TC002   | `test_history_api_post_and_get_requests` | Failed | `AssertionError: Expected 401 or 403 without key, got 404` — same **`/app/api/history`** vs **`/api/history`** mismatch. |
-| TC003   | `test_x402_api_verify_and_settle`        | Failed | `AssertionError: Expected 200 OK, got 404` — **`/app/api/x402/verify-and-settle`** vs **`/api/x402/verify-and-settle`**. |
+| Test ID | Title                                    | Result | Failure condition (exact)                                                                                                                          |
+| ------- | ---------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TC001   | `test_agent_api_post_and_get_requests`   | Failed | `AssertionError: Expected 400 or 422 for malformed JSON, got 404` — requests targeted **`/app/api/agent`** while Next.js exposes **`/api/agent`**. |
+| TC002   | `test_history_api_post_and_get_requests` | Failed | `AssertionError: Expected 401 or 403 without key, got 404` — same **`/app/api/history`** vs **`/api/history`** mismatch.                           |
+| TC003   | `test_x402_api_verify_and_settle`        | Failed | `AssertionError: Expected 200 OK, got 404` — **`/app/api/x402/verify-and-settle`** vs **`/api/x402/verify-and-settle`**.                           |
 
 **Root cause (R1):** Generated tests used a **filesystem-style URL prefix** (`/app/api/...`) instead of the **App Router public prefix** (`/api/...`).
 
@@ -45,11 +45,11 @@ No Solidity execution was produced by TestSprite in this MCP batch. Contract cov
 
 ## 3️⃣ Coverage & Matching Metrics
 
-| Area              | Planned (MCP) | Executed | Passed | Failed |
-| ----------------- | ------------- | -------- | ------ | ------ |
-| Backend (cloud) | 3             | 3        | 0      | 3      |
-| Frontend (cloud)| 0             | 0        | —      | —      |
-| Solidity (cloud)| 0             | 0        | —      | —      |
+| Area             | Planned (MCP) | Executed | Passed | Failed |
+| ---------------- | ------------- | -------- | ------ | ------ |
+| Backend (cloud)  | 3             | 3        | 0      | 3      |
+| Frontend (cloud) | 0             | 0        | —      | —      |
+| Solidity (cloud) | 0             | 0        | —      | —      |
 
 **Pass rate (backend cloud):** 0% on first run, attributable primarily to **URL prefix mismatch** (see R1).
 

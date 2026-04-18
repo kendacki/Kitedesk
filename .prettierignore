@@ -8,3 +8,6 @@ cache
 typechain-types
 package-lock.json
 *.min.js
+
+# TestSprite MCP HTML export (tool-generated; not Prettier-formatted)
+testsprite_tests/testsprite-mcp-test-report.html
