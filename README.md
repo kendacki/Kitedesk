@@ -84,21 +84,18 @@ KiteDesk implements a fully autonomous commerce loop that is observable via the 
 
 ## TestSprite (MCP) testing
 
-This repo includes a **`testsprite_tests/`** directory for **TestSprite MCP** output: backend test plans, a standardized PRD stub, and a human-readable report.
+This repo includes a **`testsprite_tests/`** directory for **TestSprite MCP** output: backend test plans, a standardized PRD stub, and an HTML run report.
 
 | Path                                                  | Purpose                                                                                     |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `testsprite_tests/testsprite_backend_test_plan.json`  | Generated API test case IDs and descriptions (`/api/agent`, `/api/history`, `/api/x402/*`). |
 | `testsprite_tests/testsprite_frontend_test_plan.json` | Frontend plan from MCP (may be empty until PRD upload succeeds in TestSprite).              |
 | `testsprite_tests/standard_prd.json`                  | Product spec JSON used to unblock backend plan generation.                                  |
-| `testsprite_tests/testsprite-mcp-test-report.md`      | Consolidated run summary, gaps, and re-run notes.                                           |
-| `testsprite_tests/testsprite-mcp-test-report.html`    | Optional HTML export from TestSprite (excluded from Prettier in `.prettierignore`).         |
+| `testsprite_tests/testsprite-mcp-test-report.html`    | TestSprite run summary export (excluded from Prettier in `.prettierignore`).                |
 
 **Running tests locally:** install the TestSprite MCP in Cursor, ensure `npm run dev` is serving **port 3000**, then use MCP tools (`testsprite_generate_*`, `testsprite_generate_code_and_execute`) per TestSprite docs. Raw cloud output and secrets belong under `testsprite_tests/tmp/` — that path is **gitignored**; do not commit API keys or tunnel credentials.
 
 **Routing note:** Next.js exposes handlers at **`/api/...`**. Some generated clients call **`/app/api/...`**; `next.config.mjs` includes a **rewrite** from `/app/api/:path*` → `/api/:path*` for compatibility.
-
-A **`src/your-code-here/`** placeholder exists for templates that expect a `src/` tree; real source remains under `app/`, `components/`, and `lib/` as above.
 
 ## Local Setup
 
