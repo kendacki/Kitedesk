@@ -56,17 +56,3 @@ The **frontend** plan file (`testsprite_frontend_test_plan.json`) was **empty** 
 Remaining **spec drift**: cloud tests may still assume global API-key auth and REST shapes that differ from production (`POST /api/agent` with payment-verified goal payloads, `GET /api/history?address=…`, `POST /api/x402/verify-and-settle` with `xPaymentHeader`). Address by regenerating tests or extending PRD — not by weakening production auth without review.
 
 ---
-
-## 5. Gaps / follow-ups
-
-1. Re-run **`testsprite_generate_code_and_execute`** after `npm run dev` on port **3000** to refresh pass/fail against current `main`.
-2. Complete TestSprite **standardized PRD upload** if the MCP returns `400` (“No files uploaded”) so frontend plans populate.
-3. Keep **`testsprite_tests/tmp/`** out of version control; rotate any key ever pasted into local TestSprite config.
-
----
-
-## 6. How to re-audit
-
-1. `npm run dev` (default `http://localhost:3000`).
-2. Cursor: TestSprite MCP — `testsprite_generate_backend_test_plan` / `testsprite_generate_frontend_test_plan`, then `testsprite_generate_code_and_execute`.
-3. Compare new `tmp/raw_report.md` (local, gitignored) with this file and update this audit narrative as needed.
