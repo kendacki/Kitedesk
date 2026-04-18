@@ -1,0 +1,5 @@
+{
+  "productName": "KiteDesk",
+  "formatVersion": 1,
+  "markdown": "# Product Specification Document: KiteDesk\n\n## 1. Product Overview\nKiteDesk is an autonomous agentic commerce platform deployed on the Kite AI Testnet. It enables AI agents to autonomously discover services, evaluate HTTP 402 (Payment Required) paywalls against a user-defined budget, authorize USDT micro-payments, and record verifiable execution traces on-chain.\n\n## 2. Platform Structure\n- Marketing Landing Page (`/`)\n- Product Console (`/desk`): wallet, task history, goal agent, budget.\n\n## 3. API Surface\n- POST/GET `app/api/agent`, `app/api/history`, `app/api/x402/*`\n\n## 4. Contracts\n- `contracts/KiteDeskAttestations.sol` (Hardhat)\n\n## 5. Testable Workflows\n- Wallet connect / wrong network / navigation persistence\n- Goal submission and agent orchestration (env-dependent)\n- x402 verify-and-settle and replay protection (Supabase)\n"
+}

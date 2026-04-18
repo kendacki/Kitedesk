@@ -13,6 +13,9 @@ build/
 # Testing
 coverage/
 
+# TestSprite MCP (generated; may contain local tunnel keys — do not ship)
+testsprite_tests/tmp/
+
 # Env and secrets (never commit keys — use .env.example as template)
 .env
 .env.*

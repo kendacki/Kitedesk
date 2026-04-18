@@ -1,5 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  /**
+   * Compatibility alias: some external test runners assume `/app/api/*` (repo-folder shape).
+   * Next.js App Router serves handlers at `/api/*` only; this rewrite preserves additive routing.
+   */
+  async rewrites() {
+    return [{ source: '/app/api/:path*', destination: '/api/:path*' }]
+  },
   // Longer-lived dev pages reduce 404s on /_next/static/* when HMR races with the browser.
   onDemandEntries: {
     maxInactiveAge: 90 * 1000,

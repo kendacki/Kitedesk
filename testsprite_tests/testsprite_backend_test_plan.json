@@ -1,0 +1,17 @@
+[
+  {
+    "id": "TC001",
+    "title": "test_agent_api_post_and_get_requests",
+    "description": "Verify that the POST and GET requests to the /app/api/agent endpoint correctly handle goal submission and agent orchestration, including proper request validation and response formatting."
+  },
+  {
+    "id": "TC002",
+    "title": "test_history_api_post_and_get_requests",
+    "description": "Verify that the POST and GET requests to the /app/api/history endpoint correctly retrieve and store task history data, ensuring data integrity and correct filtering based on user context."
+  },
+  {
+    "id": "TC003",
+    "title": "test_x402_api_verify_and_settle",
+    "description": "Verify that the /app/api/x402/* endpoints correctly perform HTTP 402 paywall verification, authorize USDT micro-payments within user-defined budgets, and handle replay protection mechanisms."
+  }
+]
