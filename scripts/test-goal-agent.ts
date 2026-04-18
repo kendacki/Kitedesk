@@ -2,9 +2,9 @@
 // Run from repo root: npm run test:goal
 import { config } from 'dotenv'
 import path from 'path'
-import { executeGoal } from '../lib/agentOrchestrator'
-import { HttpError } from '../lib/httpError'
-import { requireInternalApiBaseUrl } from '../lib/internalApiBaseUrl'
+import { executeGoal } from '../src/lib/agentOrchestrator'
+import { HttpError } from '../src/lib/httpError'
+import { requireInternalApiBaseUrl } from '../src/lib/internalApiBaseUrl'
 import type { AgentStep } from '../types'
 
 config({ path: path.resolve(process.cwd(), '.env') })

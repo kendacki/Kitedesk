@@ -75,6 +75,8 @@ KiteDesk implements a fully autonomous commerce loop that is observable via the 
 | Contracts    | Solidity 0.8.20, `KiteDeskAttestations` (Hardhat)                                 |
 | Deploy       | Vercel (recommended)                                                              |
 
+Next.js app source lives under **`src/`**: **`src/app/`** (App Router pages and `api/` routes), **`src/components/`**, **`src/hooks/`**, **`src/lib/`**, and **`src/types/`**. Config, `public/`, `contracts/`, and Hardhat stay at the repo root.
+
 ## x402 Integration Details
 
 - **Token (Kite testnet USDT):** Configure with **`KITE_X402_TOKEN`** (defaults to `0x0fF5393387ad2f9f691FD6Fd28e07E3969e27e63` if unset); confirm on [Kite testnet explorer](https://testnet.kitescan.ai).
