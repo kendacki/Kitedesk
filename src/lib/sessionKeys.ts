@@ -1,6 +1,5 @@
 import { ethers } from 'ethers'
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin'
-import { KITE_CHAIN, CONTRACTS } from '@/lib/constants'
 import { HttpError } from '@/lib/httpError'
 import crypto from 'crypto'
 
@@ -252,7 +251,7 @@ export async function listSessionKeysForUser(userSmartWallet: string): Promise<
     throw new HttpError(`Failed to list session keys: ${error.message}`, 500)
   }
 
-  return (data || []).map((row: any) => ({
+  return (data || []).map((row: SessionKeyRecord) => ({
     keyId: row.key_id,
     sessionKeyAddress: row.session_key_address,
     maxPerTxUsdt: row.max_per_tx_usdt,
