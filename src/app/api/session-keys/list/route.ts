@@ -1,10 +1,11 @@
+import { NextRequest } from 'next/server'
 import { ethers } from 'ethers'
 import { listSessionKeysForUser } from '@/lib/sessionKeys'
 import { HttpError } from '@/lib/httpError'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const url = request.nextUrl
     const wallet = url.searchParams.get('wallet')
