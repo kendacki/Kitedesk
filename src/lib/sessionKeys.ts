@@ -251,14 +251,14 @@ export async function listSessionKeysForUser(userSmartWallet: string): Promise<
     throw new HttpError(`Failed to list session keys: ${error.message}`, 500)
   }
 
-  return (data || []).map((row: SessionKeyRecord) => ({
-    keyId: row.key_id,
-    sessionKeyAddress: row.session_key_address,
-    maxPerTxUsdt: row.max_per_tx_usdt,
-    dailyLimitUsdt: row.daily_limit_usdt,
-    expiresAt: row.expires_at,
-    revoked: row.revoked,
-    usedCount: row.used_count,
+  return (data || []).map((row) => ({
+    keyId: (row as Record<string, unknown>).key_id as string,
+    sessionKeyAddress: (row as Record<string, unknown>).session_key_address as string,
+    maxPerTxUsdt: (row as Record<string, unknown>).max_per_tx_usdt as number,
+    dailyLimitUsdt: (row as Record<string, unknown>).daily_limit_usdt as number,
+    expiresAt: (row as Record<string, unknown>).expires_at as string,
+    revoked: (row as Record<string, unknown>).revoked as boolean,
+    usedCount: (row as Record<string, unknown>).used_count as number,
   }))
 }
 
