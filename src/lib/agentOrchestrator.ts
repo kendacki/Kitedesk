@@ -664,7 +664,9 @@ export async function executeGoal(
     const toolInput =
       toolName === 'web_search'
         ? normalizeSearchQuery(row.inputPrompt)
-        : buildContextualInput(row, steps)
+        : toolName === 'deep_read'
+          ? row.inputPrompt.trim()
+          : buildContextualInput(row, steps)
     const started = Date.now()
 
     if (toolName === 'web_search') {

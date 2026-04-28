@@ -41,6 +41,26 @@ function clampQuery(input: string): string {
   return input.replace(/\s+/g, ' ').trim().slice(0, 400)
 }
 
+function normalizeDeepReadUrl(input: string): string {
+  const trimmed = input.trim()
+  const direct = /^https?:\/\/\S+/i.exec(trimmed)
+  if (direct?.[0]) {
+    return direct[0]
+  }
+
+  const embedded = /(https?:\/\/\S+)/i.exec(trimmed)
+  if (embedded?.[1]) {
+    return embedded[1]
+  }
+
+  const hostPath = /([a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s]*)?)/i.exec(trimmed)
+  if (hostPath?.[1]) {
+    return `https://${hostPath[1]}`
+  }
+
+  throw new HttpError('deep_read requires a valid URL in the tool input', 400)
+}
+
 /** Structured x402 trace for demos (used from agentOrchestrator.executeX402Tool) */
 export const x402FlowDebug = {
   apiCallStart(phase: 'first_pass' | 'retry', url: string, hasXPayment: boolean) {
@@ -224,6 +244,7 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
       try {
         logToolApi('deep_read', 'Firecrawl scrape POST start')
         const fcKey = requireFirecrawlApiKey()
+        const url = normalizeDeepReadUrl(input)
         const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
           method: 'POST',
           headers: {
@@ -231,7 +252,7 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
             Authorization: `Bearer ${fcKey}`,
           },
           body: JSON.stringify({
-            url: input.startsWith('http') ? input : `https://${input}`,
+            url,
             formats: ['markdown'],
           }),
         })
