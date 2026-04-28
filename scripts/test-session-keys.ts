@@ -2,7 +2,8 @@ import crypto from 'crypto'
 import { ethers } from 'ethers'
 
 function encryptPrivateKey(privateKey: string, salt: string): string {
-  const secret = process.env.SESSION_KEY_ENCRYPTION_SECRET || 'test-secret-12345678901234567890'
+  const secret =
+    process.env.SESSION_KEY_ENCRYPTION_SECRET || 'test-secret-12345678901234567890'
   const key = crypto.pbkdf2Sync(
     Buffer.from(secret, 'utf-8'),
     Buffer.from(salt.slice(2, 18), 'hex'),
@@ -18,7 +19,8 @@ function encryptPrivateKey(privateKey: string, salt: string): string {
 }
 
 function decryptPrivateKey(encryptedData: string, salt: string): string {
-  const secret = process.env.SESSION_KEY_ENCRYPTION_SECRET || 'test-secret-12345678901234567890'
+  const secret =
+    process.env.SESSION_KEY_ENCRYPTION_SECRET || 'test-secret-12345678901234567890'
   const key = crypto.pbkdf2Sync(
     Buffer.from(secret, 'utf-8'),
     Buffer.from(salt.slice(2, 18), 'hex'),
@@ -36,7 +38,7 @@ function decryptPrivateKey(encryptedData: string, salt: string): string {
 
 async function runTests() {
   console.log('\n🧪 KITEDESK SESSION KEYS - EDGE CASE TESTS\n')
-  
+
   let passed = 0
   let failed = 0
 
@@ -46,10 +48,10 @@ async function runTests() {
     const wallet = ethers.Wallet.createRandom()
     const userWallet = ethers.Wallet.createRandom()
     const sessionKey = wallet.privateKey
-    
+
     const encrypted = encryptPrivateKey(sessionKey, userWallet.address)
     const decrypted = decryptPrivateKey(encrypted, userWallet.address)
-    
+
     if (decrypted === sessionKey) {
       console.log('✅ PASS\n')
       passed++
@@ -68,10 +70,10 @@ async function runTests() {
     const dailySpending = { totalSpent: 0, lastResetAt: Math.floor(Date.now() / 1000) }
     const now = Math.floor(Date.now() / 1000)
     const twentyFourHoursLater = now + 86400 + 1
-    
+
     dailySpending.totalSpent += 50
     const shouldReset = twentyFourHoursLater >= dailySpending.lastResetAt + 86400
-    
+
     if (shouldReset) {
       console.log('✅ PASS\n')
       passed++
@@ -89,7 +91,7 @@ async function runTests() {
   try {
     const maxPerTx = 50
     const attemptedAmount = 75
-    
+
     if (attemptedAmount > maxPerTx) {
       console.log(`✅ PASS: Rejected ${attemptedAmount} USDT (max ${maxPerTx})\n`)
       passed++
@@ -110,9 +112,11 @@ async function runTests() {
       '0x2234567890123456789012345678901234567890',
     ]
     const attemptedRecipient = '0x3234567890123456789012345678901234567890'
-    
-    const isAllowed = whitelisted.some((a) => a.toLowerCase() === attemptedRecipient.toLowerCase())
-    
+
+    const isAllowed = whitelisted.some(
+      (a) => a.toLowerCase() === attemptedRecipient.toLowerCase()
+    )
+
     if (!isAllowed) {
       console.log('✅ PASS\n')
       passed++
@@ -130,9 +134,9 @@ async function runTests() {
   try {
     const now = Math.floor(Date.now() / 1000)
     const expiresAt = now - 1000
-    
+
     const isExpired = now >= expiresAt
-    
+
     if (isExpired) {
       console.log('✅ PASS\n')
       passed++
@@ -152,9 +156,11 @@ async function runTests() {
       ethers.getAddress('0x1111111111111111111111111111111111111111'),
       ethers.getAddress('0x2222222222222222222222222222222222222222'),
     ]
-    const testRecipient = ethers.getAddress('0x2222222222222222222222222222222222222222')
+    const testRecipient = ethers.getAddress(
+      '0x2222222222222222222222222222222222222222'
+    )
     const isWhitelisted = recipients.some((r) => r === testRecipient)
-    
+
     if (isWhitelisted && recipients.length === 2) {
       console.log('✅ PASS\n')
       passed++
@@ -175,11 +181,13 @@ async function runTests() {
       revoked: false,
       expiresAt: Math.floor(Date.now() / 1000) + 86400,
     }
-    
-    const isValid1 = !sessionKey.revoked && Math.floor(Date.now() / 1000) < sessionKey.expiresAt
+
+    const isValid1 =
+      !sessionKey.revoked && Math.floor(Date.now() / 1000) < sessionKey.expiresAt
     sessionKey.revoked = true
-    const isValid2 = !sessionKey.revoked && Math.floor(Date.now() / 1000) < sessionKey.expiresAt
-    
+    const isValid2 =
+      !sessionKey.revoked && Math.floor(Date.now() / 1000) < sessionKey.expiresAt
+
     if (isValid1 && !isValid2) {
       console.log('✅ PASS\n')
       passed++
@@ -198,7 +206,7 @@ async function runTests() {
     const dailyLimit = 500
     let dailySpent = 0
     const txAmounts = [50, 75, 100, 150]
-    
+
     let allAllowed = true
     for (const amount of txAmounts) {
       if (dailySpent + amount > dailyLimit) {
@@ -207,7 +215,7 @@ async function runTests() {
       }
       dailySpent += amount
     }
-    
+
     if (allAllowed && dailySpent + 200 > dailyLimit) {
       console.log(`✅ PASS: Cumulative ${dailySpent}/${dailyLimit}, +200 rejected\n`)
       passed++
@@ -233,7 +241,7 @@ async function runTests() {
         // Invalid
       }
     }
-    
+
     if (validCount > 0) {
       console.log('✅ PASS\n')
       passed++
@@ -254,9 +262,9 @@ async function runTests() {
       const key = ethers.Wallet.createRandom()
       keys.push({ address: key.address, keyId: ethers.hexlify(ethers.randomBytes(32)) })
     }
-    
+
     const uniqueKeys = new Set(keys.map((k) => k.keyId))
-    
+
     if (uniqueKeys.size === keys.length && keys.length === 5) {
       console.log('✅ PASS\n')
       passed++
@@ -271,7 +279,7 @@ async function runTests() {
 
   console.log('='.repeat(60))
   console.log(`📊 RESULTS: ${passed} passed, ${failed} failed\n`)
-  
+
   process.exit(failed === 0 ? 0 : 1)
 }
 

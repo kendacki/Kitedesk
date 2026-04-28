@@ -19,10 +19,7 @@ export async function POST(request: Request) {
     }
 
     if (!ethers.isAddress(userSmartWallet)) {
-      return Response.json(
-        { error: 'Invalid smart wallet address' },
-        { status: 400 }
-      )
+      return Response.json({ error: 'Invalid smart wallet address' }, { status: 400 })
     }
 
     await revokeSessionKey(userSmartWallet, keyId)
@@ -43,9 +40,6 @@ export async function POST(request: Request) {
       return Response.json({ error: message }, { status: error.status })
     }
 
-    return Response.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return Response.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -345,7 +345,9 @@ export async function executeX402Tool(
         usingSessionKey = true
         userSmartWalletAddress = ctx.userSmartWallet
         sessionKeyId = ctx.sessionKeyId ?? null
-        agentLog('Using session key for x402 payment', { sessionKeyAddress: signingWallet.address })
+        agentLog('Using session key for x402 payment', {
+          sessionKeyAddress: signingWallet.address,
+        })
       }
     } catch (e) {
       console.warn('[x402] Session key load failed, fallback to attestation signer:', e)

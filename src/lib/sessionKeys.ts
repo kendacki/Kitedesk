@@ -28,7 +28,10 @@ function getEncryptionKey(userSmartWallet: string): Buffer {
     throw new HttpError('SESSION_KEY_ENCRYPTION_SECRET not configured', 503)
   }
 
-  const salt = Buffer.from(ethers.getAddress(userSmartWallet).slice(2), 'hex').slice(0, 16)
+  const salt = Buffer.from(ethers.getAddress(userSmartWallet).slice(2), 'hex').slice(
+    0,
+    16
+  )
 
   return crypto.pbkdf2Sync(
     Buffer.from(secret, 'utf-8'),
@@ -50,7 +53,10 @@ export function encryptPrivateKey(privateKey: string, userSmartWallet: string): 
   return `${iv.toString('hex')}:${encrypted}`
 }
 
-export function decryptPrivateKey(encryptedData: string, userSmartWallet: string): string {
+export function decryptPrivateKey(
+  encryptedData: string,
+  userSmartWallet: string
+): string {
   const key = getEncryptionKey(userSmartWallet)
   const [ivHex, encrypted] = encryptedData.split(':')
 
@@ -274,12 +280,10 @@ export async function recordSessionKeyUsage(
 
   const checksumAddress = ethers.getAddress(userSmartWallet)
 
-  await db
-    .from('session_key_usage')
-    .insert({
-      user_smart_wallet: checksumAddress,
-      session_key_id: keyId,
-      amount_usdt: amountUsdt,
-      used_at: new Date().toISOString(),
-    })
+  await db.from('session_key_usage').insert({
+    user_smart_wallet: checksumAddress,
+    session_key_id: keyId,
+    amount_usdt: amountUsdt,
+    used_at: new Date().toISOString(),
+  })
 }

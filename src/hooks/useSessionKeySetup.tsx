@@ -6,7 +6,10 @@ import { useWallet } from '@/hooks/useWallet'
 interface UseSessionKeySetupReturn {
   isInitializing: boolean
   error: string | null
-  initializeSessionKey: (budgetUsdt: number, recipients: string[]) => Promise<{
+  initializeSessionKey: (
+    budgetUsdt: number,
+    recipients: string[]
+  ) => Promise<{
     keyId: string
     sessionKeyAddress: string
     expiresAt: string

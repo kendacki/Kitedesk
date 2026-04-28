@@ -8,17 +8,11 @@ export async function GET(request: Request) {
     const wallet = url.searchParams.get('wallet')
 
     if (!wallet) {
-      return Response.json(
-        { error: 'Missing wallet parameter' },
-        { status: 400 }
-      )
+      return Response.json({ error: 'Missing wallet parameter' }, { status: 400 })
     }
 
     if (!ethers.isAddress(wallet)) {
-      return Response.json(
-        { error: 'Invalid wallet address' },
-        { status: 400 }
-      )
+      return Response.json({ error: 'Invalid wallet address' }, { status: 400 })
     }
 
     const keys = await listSessionKeysForUser(wallet)
@@ -39,9 +33,6 @@ export async function GET(request: Request) {
       return Response.json({ error: message }, { status: error.status })
     }
 
-    return Response.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return Response.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
