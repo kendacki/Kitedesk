@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin'
-import { KITE_CHAIN } from '@/lib/constants'
+import { KITE_CHAIN, CONTRACTS } from '@/lib/constants'
 import { HttpError } from '@/lib/httpError'
 import crypto from 'crypto'
 

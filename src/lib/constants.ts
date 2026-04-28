@@ -93,6 +93,10 @@ export const CONTRACTS = {
     'NEXT_PUBLIC_KITE_ATTESTATION_CONTRACT',
     envOr('KITE_ATTESTATION_CONTRACT', '')
   ),
+  sessionKeyValidator: envOr(
+    'NEXT_PUBLIC_SESSION_KEY_VALIDATOR_ADDRESS',
+    envOr('SESSION_KEY_VALIDATOR_ADDRESS', '')
+  ),
 }
 
 const X402_FACILITATOR_DEFAULT = 'https://facilitator.pieverse.io'
