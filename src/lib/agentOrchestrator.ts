@@ -536,13 +536,13 @@ async function runPlanner(
   let parsed: PlannerJson
   try {
     parsed = JSON.parse(extractJsonObject(text)) as PlannerJson
-  } catch (err) {
+  } catch {
     console.warn('[planner] JSON parse failed, raw output:', text)
     try {
       // Try a second pass at extracting a JSON object
       const extracted = extractJsonObject(text)
       parsed = JSON.parse(extracted) as PlannerJson
-    } catch (err2) {
+    } catch {
       console.warn('[planner] Robust parse failed, falling back to minimal safe plan')
       const fallbackPlan: PlanRow[] = [
         {
