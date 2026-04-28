@@ -7,6 +7,7 @@ import { KITE_CHAIN, KITE_X402 } from '@/lib/constants'
 import { requireInternalApiBaseUrl } from '@/lib/internalApiBaseUrl'
 import { buildXPaymentHeaderForFacilitator } from '@/lib/x402AgentPayment'
 import { fetchX402Search } from '@/lib/x402SearchClient'
+import { getDecryptedSessionKeyWallet, recordSessionKeyUsage } from '@/lib/sessionKeys'
 import type { AgentStep, GoalResult, ToolName } from '@/types'
 
 const DEFAULT_MODEL = 'openai/gpt-oss-120b'
@@ -197,6 +198,10 @@ function buildContextualInput(row: PlanRow, priorSteps: AgentStep[]): string {
 export type ExecuteX402ToolContext = {
   /** e.g. Step 1/3 — for demo logs */
   stepLabel?: string
+  /** User's smart wallet address (for session key lookup) */
+  userSmartWallet?: string
+  /** Session key ID (for usage recording) */
+  sessionKeyId?: string
 }
 
 /**
@@ -327,7 +332,32 @@ export async function executeX402Tool(
     return { skipped: true, reason: 'budget_exceeded' }
   }
 
-  const wallet = new ethers.Wallet(pk, provider)
+  let signingWallet: ethers.Wallet | null = null
+  let usingSessionKey = false
+  let sessionKeyId: string | null = null
+  let userSmartWalletAddress: string | null = null
+
+  // Try session key first (if available)
+  if (ctx?.userSmartWallet && ethers.isAddress(ctx.userSmartWallet)) {
+    try {
+      signingWallet = await getDecryptedSessionKeyWallet(ctx.userSmartWallet, provider)
+      if (signingWallet) {
+        usingSessionKey = true
+        userSmartWalletAddress = ctx.userSmartWallet
+        sessionKeyId = ctx.sessionKeyId ?? null
+        agentLog('Using session key for x402 payment', { sessionKeyAddress: signingWallet.address })
+      }
+    } catch (e) {
+      console.warn('[x402] Session key load failed, fallback to attestation signer:', e)
+    }
+  }
+
+  // Fallback to attestation signer if session key unavailable
+  if (!signingWallet) {
+    signingWallet = new ethers.Wallet(pk, provider)
+  }
+
+  const wallet = signingWallet
 
   const tokenRead = new ethers.Contract(asset, ERC20_BALANCE_ABI, provider)
   let balance: bigint
@@ -450,6 +480,15 @@ export async function executeX402Tool(
     ok: true,
     settlementTxHash,
   })
+
+  // Record session key usage if applicable
+  if (usingSessionKey && userSmartWalletAddress && sessionKeyId) {
+    try {
+      await recordSessionKeyUsage(userSmartWalletAddress, sessionKeyId, priceUsdt)
+    } catch (e) {
+      console.warn('[x402] Usage recording failed, but payment succeeded:', e)
+    }
+  }
 
   return {
     ok: true,
