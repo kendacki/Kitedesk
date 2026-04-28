@@ -204,6 +204,14 @@ export type ExecuteX402ToolContext = {
   sessionKeyId?: string
 }
 
+function normalizeSearchQuery(raw: string): string {
+  const collapsed = raw.replace(/\s+/g, ' ').trim()
+  if (collapsed.length <= 400) {
+    return collapsed
+  }
+  return collapsed.slice(0, 400)
+}
+
 /**
  * x402 tool execution: HTTP POST to INTERNAL_API_BASE_URL/api/x402/search; EIP-3009 X-Payment + facilitator or direct USDT transfer.
  * Goal mode: first request must return 402 (no free 200 before payment).
@@ -227,7 +235,7 @@ export async function executeX402Tool(
 
   const base = requireInternalApiBaseUrl()
   const searchUrl = `${base}/api/x402/search`
-  const q = input.trim()
+  const q = normalizeSearchQuery(input)
   const label = ctx?.stepLabel ?? 'Step'
 
   agentLog(`${label}: calling x402 resource`, { url: searchUrl })
@@ -608,7 +616,11 @@ async function runPlanner(
 
 export async function executeGoal(
   goal: string,
-  budgetUsdt: number
+  budgetUsdt: number,
+  ctx?: {
+    userSmartWallet?: string
+    sessionKeyId?: string
+  }
 ): Promise<
   Omit<GoalResult, 'taskId' | 'txHash' | 'attestationHash' | 'attestationUrl'>
 > {
@@ -649,7 +661,10 @@ export async function executeGoal(
       }
     }
 
-    const toolInput = buildContextualInput(row, steps)
+    const toolInput =
+      toolName === 'web_search'
+        ? normalizeSearchQuery(row.inputPrompt)
+        : buildContextualInput(row, steps)
     const started = Date.now()
 
     if (toolName === 'web_search') {
@@ -659,6 +674,8 @@ export async function executeGoal(
       })
       const xr = await executeX402Tool(toolName, toolInput, budgetUsdt, accumulated, {
         stepLabel: `Step ${i + 1}/${bodyPlan.length}`,
+        userSmartWallet: ctx?.userSmartWallet,
+        sessionKeyId: ctx?.sessionKeyId,
       })
       const durationMs = Date.now() - started
 

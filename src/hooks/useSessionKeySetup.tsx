@@ -32,11 +32,11 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
       setError(null)
 
       try {
-        const message = `Authorize session key for ${budgetUsdt} USDT, max $50 per transaction, 24-hour expiration. ${new Date(
+        const authorizationMessage = `Authorize session key for ${budgetUsdt} USDT, max $50 per transaction, 24-hour expiration. ${new Date(
           Date.now() + 24 * 3600 * 1000
         ).toISOString()}`
 
-        const signature = await signer.signMessage(message)
+        const signature = await signer.signMessage(authorizationMessage)
 
         const response = await fetch('/api/session-keys/create', {
           method: 'POST',
@@ -44,6 +44,7 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
           body: JSON.stringify({
             userSmartWallet: address,
             signature,
+            authorizationMessage,
             budgetUsdt,
             maxPerTxUsdt: Math.min(50, budgetUsdt),
             expiresInHours: 24,

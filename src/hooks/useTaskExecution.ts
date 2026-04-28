@@ -153,6 +153,10 @@ export function useTaskExecution() {
       }
 
       setStatus('executing')
+      const storedSessionKeyId =
+        typeof window !== 'undefined'
+          ? localStorage.getItem(`session-key-${address}`)
+          : null
       let data: {
         success?: boolean
         taskId?: string
@@ -168,6 +172,8 @@ export function useTaskExecution() {
             taskType,
             prompt,
             userAddress: address,
+            userSmartWallet: address,
+            sessionKeyId: storedSessionKeyId || undefined,
             paymentTxHash,
           },
           { timeout: AGENT_REQUEST_MS }
@@ -311,6 +317,10 @@ export function useTaskExecution() {
       await new Promise((r) => setTimeout(r, 280))
 
       setStatus('executing')
+      const storedSessionKeyId =
+        typeof window !== 'undefined'
+          ? localStorage.getItem(`session-key-${address}`)
+          : null
       let data: {
         success?: boolean
         taskId?: string
@@ -325,6 +335,8 @@ export function useTaskExecution() {
             goal: goal.trim(),
             budgetUsdt,
             userAddress: address,
+            userSmartWallet: address,
+            sessionKeyId: storedSessionKeyId || undefined,
             paymentTxHash,
           },
           { timeout: AGENT_REQUEST_MS }

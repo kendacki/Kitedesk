@@ -37,6 +37,10 @@ function requireFirecrawlApiKey(): string {
   return k
 }
 
+function clampQuery(input: string): string {
+  return input.replace(/\s+/g, ' ').trim().slice(0, 400)
+}
+
 /** Structured x402 trace for demos (used from agentOrchestrator.executeX402Tool) */
 export const x402FlowDebug = {
   apiCallStart(phase: 'first_pass' | 'retry', url: string, hasXPayment: boolean) {
@@ -105,7 +109,7 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
         })
         logToolApi('web_search', 'Tavily search start')
         const client = tavily({ apiKey: requireTavilyApiKey() })
-        const response = await client.search(input, {
+        const response = await client.search(clampQuery(input), {
           searchDepth: 'basic',
           maxResults: 5,
           includeAnswer: true,
@@ -136,7 +140,7 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
       try {
         logToolApi('news_fetch', 'Tavily news start')
         const client = tavily({ apiKey: requireTavilyApiKey() })
-        const response = await client.search(input, {
+        const response = await client.search(clampQuery(input), {
           searchDepth: 'basic',
           topic: 'news',
           maxResults: 5,
@@ -165,7 +169,7 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
       try {
         logToolApi('price_check', 'Tavily price search start')
         const client = tavily({ apiKey: requireTavilyApiKey() })
-        const response = await client.search(`${input} price buy 2026`, {
+        const response = await client.search(clampQuery(`${input} price buy 2026`), {
           searchDepth: 'advanced',
           maxResults: 6,
           includeAnswer: true,
@@ -192,7 +196,7 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
         logToolApi('competitor_analysis', 'Tavily competitors start')
         const client = tavily({ apiKey: requireTavilyApiKey() })
         const response = await client.search(
-          `${input} alternatives competitors comparison`,
+          clampQuery(`${input} alternatives competitors comparison`),
           {
             searchDepth: 'advanced',
             maxResults: 6,

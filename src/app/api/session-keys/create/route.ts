@@ -9,6 +9,7 @@ export async function POST(request: Request) {
     const {
       userSmartWallet,
       signature,
+      authorizationMessage,
       budgetUsdt,
       maxPerTxUsdt = Math.min(50, budgetUsdt),
       expiresInHours = 24,
@@ -16,13 +17,20 @@ export async function POST(request: Request) {
     } = body as {
       userSmartWallet: string
       signature: string
+      authorizationMessage?: string
       budgetUsdt: number
       maxPerTxUsdt?: number
       expiresInHours?: number
       whitelistedRecipients: string[]
     }
 
-    if (!userSmartWallet || !signature || !budgetUsdt || !whitelistedRecipients) {
+    if (
+      !userSmartWallet ||
+      !signature ||
+      !authorizationMessage ||
+      !budgetUsdt ||
+      !whitelistedRecipients
+    ) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -36,6 +44,16 @@ export async function POST(request: Request) {
 
     if (budgetUsdt <= 0) {
       return Response.json({ error: 'Budget must be positive' }, { status: 400 })
+    }
+
+    const recovered = ethers.verifyMessage(authorizationMessage, signature)
+    if (ethers.getAddress(recovered) !== ethers.getAddress(userSmartWallet)) {
+      return Response.json(
+        { error: 'Invalid session key authorization signature' },
+        {
+          status: 401,
+        }
+      )
     }
 
     const result = await createSessionKey({

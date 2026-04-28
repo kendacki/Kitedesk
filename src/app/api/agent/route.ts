@@ -53,6 +53,10 @@ export async function POST(req: NextRequest) {
       const userAddress = typeof body.userAddress === 'string' ? body.userAddress : ''
       const paymentTxHash =
         typeof body.paymentTxHash === 'string' ? body.paymentTxHash : ''
+      const userSmartWallet =
+        typeof body.userSmartWallet === 'string' ? body.userSmartWallet : ''
+      const sessionKeyId =
+        typeof body.sessionKeyId === 'string' ? body.sessionKeyId : ''
 
       if (!goal.trim() || !userAddress || !paymentTxHash) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -73,7 +77,13 @@ export async function POST(req: NextRequest) {
       await claimPaymentTransaction(paymentTxHash, userAddress)
 
       try {
-        const partial = await executeGoal(goal.trim(), budgetUsdt)
+        const partial = await executeGoal(goal.trim(), budgetUsdt, {
+          userSmartWallet:
+            userSmartWallet && ethers.isAddress(userSmartWallet)
+              ? userSmartWallet
+              : undefined,
+          sessionKeyId: sessionKeyId || undefined,
+        })
         const taskId = uuidv4()
         const goalPreview = goal.trim().slice(0, 80)
 

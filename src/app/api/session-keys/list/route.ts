@@ -2,9 +2,11 @@ import { ethers } from 'ethers'
 import { listSessionKeysForUser } from '@/lib/sessionKeys'
 import { HttpError } from '@/lib/httpError'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
   try {
-    const url = new URL(request.url)
+    const url = request.nextUrl
     const wallet = url.searchParams.get('wallet')
 
     if (!wallet) {
