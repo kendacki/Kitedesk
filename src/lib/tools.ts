@@ -43,19 +43,27 @@ function clampQuery(input: string): string {
 
 function normalizeDeepReadUrl(input: string): string {
   const trimmed = input.trim()
-  const direct = /^https?:\/\/\S+/i.exec(trimmed)
-  if (direct?.[0]) {
-    return direct[0]
-  }
+  const cleanup = (u: string) => u.replace(/[)\],.;!?]+$/g, '')
 
-  const embedded = /(https?:\/\/\S+)/i.exec(trimmed)
-  if (embedded?.[1]) {
-    return embedded[1]
-  }
+  const candidates = [
+    /^https?:\/\/\S+/i.exec(trimmed)?.[0],
+    /(https?:\/\/\S+)/i.exec(trimmed)?.[1],
+    (() => {
+      const hostPath = /([a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s]*)?)/i.exec(trimmed)?.[1]
+      return hostPath ? `https://${hostPath}` : undefined
+    })(),
+  ].filter((v): v is string => Boolean(v))
 
-  const hostPath = /([a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s]*)?)/i.exec(trimmed)
-  if (hostPath?.[1]) {
-    return `https://${hostPath[1]}`
+  for (const raw of candidates) {
+    const maybe = cleanup(raw)
+    try {
+      const parsed = new URL(maybe)
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        return parsed.toString()
+      }
+    } catch {
+      // continue trying other candidates
+    }
   }
 
   throw new HttpError('deep_read requires a valid URL in the tool input', 400)
@@ -257,6 +265,15 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
           }),
         })
         logToolApi('deep_read', `Firecrawl response ${res.status}`)
+
+        if (!res.ok) {
+          const errorPreview = (await res.text()).slice(0, 240)
+          throw new HttpError(
+            `Firecrawl failed to read URL (status ${res.status}): ${errorPreview}`,
+            502
+          )
+        }
+
         const data = (await res.json()) as {
           success: boolean
           data?: { markdown?: string }

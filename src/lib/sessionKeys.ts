@@ -22,6 +22,14 @@ export interface SessionKeyRecord {
 const ENCRYPTION_ALGORITHM = 'aes-256-cbc'
 const KEY_DERIVATION_ITERATIONS = 100000
 
+function isMissingSessionKeysTableError(message: string): boolean {
+  const m = message.toLowerCase()
+  return (
+    m.includes("could not find the table 'public.session_keys'") ||
+    m.includes('relation "session_keys" does not exist')
+  )
+}
+
 function getEncryptionKey(userSmartWallet: string): Buffer {
   const secret = process.env.SESSION_KEY_ENCRYPTION_SECRET
   if (!secret) {
@@ -167,6 +175,11 @@ export async function getSessionKeyForUser(
     .limit(1)
 
   if (error) {
+    if (isMissingSessionKeysTableError(error.message)) {
+      // Keep agent execution alive when migration is not applied yet.
+      console.warn('[SessionKeys] session_keys table missing; falling back to signer')
+      return null
+    }
     throw new HttpError(`Failed to retrieve session key: ${error.message}`, 500)
   }
 
