@@ -28,6 +28,7 @@
     "test:goal": "tsx scripts/test-goal-agent.ts",
     "test:goal:cjs": "tsx scripts/test-goal-agent.ts",
     "test:x402:facilitator": "node scripts/test-x402-facilitator.cjs",
+    "test:session-keys": "tsx scripts/test-session-keys.ts",
     "print:agent-wallet": "node scripts/print-agent-wallet.cjs"
   },
   "dependencies": {
