@@ -14,13 +14,13 @@ interface UseSessionKeySetupReturn {
 }
 
 export function useSessionKeySetup(): UseSessionKeySetupReturn {
-  const { wallet } = useWallet()
+  const { address, signer } = useWallet()
   const [isInitializing, setIsInitializing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const initializeSessionKey = useCallback(
     async (budgetUsdt: number, recipients: string[]) => {
-      if (!wallet.signer || !wallet.address) {
+      if (!signer || !address) {
         setError('Wallet not connected')
         return null
       }
@@ -33,13 +33,13 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
           Date.now() + 24 * 3600 * 1000
         ).toISOString()}`
 
-        const signature = await wallet.signer.signMessage(message)
+        const signature = await signer.signMessage(message)
 
         const response = await fetch('/api/session-keys/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userSmartWallet: wallet.address,
+            userSmartWallet: address,
             signature,
             budgetUsdt,
             maxPerTxUsdt: Math.min(50, budgetUsdt),
@@ -55,7 +55,7 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
 
         const data = await response.json()
 
-        localStorage.setItem(`session-key-${wallet.address}`, data.keyId)
+        localStorage.setItem(`session-key-${address}`, data.keyId)
 
         setIsInitializing(false)
         return data
@@ -66,7 +66,7 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
         return null
       }
     },
-    [wallet.signer, wallet.address]
+    [signer, address]
   )
 
   return {

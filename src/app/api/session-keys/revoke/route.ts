@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     console.error('[API] /session-keys/revoke error:', message)
 
     if (error instanceof HttpError) {
-      return Response.json({ error: message }, { status: error.statusCode })
+      return Response.json({ error: message }, { status: error.status })
     }
 
     return Response.json(

@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     console.error('[API] /session-keys/list error:', message)
 
     if (error instanceof HttpError) {
-      return Response.json({ error: message }, { status: error.statusCode })
+      return Response.json({ error: message }, { status: error.status })
     }
 
     return Response.json(
