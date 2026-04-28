@@ -536,8 +536,24 @@ async function runPlanner(
   let parsed: PlannerJson
   try {
     parsed = JSON.parse(extractJsonObject(text)) as PlannerJson
-  } catch {
-    throw new HttpError('Planner returned invalid JSON', 502)
+  } catch (err) {
+    console.warn('[planner] JSON parse failed, raw output:', text)
+    try {
+      // Try a second pass at extracting a JSON object
+      const extracted = extractJsonObject(text)
+      parsed = JSON.parse(extracted) as PlannerJson
+    } catch (err2) {
+      console.warn('[planner] Robust parse failed, falling back to minimal safe plan')
+      const fallbackPlan: PlanRow[] = [
+        {
+          stepNumber: 1,
+          toolName: 'web_search',
+          inputPrompt: goal.trim(),
+          reasoning: 'Fallback plan: perform a web search to gather initial context',
+        },
+      ]
+      return { bodyPlan: fallbackPlan, planReasoning: 'Fallback plan due to planner parse failure', skippedTools: ['planner_parse_fallback'] }
+    }
   }
   const planReasoning =
     typeof parsed.planReasoning === 'string' && parsed.planReasoning.trim()
@@ -795,6 +811,8 @@ export async function executeGoal(
     }
   }
 
+  const sessionKeySuggested = !ctx?.userSmartWallet && bodyPlan.some((b) => b.toolName === 'web_search')
+
   return {
     goal: g,
     budgetUsdt,
@@ -807,5 +825,6 @@ export async function executeGoal(
     skippedTools: uniqueSkipped,
     x402PaymentsCount,
     x402TotalPaidUsdt,
+    sessionKeySuggested,
   }
 }

@@ -82,4 +82,6 @@ export interface GoalResult {
   x402PaymentsCount: number
   /** Sum of toolCall.costUsdt for paid_via_x402 steps */
   x402TotalPaidUsdt: number
+  /** Suggest the user create a session key when planner needs paid tools but none provided */
+  sessionKeySuggested?: boolean
 }
