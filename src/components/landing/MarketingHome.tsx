@@ -41,6 +41,28 @@ const floatTransition = {
   ease: [0.45, 0, 0.55, 1] as [number, number, number, number],
 }
 
+const partnerLogos = [
+  {
+    src: '/images/partners/metamask.png',
+    alt: 'MetaMask',
+    slot: 'default',
+  },
+  {
+    src: '/images/partners/kite.png',
+    alt: 'Kite',
+    slot: 'wide',
+  },
+  { src: '/images/partners/groq.png', alt: 'Groq', slot: 'default' },
+  { src: '/images/partners/usdt.png', alt: 'USDT', slot: 'default' },
+  {
+    src: '/images/partners/solidity.png',
+    alt: 'Solidity',
+    slot: 'default',
+  },
+] as const
+
+const loopingPartnerLogos = [...partnerLogos, ...partnerLogos] as const
+
 function EmeraldCircleBullet() {
   return (
     <span
@@ -392,45 +414,31 @@ export function MarketingHome() {
           <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
             Agentic Commerce on Kite
           </p>
-          <div className="mx-auto mt-10 flex max-w-4xl flex-wrap items-center justify-center gap-x-8 gap-y-5 opacity-60 grayscale sm:gap-x-12 sm:gap-y-6">
-            {(
-              [
-                {
-                  src: '/images/partners/metamask.png',
-                  alt: 'MetaMask',
-                  slot: 'default',
-                },
-                {
-                  src: '/images/partners/kite.png',
-                  alt: 'Kite',
-                  slot: 'wide',
-                },
-                { src: '/images/partners/groq.png', alt: 'Groq', slot: 'default' },
-                { src: '/images/partners/usdt.png', alt: 'USDT', slot: 'default' },
-                {
-                  src: '/images/partners/solidity.png',
-                  alt: 'Solidity',
-                  slot: 'default',
-                },
-              ] as const
-            ).map(({ src, alt, slot }) => (
-              <div
-                key={src}
-                className={
-                  slot === 'wide'
-                    ? 'flex h-9 w-[9.25rem] shrink-0 items-center justify-center sm:h-10 sm:w-[10.5rem]'
-                    : 'flex h-9 w-[6.5rem] shrink-0 items-center justify-center sm:h-10 sm:w-[7.5rem]'
-                }
-              >
-                <Image
-                  src={src}
-                  alt={alt}
-                  width={slot === 'wide' ? 220 : 150}
-                  height={40}
-                  className="max-h-full w-auto max-w-full object-contain object-center"
-                />
-              </div>
-            ))}
+          <div className="mx-auto mt-10 max-w-6xl overflow-hidden [mask-image:linear-gradient(to_right,transparent_0,black_8%,black_92%,transparent_100%)]">
+            <motion.div
+              className="flex w-max items-center gap-8 opacity-65 grayscale sm:gap-12"
+              animate={{ x: ['0%', '-50%'] }}
+              transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
+            >
+              {loopingPartnerLogos.map(({ src, alt, slot }, idx) => (
+                <div
+                  key={`${src}-${idx}`}
+                  className={
+                    slot === 'wide'
+                      ? 'flex h-16 w-56 shrink-0 items-center justify-center sm:h-20 sm:w-72'
+                      : 'flex h-16 w-40 shrink-0 items-center justify-center sm:h-20 sm:w-56'
+                  }
+                >
+                  <Image
+                    src={src}
+                    alt={alt}
+                    width={slot === 'wide' ? 360 : 280}
+                    height={96}
+                    className="max-h-full w-auto max-w-full object-contain object-center"
+                  />
+                </div>
+              ))}
+            </motion.div>
           </div>
         </section>
 
