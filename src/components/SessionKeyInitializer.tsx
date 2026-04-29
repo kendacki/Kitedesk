@@ -38,14 +38,18 @@ export function SessionKeyInitializer() {
         // Check if session key already exists in localStorage
         const storedKeyId = localStorage.getItem(`session-key-${address}`)
         if (storedKeyId) {
-          console.debug('[SessionKeyInitializer] Using existing session key from localStorage')
+          console.debug(
+            '[SessionKeyInitializer] Using existing session key from localStorage'
+          )
           initializationAttempted.current.add(address)
           return
         }
 
         // Fetch session keys from backend to see if any exist for this wallet
         try {
-          const listRes = await fetch(`/api/session-keys/list?wallet=${encodeURIComponent(address)}`)
+          const listRes = await fetch(
+            `/api/session-keys/list?wallet=${encodeURIComponent(address)}`
+          )
 
           if (listRes.ok) {
             const listData = await listRes.json()
@@ -54,7 +58,10 @@ export function SessionKeyInitializer() {
               const firstKey = listData.keys[0]
               if (typeof firstKey.key_id === 'string') {
                 localStorage.setItem(`session-key-${address}`, firstKey.key_id)
-                console.debug('[SessionKeyInitializer] Loaded session key from backend:', firstKey.key_id)
+                console.debug(
+                  '[SessionKeyInitializer] Loaded session key from backend:',
+                  firstKey.key_id
+                )
                 initializationAttempted.current.add(address)
                 return
               }
@@ -62,7 +69,10 @@ export function SessionKeyInitializer() {
           }
         } catch (error) {
           // Log but continue - attempt to create new key if signer available
-          console.debug('[SessionKeyInitializer] Failed to fetch existing keys from backend:', error)
+          console.debug(
+            '[SessionKeyInitializer] Failed to fetch existing keys from backend:',
+            error
+          )
         }
 
         // No existing session key found - attempt to auto-create one
@@ -89,24 +99,38 @@ export function SessionKeyInitializer() {
               const createData = await createRes.json()
               if (createData.keyId) {
                 localStorage.setItem(`session-key-${address}`, createData.keyId)
-                console.debug('[SessionKeyInitializer] Auto-created new session key:', createData.keyId)
+                console.debug(
+                  '[SessionKeyInitializer] Auto-created new session key:',
+                  createData.keyId
+                )
                 initializationAttempted.current.add(address)
                 return
               }
             } else {
-              console.debug('[SessionKeyInitializer] Auto-creation failed:', await createRes.text())
+              console.debug(
+                '[SessionKeyInitializer] Auto-creation failed:',
+                await createRes.text()
+              )
             }
           } catch (error) {
-            console.debug('[SessionKeyInitializer] Auto-creation error (will retry on first transaction):', error)
+            console.debug(
+              '[SessionKeyInitializer] Auto-creation error (will retry on first transaction):',
+              error
+            )
           }
         }
 
         // Fallback: No session key found and couldn't create one yet
         // Session key will be created on first x402 transaction when needed
-        console.debug('[SessionKeyInitializer] Will create session key on first x402 transaction')
+        console.debug(
+          '[SessionKeyInitializer] Will create session key on first x402 transaction'
+        )
         initializationAttempted.current.add(address)
       } catch (error) {
-        console.error('[SessionKeyInitializer] Unexpected error during initialization:', error)
+        console.error(
+          '[SessionKeyInitializer] Unexpected error during initialization:',
+          error
+        )
         initializationAttempted.current.add(address)
       } finally {
         isInitializing.current = false
