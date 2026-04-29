@@ -123,7 +123,7 @@ async function settleViaDirectTransfer(
     if (e instanceof Error) {
       msg = e.message
       // Try to extract contract revert reason from ethers.js error
-      const errObj = (e as unknown) as Record<string, unknown>
+      const errObj = e as unknown as Record<string, unknown>
       if (errObj.code === 'CALL_EXCEPTION' || errObj.reason) {
         // Ethers.js CALL_EXCEPTION with revert details
         if (typeof errObj.reason === 'string' && errObj.reason) {

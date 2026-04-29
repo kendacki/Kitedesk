@@ -552,7 +552,11 @@ async function runPlanner(
           reasoning: 'Fallback plan: perform a web search to gather initial context',
         },
       ]
-      return { bodyPlan: fallbackPlan, planReasoning: 'Fallback plan due to planner parse failure', skippedTools: ['planner_parse_fallback'] }
+      return {
+        bodyPlan: fallbackPlan,
+        planReasoning: 'Fallback plan due to planner parse failure',
+        skippedTools: ['planner_parse_fallback'],
+      }
     }
   }
   const planReasoning =
@@ -811,7 +815,8 @@ export async function executeGoal(
     }
   }
 
-  const sessionKeySuggested = !ctx?.userSmartWallet && bodyPlan.some((b) => b.toolName === 'web_search')
+  const sessionKeySuggested =
+    !ctx?.userSmartWallet && bodyPlan.some((b) => b.toolName === 'web_search')
 
   return {
     goal: g,
