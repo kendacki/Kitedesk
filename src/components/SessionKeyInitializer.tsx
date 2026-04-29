@@ -11,10 +11,11 @@ import { useWallet } from '@/components/WalletProvider'
  * On wallet connect:
  * 1. Check localStorage for existing key
  * 2. Fetch from backend if not in localStorage
- * 3. Store keyId in localStorage for seamless x402 payment signing
+ * 3. Create new session key if none exist (requires MetaMask signature)
+ * 4. Store keyId in localStorage for seamless x402 payment signing
  */
 export function SessionKeyInitializer() {
-  const { address } = useWallet()
+  const { address, provider } = useWallet()
   const initializationAttempted = useRef<Set<string>>(new Set())
   const isInitializing = useRef(false)
 
@@ -62,13 +63,60 @@ export function SessionKeyInitializer() {
             }
           }
         } catch (error) {
-          // Log but continue - if backend fetch fails, session key can still be created on first transaction
+          // Log but continue - attempt to create new session key
           console.debug('[SessionKeyInitializer] Failed to fetch existing keys from backend:', error)
         }
 
-        // No existing session key found locally or on backend
-        // This is normal - session keys are created on first transaction when needed
-        console.debug('[SessionKeyInitializer] No existing session key found. Will be created on first transaction.')
+        // No existing session key found - attempt to create a new one
+        if (provider) {
+          try {
+            console.debug('[SessionKeyInitializer] Creating new session key...')
+            const signer = await provider.getSigner()
+            const signerAddress = await signer.getAddress()
+
+            // Create authorization message for session key creation
+            const authMessage = `Create session key for ${signerAddress}`
+            const signature = await signer.signMessage(authMessage)
+
+            // Call backend to create the session key
+            const createRes = await fetch('/api/session-keys/create', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userSmartWallet: address,
+                signature,
+                authorizationMessage: authMessage,
+                budgetUsdt: 1.0, // Default budget: $1.00 per day
+                maxPerTxUsdt: 0.5, // Max $0.50 per transaction
+                expiresInHours: 24, // Expires in 24 hours
+                whitelistedRecipients: [
+                  '0x1234567890123456789012345678901234567890', // Placeholder - can be configured
+                ],
+              }),
+            })
+
+            if (createRes.ok) {
+              const createData = await createRes.json()
+              if (createData.keyId) {
+                localStorage.setItem(`session-key-${address}`, createData.keyId)
+                console.debug('[SessionKeyInitializer] Successfully created and stored session key:', createData.keyId)
+                initializationAttempted.current.add(address)
+                return
+              }
+            } else {
+              const errorData = await createRes.json()
+              console.warn('[SessionKeyInitializer] Failed to create session key:', errorData.error)
+            }
+          } catch (createError) {
+            // If user rejects signature or other error occurs, that's okay
+            // Session keys can be created on first transaction
+            console.debug('[SessionKeyInitializer] Could not auto-create session key:', createError)
+          }
+        }
+
+        // Fallback: No existing session key and auto-creation failed
+        // Session keys will be created on-demand on first x402 transaction
+        console.debug('[SessionKeyInitializer] Session key initialization deferred to first transaction.')
         initializationAttempted.current.add(address)
       } catch (error) {
         console.error('[SessionKeyInitializer] Unexpected error during initialization:', error)
@@ -79,7 +127,7 @@ export function SessionKeyInitializer() {
     }
 
     checkAndInitializeSessionKey()
-  }, [address])
+  }, [address, provider])
 
   // This component doesn't render anything visible - it just manages initialization side effects
   return null
