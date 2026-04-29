@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { useWallet } from '@/components/WalletProvider'
 import { useTaskExecution } from '@/hooks/useTaskExecution'
 import { WalletConnect } from '@/components/WalletConnect'
+import { SessionKeyInitializer } from '@/components/SessionKeyInitializer'
 import { TaskForm } from '@/components/TaskForm'
 import { AgentStepsPanel } from '@/components/AgentStepsPanel'
 import { AgentExecutionTimeline } from '@/components/AgentExecutionTimeline'
@@ -161,6 +162,7 @@ export function KiteDeskApp() {
 
   return (
     <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-4xl flex-col px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-1 font-sans safe-x sm:px-6 sm:pb-12 sm:pt-2 md:pb-16 md:pt-3">
+      <SessionKeyInitializer />
       <a
         href="#kitedesk-main"
         className="fixed left-4 top-0 z-[100] -translate-y-[180%] rounded-md bg-emerald-900 px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-transform duration-200 focus:translate-y-4 focus:outline-none focus:ring-2 focus:ring-emerald-200"
