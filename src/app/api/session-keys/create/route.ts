@@ -1,7 +1,7 @@
 import { ethers } from 'ethers'
 import { createSessionKey } from '@/lib/sessionKeys'
 import { HttpError } from '@/lib/httpError'
-import { CONTRACTS } from '@/lib/constants'
+import { getPlatformWalletAddress } from '@/lib/verifyPayment'
 
 export async function POST(request: Request) {
   try {
@@ -33,11 +33,11 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Invalid smart wallet address' }, { status: 400 })
     }
 
-    // Auto-populate whitelistedRecipients with common addresses if not provided
+    // Auto-populate whitelistedRecipients with the platform payTo address if not provided.
+    // That keeps freshly signed-in users eligible for x402 queries immediately.
     let recipients = whitelistedRecipients || []
     if (recipients.length === 0) {
-      // Default to USDT contract and user's smart wallet
-      recipients = [ethers.getAddress(CONTRACTS.usdt), ethers.getAddress(userSmartWallet)]
+      recipients = [getPlatformWalletAddress(), ethers.getAddress(userSmartWallet)]
     } else {
       // Normalize provided addresses
       recipients = recipients.map((r: string) => ethers.getAddress(r))
