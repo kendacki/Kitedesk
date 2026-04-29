@@ -21,21 +21,12 @@ async function settleViaFacilitator(
   const settleUrl = KITE_X402.settleUrl
   let settleRes: Response
   try {
-    // Decode the base64 payload to send the actual authorization + signature to the facilitator
-    let payloadObj: Record<string, unknown>
-    try {
-      const decoded = Buffer.from(paymentPayload, 'base64').toString('utf8')
-      payloadObj = JSON.parse(decoded) as Record<string, unknown>
-    } catch {
-      // If decoding fails, send as-is (might already be decoded)
-      payloadObj = { paymentPayload }
-    }
-
+    // Send the base64 payload as-is to the facilitator in the paymentPayload field
     settleRes = await fetch(settleUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...payloadObj,
+        paymentPayload: paymentPayload.trim(),
         network,
       }),
       signal: AbortSignal.timeout(8000),

@@ -45,20 +45,16 @@ export function SessionKeyInitializer() {
 
         // Fetch session keys from backend to see if any exist for this wallet
         try {
-          const listRes = await fetch('/api/session-keys/list', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userSmartWallet: address }),
-          })
+          const listRes = await fetch(`/api/session-keys/list?wallet=${encodeURIComponent(address)}`)
 
           if (listRes.ok) {
             const listData = await listRes.json()
-            if (listData.sessionKeys && listData.sessionKeys.length > 0) {
+            if (listData.keys && listData.keys.length > 0) {
               // Use the first active session key found on backend
-              const firstKey = listData.sessionKeys[0]
-              if (typeof firstKey.keyId === 'string') {
-                localStorage.setItem(`session-key-${address}`, firstKey.keyId)
-                console.debug('[SessionKeyInitializer] Loaded session key from backend:', firstKey.keyId)
+              const firstKey = listData.keys[0]
+              if (typeof firstKey.key_id === 'string') {
+                localStorage.setItem(`session-key-${address}`, firstKey.key_id)
+                console.debug('[SessionKeyInitializer] Loaded session key from backend:', firstKey.key_id)
                 initializationAttempted.current.add(address)
                 return
               }
