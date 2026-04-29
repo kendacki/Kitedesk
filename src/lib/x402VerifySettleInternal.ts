@@ -33,6 +33,7 @@ async function settleViaFacilitator(
     })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Facilitator request failed'
+    console.error('[x402] Facilitator request error:', { message: msg, error: e })
     return { ok: false, error: msg }
   }
 
@@ -52,6 +53,11 @@ async function settleViaFacilitator(
         : typeof settleJson.message === 'string'
           ? settleJson.message
           : `Facilitator settle failed (${settleRes.status})`
+    console.error('[x402] Facilitator settlement failed:', {
+      status: settleRes.status,
+      error: errMsg,
+      response: settleJson,
+    })
     return { ok: false, error: errMsg }
   }
 
@@ -110,8 +116,37 @@ async function settleViaDirectTransfer(
     }
     return { ok: true, txHash: receipt.hash }
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Direct transfer failed'
-    return { ok: false, error: msg }
+    // Enhanced error handling for contract revert exceptions
+    let msg = 'Direct transfer failed'
+    let details = ''
+
+    if (e instanceof Error) {
+      msg = e.message
+      // Try to extract contract revert reason from ethers.js error
+      const errObj = (e as unknown) as Record<string, unknown>
+      if (errObj.code === 'CALL_EXCEPTION' || errObj.reason) {
+        // Ethers.js CALL_EXCEPTION with revert details
+        if (typeof errObj.reason === 'string' && errObj.reason) {
+          details = `; contract reason: ${errObj.reason}`
+        }
+        if (errObj.data) {
+          details = `${details}; transaction data: ${String(errObj.data).slice(0, 100)}`
+        }
+      }
+      // Log full error for debugging
+      console.error('[x402] Direct transfer contract call error:', {
+        code: errObj.code,
+        reason: errObj.reason,
+        revert: errObj.revert,
+        transaction: errObj.transaction,
+        errorMessage: msg,
+      })
+    }
+
+    return {
+      ok: false,
+      error: `Direct transfer failed: ${msg}${details}`,
+    }
   }
 }
 
@@ -155,7 +190,7 @@ export async function verifyAndSettleInternal(
     return { success: true, txHash: fac.txHash, path: 'facilitator' }
   }
 
-  const facilitatorError = fac.error
+  const facilitatorError = fac.ok ? '' : fac.error
   const direct = await settleViaDirectTransfer(parsed)
   if (direct.ok) {
     return { success: true, txHash: direct.txHash, path: 'direct' }
@@ -165,6 +200,6 @@ export async function verifyAndSettleInternal(
     success: false,
     error: 'Both settlement paths failed',
     facilitatorError,
-    directError: direct.error,
+    directError: direct.ok ? '' : direct.error,
   }
 }
