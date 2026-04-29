@@ -11,11 +11,13 @@ import { useWallet } from '@/components/WalletProvider'
  * On wallet connect:
  * 1. Check localStorage for existing key
  * 2. Fetch from backend if not in localStorage
- * 3. Create new session key if none exist (requires MetaMask signature)
+ * 3. Attempt to auto-create new session key if none found
  * 4. Store keyId in localStorage for seamless x402 payment signing
+ *
+ * Auto-creation requires one MetaMask signature but eliminates prompts for subsequent transactions.
  */
 export function SessionKeyInitializer() {
-  const { address, provider } = useWallet()
+  const { address, signer } = useWallet()
   const initializationAttempted = useRef<Set<string>>(new Set())
   const isInitializing = useRef(false)
 
@@ -63,35 +65,27 @@ export function SessionKeyInitializer() {
             }
           }
         } catch (error) {
-          // Log but continue - attempt to create new session key
+          // Log but continue - attempt to create new key if signer available
           console.debug('[SessionKeyInitializer] Failed to fetch existing keys from backend:', error)
         }
 
-        // No existing session key found - attempt to create a new one
-        if (provider) {
+        // No existing session key found - attempt to auto-create one
+        if (signer) {
           try {
-            console.debug('[SessionKeyInitializer] Creating new session key...')
-            const signer = await provider.getSigner()
-            const signerAddress = await signer.getAddress()
+            const authMsg = `Authorize session key creation for ${address}`
+            const signature = await signer.signMessage(authMsg)
 
-            // Create authorization message for session key creation
-            const authMessage = `Create session key for ${signerAddress}`
-            const signature = await signer.signMessage(authMessage)
-
-            // Call backend to create the session key
             const createRes = await fetch('/api/session-keys/create', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 userSmartWallet: address,
                 signature,
-                authorizationMessage: authMessage,
-                budgetUsdt: 1.0, // Default budget: $1.00 per day
-                maxPerTxUsdt: 0.5, // Max $0.50 per transaction
-                expiresInHours: 24, // Expires in 24 hours
-                whitelistedRecipients: [
-                  '0x1234567890123456789012345678901234567890', // Placeholder - can be configured
-                ],
+                authorizationMessage: authMsg,
+                budgetUsdt: 10, // Default budget for auto-created keys
+                maxPerTxUsdt: 5,
+                expiresInHours: 24,
+                // whitelistedRecipients will be auto-populated by the API
               }),
             })
 
@@ -99,24 +93,21 @@ export function SessionKeyInitializer() {
               const createData = await createRes.json()
               if (createData.keyId) {
                 localStorage.setItem(`session-key-${address}`, createData.keyId)
-                console.debug('[SessionKeyInitializer] Successfully created and stored session key:', createData.keyId)
+                console.debug('[SessionKeyInitializer] Auto-created new session key:', createData.keyId)
                 initializationAttempted.current.add(address)
                 return
               }
             } else {
-              const errorData = await createRes.json()
-              console.warn('[SessionKeyInitializer] Failed to create session key:', errorData.error)
+              console.debug('[SessionKeyInitializer] Auto-creation failed:', await createRes.text())
             }
-          } catch (createError) {
-            // If user rejects signature or other error occurs, that's okay
-            // Session keys can be created on first transaction
-            console.debug('[SessionKeyInitializer] Could not auto-create session key:', createError)
+          } catch (error) {
+            console.debug('[SessionKeyInitializer] Auto-creation error (will retry on first transaction):', error)
           }
         }
 
-        // Fallback: No existing session key and auto-creation failed
-        // Session keys will be created on-demand on first x402 transaction
-        console.debug('[SessionKeyInitializer] Session key initialization deferred to first transaction.')
+        // Fallback: No session key found and couldn't create one yet
+        // Session key will be created on first x402 transaction when needed
+        console.debug('[SessionKeyInitializer] Will create session key on first x402 transaction')
         initializationAttempted.current.add(address)
       } catch (error) {
         console.error('[SessionKeyInitializer] Unexpected error during initialization:', error)
@@ -127,7 +118,7 @@ export function SessionKeyInitializer() {
     }
 
     checkAndInitializeSessionKey()
-  }, [address, provider])
+  }, [address, signer])
 
   // This component doesn't render anything visible - it just manages initialization side effects
   return null

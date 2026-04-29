@@ -1,6 +1,7 @@
 import { ethers } from 'ethers'
 import { createSessionKey } from '@/lib/sessionKeys'
 import { HttpError } from '@/lib/httpError'
+import { CONTRACTS } from '@/lib/constants'
 
 export async function POST(request: Request) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
       budgetUsdt,
       maxPerTxUsdt = Math.min(50, budgetUsdt),
       expiresInHours = 24,
-      whitelistedRecipients,
+      whitelistedRecipients = [],
     } = body as {
       userSmartWallet: string
       signature: string
@@ -21,16 +22,10 @@ export async function POST(request: Request) {
       budgetUsdt: number
       maxPerTxUsdt?: number
       expiresInHours?: number
-      whitelistedRecipients: string[]
+      whitelistedRecipients?: string[]
     }
 
-    if (
-      !userSmartWallet ||
-      !signature ||
-      !authorizationMessage ||
-      !budgetUsdt ||
-      !whitelistedRecipients
-    ) {
+    if (!userSmartWallet || !signature || !authorizationMessage || !budgetUsdt) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -38,7 +33,17 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Invalid smart wallet address' }, { status: 400 })
     }
 
-    if (whitelistedRecipients.some((r: string) => !ethers.isAddress(r))) {
+    // Auto-populate whitelistedRecipients with common addresses if not provided
+    let recipients = whitelistedRecipients || []
+    if (recipients.length === 0) {
+      // Default to USDT contract and user's smart wallet
+      recipients = [ethers.getAddress(CONTRACTS.usdt), ethers.getAddress(userSmartWallet)]
+    } else {
+      // Normalize provided addresses
+      recipients = recipients.map((r: string) => ethers.getAddress(r))
+    }
+
+    if (recipients.some((r: string) => !ethers.isAddress(r))) {
       return Response.json({ error: 'Invalid recipient address' }, { status: 400 })
     }
 
@@ -61,7 +66,7 @@ export async function POST(request: Request) {
       budgetUsdt,
       maxPerTxUsdt,
       expiresInHours,
-      whitelistedRecipients: whitelistedRecipients as string[],
+      whitelistedRecipients: recipients as string[],
     })
 
     return Response.json(
