@@ -1,7 +1,7 @@
 // KiteDesk | MetaMask connection and Kite testnet chain state
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { ethers } from 'ethers'
 import { KITE_CHAIN, KITE_STAY_ON_TESTNET_MESSAGE } from '@/lib/constants'
 import {
@@ -119,7 +119,34 @@ export function useWallet() {
     error: null,
   })
 
-  const disconnect = useCallback(() => {
+  const addressRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    addressRef.current = state.address
+  }, [state.address])
+
+  const revokeStoredSessionKey = useCallback(async (address: string | null) => {
+    if (!address || typeof window === 'undefined') return
+
+    const keyId = localStorage.getItem(`session-key-${address}`)
+    if (!keyId) return
+
+    try {
+      await fetch('/api/session-keys/revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userSmartWallet: address, keyId }),
+      })
+    } catch (err) {
+      console.warn('[useWallet] Failed to revoke session key on disconnect', err)
+    } finally {
+      localStorage.removeItem(`session-key-${address}`)
+    }
+  }, [])
+
+  const disconnect = useCallback(async () => {
+    await revokeStoredSessionKey(addressRef.current)
+
     setState({
       address: null,
       provider: null,
@@ -128,7 +155,7 @@ export function useWallet() {
       isConnecting: false,
       error: null,
     })
-  }, [])
+  }, [revokeStoredSessionKey])
 
   /** Rehydrate from the extension after refresh, new tabs, or remounts (silent `eth_accounts`). */
   useEffect(() => {
@@ -412,7 +439,7 @@ export function useWallet() {
     }
 
     const onDisconnect = () => {
-      disconnect()
+      void disconnect()
     }
 
     eth.on('accountsChanged', onAccountsChanged)
