@@ -26,7 +26,7 @@ async function settleViaFacilitator(
     try {
       const decoded = Buffer.from(paymentPayload, 'base64').toString('utf8')
       payloadObj = JSON.parse(decoded) as Record<string, unknown>
-    } catch (e) {
+    } catch {
       // If decoding fails, send as-is (might already be decoded)
       payloadObj = { paymentPayload }
     }
