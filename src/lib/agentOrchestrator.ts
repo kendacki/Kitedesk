@@ -7,7 +7,7 @@ import { KITE_CHAIN, KITE_X402 } from '@/lib/constants'
 import { requireInternalApiBaseUrl } from '@/lib/internalApiBaseUrl'
 import { buildXPaymentHeaderForFacilitator } from '@/lib/x402AgentPayment'
 import { fetchX402Search } from '@/lib/x402SearchClient'
-import { getDecryptedSessionKeyWallet, recordSessionKeyUsage } from '@/lib/sessionKeys'
+import { getDecryptedSessionKeyWallet, recordSessionKeyUsage, getSessionKeyForUser } from '@/lib/sessionKeys'
 import type { AgentStep, GoalResult, ToolName } from '@/types'
 
 const DEFAULT_MODEL = 'openai/gpt-oss-120b'
@@ -356,6 +356,27 @@ export async function executeX402Tool(
         agentLog('Using session key for x402 payment', {
           sessionKeyAddress: signingWallet.address,
         })
+        // Verify session key is whitelisted for this payTo address
+        try {
+          const skRecord = await getSessionKeyForUser(ctx.userSmartWallet)
+          if (skRecord) {
+            const normalizedRecipients = (skRecord.whitelisted_recipients || []).map((r) =>
+              ethers.getAddress(r)
+            )
+            const normalizedPayTo = ethers.getAddress(payTo)
+            if (!normalizedRecipients.includes(normalizedPayTo)) {
+              agentLog('Session key not whitelisted for payTo — falling back to attestation signer', {
+                payTo,
+                sessionKeyAddress: signingWallet.address,
+              })
+              signingWallet = null
+              usingSessionKey = false
+              sessionKeyId = null
+            }
+          }
+        } catch (err) {
+          console.warn('[x402] Failed to verify session key whitelist, continuing with session key:', err)
+        }
       }
     } catch (e) {
       console.warn('[x402] Session key load failed, fallback to attestation signer:', e)
