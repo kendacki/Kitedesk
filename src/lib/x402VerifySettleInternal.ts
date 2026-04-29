@@ -107,8 +107,35 @@ async function settleViaDirectTransfer(
     return { ok: false, error: 'Invalid asset address in X-Payment payload' }
   }
 
+  // Validate the contract is deployed and has code
+  const code = await provider.getCode(asset)
+  if (!code || code === '0x') {
+    console.warn('[x402] Contract not found at asset address:', asset)
+    return {
+      ok: false,
+      error: `Contract not found at token address ${asset} on ${KITE_CHAIN.name}`,
+    }
+  }
+
   const token = new ethers.Contract(asset, ERC20_TRANSFER_ABI, wallet)
   try {
+    // Check balance first to avoid wasting gas on a doomed transaction
+    const balance = await token.balanceOf(wallet.address).catch(() => null)
+    if (balance === null || balance < amount) {
+      const balStr = balance ? ethers.formatUnits(balance, 6) : 'unknown'
+      const amountStr = ethers.formatUnits(amount, 6)
+      console.error('[x402] Insufficient token balance for transfer:', {
+        balance: balStr,
+        required: amountStr,
+        wallet: wallet.address,
+        asset,
+      })
+      return {
+        ok: false,
+        error: `Insufficient token balance: have ${balStr}, need ${amountStr}`,
+      }
+    }
+
     const tx = await token.transfer(payTo, amount)
     const receipt = await tx.wait()
     if (!receipt || receipt.status !== 1) {
@@ -124,13 +151,22 @@ async function settleViaDirectTransfer(
       msg = e.message
       // Try to extract contract revert reason from ethers.js error
       const errObj = e as unknown as Record<string, unknown>
-      if (errObj.code === 'CALL_EXCEPTION' || errObj.reason) {
+      if (errObj.code === 'CALL_EXCEPTION') {
         // Ethers.js CALL_EXCEPTION with revert details
         if (typeof errObj.reason === 'string' && errObj.reason) {
           details = `; contract reason: ${errObj.reason}`
+        } else {
+          details =
+            '; contract reverted without explicit reason (check contract implementation)'
         }
-        if (errObj.data) {
-          details = `${details}; transaction data: ${String(errObj.data).slice(0, 100)}`
+        if (typeof errObj.transaction === 'object' && errObj.transaction) {
+          const tx = errObj.transaction as Record<string, unknown>
+          console.error('[x402] Contract call failed during gas estimation:', {
+            to: tx.to,
+            from: tx.from,
+            data: String(tx.data).slice(0, 100),
+            value: tx.value,
+          })
         }
       }
       // Log full error for debugging
@@ -138,14 +174,13 @@ async function settleViaDirectTransfer(
         code: errObj.code,
         reason: errObj.reason,
         revert: errObj.revert,
-        transaction: errObj.transaction,
         errorMessage: msg,
       })
     }
 
     return {
       ok: false,
-      error: `Direct transfer failed: ${msg}${details}`,
+      error: `Direct transfer settlement unavailable: ${msg}${details}. Ensure agent wallet has sufficient token balance and correct contract is deployed.`,
     }
   }
 }
