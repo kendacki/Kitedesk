@@ -15,8 +15,8 @@ function pickTxHash(data: Record<string, unknown>): string | undefined {
 }
 
 async function settleViaFacilitator(
-  authorization: unknown,
-  signature: string
+  paymentPayload: string,
+  network: string
 ): Promise<{ ok: true; txHash?: string } | { ok: false; error: string }> {
   const settleUrl = KITE_X402.settleUrl
   let settleRes: Response
@@ -25,9 +25,8 @@ async function settleViaFacilitator(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        authorization,
-        signature,
-        network: 'kite-testnet',
+        paymentPayload,
+        network,
       }),
       signal: AbortSignal.timeout(8000),
     })
@@ -211,16 +210,7 @@ export async function verifyAndSettleInternal(
     return { success: false, error: msg, facilitatorError: msg, directError: msg }
   }
 
-  const authObj = {
-    from: parsed.authorization.from,
-    to: parsed.authorization.to,
-    value: parsed.authorization.value,
-    validAfter: parsed.authorization.validAfter,
-    validBefore: parsed.authorization.validBefore,
-    nonce: parsed.authorization.nonce,
-  }
-
-  const fac = await settleViaFacilitator(authObj, parsed.signature)
+  const fac = await settleViaFacilitator(xPaymentHeader, 'kite-testnet')
   if (fac.ok) {
     return { success: true, txHash: fac.txHash, path: 'facilitator' }
   }
