@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useWallet } from '@/components/WalletProvider'
 
 /**
@@ -10,17 +10,27 @@ import { useWallet } from '@/components/WalletProvider'
  */
 export function SessionKeyInitializer() {
   const { address } = useWallet()
+  const initializationAttempted = useRef<Set<string>>(new Set())
+  const isInitializing = useRef(false)
 
   useEffect(() => {
-    if (!address) {
+    if (!address || isInitializing.current) {
       return
     }
+
+    // Prevent duplicate initialization attempts for the same address
+    if (initializationAttempted.current.has(address)) {
+      return
+    }
+
+    isInitializing.current = true
 
     const checkAndInitializeSessionKey = async () => {
       try {
         // Check if session key already exists in localStorage
         const storedKeyId = localStorage.getItem(`session-key-${address}`)
         if (storedKeyId) {
+          initializationAttempted.current.add(address)
           return
         }
 
@@ -39,24 +49,29 @@ export function SessionKeyInitializer() {
               const firstKey = listData.sessionKeys[0]
               if (typeof firstKey.keyId === 'string') {
                 localStorage.setItem(`session-key-${address}`, firstKey.keyId)
+                initializationAttempted.current.add(address)
                 return
               }
             }
           }
-        } catch {
-          // Continue to initialization if list fails
+        } catch (error) {
+          // Log but continue - session key creation can happen on-demand
+          console.debug('[SessionKeyInitializer] Failed to fetch existing keys:', error)
         }
 
-        // No session key found, that's okay - it will be created on first use if needed
-        // Or the user can manually initialize one via the wallet interface
+        // No session key found - that's okay, it will be created on first use or manually
+        initializationAttempted.current.add(address)
       } catch (error) {
-        console.error('[SessionKeyInitializer] Error checking session keys:', error)
+        console.error('[SessionKeyInitializer] Error during initialization:', error)
+        initializationAttempted.current.add(address)
+      } finally {
+        isInitializing.current = false
       }
     }
 
     checkAndInitializeSessionKey()
   }, [address])
 
-  // This component doesn't render anything visible - it just manages state
+  // This component doesn't render anything visible - it just manages initialization side effects
   return null
 }
