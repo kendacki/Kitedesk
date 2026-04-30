@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { type JsonRpcSigner } from 'ethers'
 import { useWallet } from '@/components/WalletProvider'
 
 /**
@@ -21,6 +22,105 @@ export function SessionKeyInitializer() {
   const initializationAttempted = useRef<Set<string>>(new Set())
   const isInitializing = useRef(false)
 
+  // Named initializer so we can call it from both the effect and an explicit connect event
+  const runInitialization = async (
+    addr: string | null,
+    signerObj: JsonRpcSigner | null
+  ) => {
+    if (!addr || isInitializing.current) return
+    if (initializationAttempted.current.has(addr)) return
+
+    isInitializing.current = true
+    try {
+      // Check localStorage first
+      const storedKeyId = localStorage.getItem(`session-key-${addr}`)
+      if (storedKeyId) {
+        console.debug(
+          '[SessionKeyInitializer] Using existing session key from localStorage'
+        )
+        initializationAttempted.current.add(addr)
+        return
+      }
+
+      // Try backend list
+      try {
+        const listRes = await fetch(
+          `/api/session-keys/list?wallet=${encodeURIComponent(addr)}`
+        )
+        if (listRes.ok) {
+          const listData = await listRes.json()
+          if (listData.keys && listData.keys.length > 0) {
+            const firstKey = listData.keys[0]
+            if (typeof firstKey.key_id === 'string') {
+              localStorage.setItem(`session-key-${addr}`, firstKey.key_id)
+              console.debug(
+                '[SessionKeyInitializer] Loaded session key from backend:',
+                firstKey.key_id
+              )
+              initializationAttempted.current.add(addr)
+              return
+            }
+          }
+        }
+      } catch (error) {
+        console.debug(
+          '[SessionKeyInitializer] Failed to fetch existing keys from backend:',
+          error
+        )
+      }
+
+      // Attempt create if signer present
+      if (signerObj) {
+        try {
+          const authMsg = `Authorize session key creation for ${addr}`
+          const signature = await signerObj.signMessage(authMsg)
+
+          const createRes = await fetch('/api/session-keys/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userSmartWallet: addr,
+              signature,
+              authorizationMessage: authMsg,
+              budgetUsdt: 10,
+              maxPerTxUsdt: 5,
+              expiresInHours: 24,
+            }),
+          })
+
+          if (createRes.ok) {
+            const createData = await createRes.json()
+            if (createData.keyId) {
+              localStorage.setItem(`session-key-${addr}`, createData.keyId)
+              console.debug(
+                '[SessionKeyInitializer] Auto-created new session key:',
+                createData.keyId
+              )
+              initializationAttempted.current.add(addr)
+              return
+            }
+          } else {
+            console.debug(
+              '[SessionKeyInitializer] Auto-creation failed:',
+              await createRes.text()
+            )
+          }
+        } catch (error) {
+          console.debug(
+            '[SessionKeyInitializer] Auto-creation error (will retry later):',
+            error
+          )
+        }
+      }
+
+      console.debug(
+        '[SessionKeyInitializer] Will create session key on first x402 transaction'
+      )
+    } finally {
+      isInitializing.current = false
+    }
+  }
+
   useEffect(() => {
     // Reset initialization tracking when user disconnects so it will re-initialize on reconnect
     if (!address) {
@@ -38,114 +138,22 @@ export function SessionKeyInitializer() {
     if (initializationAttempted.current.has(address)) {
       return
     }
+    void runInitialization(address, signer)
+  }, [address, signer])
 
-    isInitializing.current = true
-
-    const checkAndInitializeSessionKey = async () => {
+  useEffect(() => {
+    const onConnect = (ev: Event) => {
       try {
-        // Check if session key already exists in localStorage
-        const storedKeyId = localStorage.getItem(`session-key-${address}`)
-        if (storedKeyId) {
-          console.debug(
-            '[SessionKeyInitializer] Using existing session key from localStorage'
-          )
-          initializationAttempted.current.add(address)
-          return
-        }
-
-        // Fetch session keys from backend to see if any exist for this wallet
-        try {
-          const listRes = await fetch(
-            `/api/session-keys/list?wallet=${encodeURIComponent(address)}`
-          )
-
-          if (listRes.ok) {
-            const listData = await listRes.json()
-            if (listData.keys && listData.keys.length > 0) {
-              // Use the first active session key found on backend
-              const firstKey = listData.keys[0]
-              if (typeof firstKey.key_id === 'string') {
-                localStorage.setItem(`session-key-${address}`, firstKey.key_id)
-                console.debug(
-                  '[SessionKeyInitializer] Loaded session key from backend:',
-                  firstKey.key_id
-                )
-                initializationAttempted.current.add(address)
-                return
-              }
-            }
-          }
-        } catch (error) {
-          // Log but continue - attempt to create new key if signer available
-          console.debug(
-            '[SessionKeyInitializer] Failed to fetch existing keys from backend:',
-            error
-          )
-        }
-
-        // No existing session key found - attempt to auto-create one
-        if (signer) {
-          try {
-            const authMsg = `Authorize session key creation for ${address}`
-            const signature = await signer.signMessage(authMsg)
-
-            const createRes = await fetch('/api/session-keys/create', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userSmartWallet: address,
-                signature,
-                authorizationMessage: authMsg,
-                budgetUsdt: 10, // Default budget for auto-created keys
-                maxPerTxUsdt: 5,
-                expiresInHours: 24,
-                // whitelistedRecipients will be auto-populated by the API
-              }),
-            })
-
-            if (createRes.ok) {
-              const createData = await createRes.json()
-              if (createData.keyId) {
-                localStorage.setItem(`session-key-${address}`, createData.keyId)
-                console.debug(
-                  '[SessionKeyInitializer] Auto-created new session key:',
-                  createData.keyId
-                )
-                initializationAttempted.current.add(address)
-                return
-              }
-            } else {
-              console.debug(
-                '[SessionKeyInitializer] Auto-creation failed:',
-                await createRes.text()
-              )
-            }
-          } catch (error) {
-            console.debug(
-              '[SessionKeyInitializer] Auto-creation error (will retry on first transaction):',
-              error
-            )
-          }
-        }
-
-        // Fallback: No session key found and couldn't create one yet
-        // Session key will be created on first x402 transaction when needed
-        console.debug(
-          '[SessionKeyInitializer] Will create session key on first x402 transaction'
-        )
-        initializationAttempted.current.add(address)
-      } catch (error) {
-        console.error(
-          '[SessionKeyInitializer] Unexpected error during initialization:',
-          error
-        )
-        initializationAttempted.current.add(address)
-      } finally {
-        isInitializing.current = false
+        const detail = (ev as CustomEvent).detail as { address?: string }
+        const addr = detail?.address ?? address
+        void runInitialization(addr ?? null, signer)
+      } catch (err) {
+        console.debug('[SessionKeyInitializer] connect event handler error', err)
       }
     }
 
-    checkAndInitializeSessionKey()
+    window.addEventListener('kitedesk:connect', onConnect)
+    return () => window.removeEventListener('kitedesk:connect', onConnect)
   }, [address, signer])
 
   // This component doesn't render anything visible - it just manages initialization side effects

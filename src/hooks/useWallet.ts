@@ -237,6 +237,14 @@ export function useWallet() {
         isConnecting: false,
         error: null,
       })
+      // Notify any listeners (SessionKeyInitializer) that connect just completed
+      try {
+        window.dispatchEvent(
+          new CustomEvent('kitedesk:connect', { detail: { address: next.address } })
+        )
+      } catch {
+        /* ignore - non-browser or SSR */
+      }
     } catch (err: unknown) {
       setState((s) => ({
         ...s,
