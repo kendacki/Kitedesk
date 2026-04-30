@@ -6,7 +6,6 @@ import { motion } from 'framer-motion'
 import type { ethers } from 'ethers'
 import { checkUsdtBalance } from '@/lib/payment'
 import { brandEase, brandLinkLight, brandPrimaryButton } from '@/lib/brand'
-import { KITE_CHAIN } from '@/lib/constants'
 import { formatWalletUsdtForDisplay } from '@/lib/formatWalletUsdt'
 
 function truncateAddress(address: string): string {
@@ -46,10 +45,12 @@ export function WalletConnect({
     }
     setBalancePending(true)
     try {
-      const net = await provider.getNetwork()
-      if (Number(net.chainId) !== KITE_CHAIN.id) {
-        setUsdtBalance(null)
-        return
+      // Try to read the network, but attempt token balance read regardless of reported network.
+      // Some providers may report transient chain states; prefer showing a best-effort USDT balance.
+      try {
+        await provider.getNetwork()
+      } catch {
+        // ignore network read error and proceed to balance check
       }
       const bal = await checkUsdtBalance(provider, address)
       setUsdtBalance(bal)
