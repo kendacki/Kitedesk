@@ -3,6 +3,7 @@
 
 import { createContext, useContext, type ReactNode } from 'react'
 import { useWallet as useWalletState } from '@/hooks/useWallet'
+import { SessionKeyInitializer } from '@/components/SessionKeyInitializer'
 
 type Wallet = ReturnType<typeof useWalletState>
 
@@ -10,7 +11,12 @@ const WalletContext = createContext<Wallet | null>(null)
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   const wallet = useWalletState()
-  return <WalletContext.Provider value={wallet}>{children}</WalletContext.Provider>
+  return (
+    <WalletContext.Provider value={wallet}>
+      <SessionKeyInitializer />
+      {children}
+    </WalletContext.Provider>
+  )
 }
 
 export function useWallet(): Wallet {
