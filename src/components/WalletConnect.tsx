@@ -40,10 +40,13 @@ export function WalletConnect({
 
   const refreshBalance = useCallback(async () => {
     if (!provider || !address) {
-      console.debug('[WalletConnect] refreshBalance skipped: missing provider or address', {
-        hasProvider: Boolean(provider),
-        address,
-      })
+      console.debug(
+        '[WalletConnect] refreshBalance skipped: missing provider or address',
+        {
+          hasProvider: Boolean(provider),
+          address,
+        }
+      )
       setUsdtBalance(null)
       return
     }

@@ -11,3 +11,8 @@ package-lock.json
 
 # TestSprite MCP HTML export (tool-generated; not Prettier-formatted)
 testsprite_tests/testsprite-mcp-test-report.html
+
+# Tool-generated reports and plans (may change structure/format outside app source)
+testsprite_tests/*.json
+testsprite_tests/*.md
+SESSION_KEYS_DEPLOYMENT_REPORT.md
