@@ -13,6 +13,12 @@ import {
   releasePaymentClaim,
 } from '@/lib/supabaseTasks'
 import { executeGoal } from '@/lib/agentOrchestrator'
+import { payForTaskWithSigner } from '@/lib/payment'
+import {
+  getDecryptedSessionKeyWalletById,
+  getSessionKeyByIdForUser,
+} from '@/lib/sessionKeys'
+import { getPlatformWalletAddress } from '@/lib/verifyPayment'
 import type { GoalResult, TaskType } from '@/types'
 
 export const runtime = 'nodejs'
@@ -21,6 +27,59 @@ export const maxDuration = 120
 type ClassicTaskType = Exclude<TaskType, 'goal'>
 
 const CLASSIC_TASK_TYPES: ClassicTaskType[] = ['research', 'code_review', 'content_gen']
+
+async function trySessionKeyPrepay(params: {
+  userAddress: string
+  userSmartWallet: string
+  sessionKeyId: string
+  amountUsdt: number
+}): Promise<{ txHash: string; payerAddress: string } | null> {
+  if (
+    !ethers.isAddress(params.userAddress) ||
+    !ethers.isAddress(params.userSmartWallet)
+  ) {
+    return null
+  }
+
+  if (
+    ethers.getAddress(params.userAddress) !== ethers.getAddress(params.userSmartWallet)
+  ) {
+    return null
+  }
+
+  const keyRecord = await getSessionKeyByIdForUser(
+    params.userSmartWallet,
+    params.sessionKeyId
+  )
+  if (!keyRecord) {
+    return null
+  }
+
+  if (params.amountUsdt > keyRecord.max_per_tx_usdt) {
+    return null
+  }
+
+  const platform = getPlatformWalletAddress()
+  const allowedRecipients = (keyRecord.whitelisted_recipients || []).map((r) =>
+    ethers.getAddress(r)
+  )
+  if (!allowedRecipients.includes(ethers.getAddress(platform))) {
+    return null
+  }
+
+  const provider = new ethers.JsonRpcProvider(KITE_CHAIN.rpcUrl)
+  const sessionWallet = await getDecryptedSessionKeyWalletById(
+    params.userSmartWallet,
+    params.sessionKeyId,
+    provider
+  )
+  if (!sessionWallet) {
+    return null
+  }
+
+  const txHash = await payForTaskWithSigner(sessionWallet, params.amountUsdt)
+  return { txHash, payerAddress: sessionWallet.address }
+}
 
 function explorerTxUrl(txHash: string): string {
   const explorerBase =
@@ -58,7 +117,7 @@ export async function POST(req: NextRequest) {
       const sessionKeyId =
         typeof body.sessionKeyId === 'string' ? body.sessionKeyId : ''
 
-      if (!goal.trim() || !userAddress || !paymentTxHash) {
+      if (!goal.trim() || !userAddress) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
       }
       if (!Number.isFinite(budgetUsdt) || budgetUsdt < 0.1 || budgetUsdt > 2.0) {
@@ -71,10 +130,41 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid user address' }, { status: 400 })
       }
 
-      await verifyPaymentTransaction(paymentTxHash, userAddress, budgetUsdt)
+      let effectivePaymentTxHash = paymentTxHash
+      let paymentPayerAddress = userAddress
 
-      paymentTxHashForRelease = paymentTxHash
-      await claimPaymentTransaction(paymentTxHash, userAddress)
+      if (!effectivePaymentTxHash && userSmartWallet && sessionKeyId) {
+        try {
+          const sessionPrepay = await trySessionKeyPrepay({
+            userAddress,
+            userSmartWallet,
+            sessionKeyId,
+            amountUsdt: budgetUsdt,
+          })
+          if (sessionPrepay) {
+            effectivePaymentTxHash = sessionPrepay.txHash
+            paymentPayerAddress = sessionPrepay.payerAddress
+          }
+        } catch (err) {
+          console.warn('[API] session-key prepay failed; client payment required', err)
+        }
+      }
+
+      if (!effectivePaymentTxHash) {
+        return NextResponse.json(
+          { error: 'Missing payment transaction hash' },
+          { status: 400 }
+        )
+      }
+
+      await verifyPaymentTransaction(
+        effectivePaymentTxHash,
+        paymentPayerAddress,
+        budgetUsdt
+      )
+
+      paymentTxHashForRelease = effectivePaymentTxHash
+      await claimPaymentTransaction(effectivePaymentTxHash, userAddress)
 
       try {
         const partial = await executeGoal(goal.trim(), budgetUsdt, {
@@ -99,7 +189,7 @@ export async function POST(req: NextRequest) {
 
         const attestationUrl = explorerTxUrl(attestationHash)
 
-        await completePaymentTask(paymentTxHash, {
+        await completePaymentTask(effectivePaymentTxHash, {
           taskId,
           taskType: 'goal',
           promptPreview: goal.trim().slice(0, 120),
@@ -116,7 +206,7 @@ export async function POST(req: NextRequest) {
           totalSpentUsdt: partial.totalSpentUsdt,
           remainingBudget: partial.remainingBudget,
           finalOutput: partial.finalOutput,
-          txHash: paymentTxHash,
+          txHash: effectivePaymentTxHash,
           attestationHash,
           attestationUrl,
           completedAt: partial.completedAt,
@@ -133,7 +223,7 @@ export async function POST(req: NextRequest) {
         })
       } catch (rollbackErr: unknown) {
         if (!attestationWritten) {
-          await releasePaymentClaim(paymentTxHash)
+          await releasePaymentClaim(effectivePaymentTxHash)
         }
         throw rollbackErr
       }

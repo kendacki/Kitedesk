@@ -196,6 +196,47 @@ export async function getSessionKeyForUser(
   return record
 }
 
+export async function getSessionKeyByIdForUser(
+  userSmartWallet: string,
+  keyId: string
+): Promise<SessionKeyRecord | null> {
+  const db = getSupabaseAdmin()
+  if (!db) {
+    throw new HttpError('Database not configured', 503)
+  }
+
+  const checksumAddress = ethers.getAddress(userSmartWallet)
+
+  const { data, error } = await db
+    .from('session_keys')
+    .select('*')
+    .eq('user_smart_wallet', checksumAddress)
+    .eq('key_id', keyId)
+    .eq('revoked', false)
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (error) {
+    if (isMissingSessionKeysTableError(error.message)) {
+      console.warn('[SessionKeys] session_keys table missing; falling back to signer')
+      return null
+    }
+    throw new HttpError(`Failed to retrieve session key by id: ${error.message}`, 500)
+  }
+
+  if (!data || data.length === 0) {
+    return null
+  }
+
+  const record = data[0] as SessionKeyRecord
+
+  if (new Date(record.expires_at) < new Date()) {
+    return null
+  }
+
+  return record
+}
+
 export async function getDecryptedSessionKeyWallet(
   userSmartWallet: string,
   provider: ethers.JsonRpcProvider
@@ -214,6 +255,29 @@ export async function getDecryptedSessionKeyWallet(
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
     console.error('[SessionKeys] Failed to decrypt session key:', msg)
+    return null
+  }
+}
+
+export async function getDecryptedSessionKeyWalletById(
+  userSmartWallet: string,
+  keyId: string,
+  provider: ethers.JsonRpcProvider
+): Promise<ethers.Wallet | null> {
+  const record = await getSessionKeyByIdForUser(userSmartWallet, keyId)
+  if (!record) {
+    return null
+  }
+
+  try {
+    const decryptedPrivateKey = decryptPrivateKey(
+      record.session_key_private_key_encrypted,
+      userSmartWallet
+    )
+    return new ethers.Wallet(decryptedPrivateKey, provider)
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    console.error('[SessionKeys] Failed to decrypt session key by id:', msg)
     return null
   }
 }

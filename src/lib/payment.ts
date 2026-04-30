@@ -55,8 +55,8 @@ export async function checkUsdtBalance(
   return parseFloat(ethers.formatUnits(balance, unitDecimals))
 }
 
-export async function payForTask(
-  signer: ethers.JsonRpcSigner,
+export async function payForTaskWithSigner(
+  signer: ethers.Signer,
   priceUsdt: number
 ): Promise<string> {
   if (!Number.isFinite(priceUsdt) || priceUsdt <= 0) {
@@ -95,4 +95,11 @@ export async function payForTask(
   }
 
   return receipt.hash
+}
+
+export async function payForTask(
+  signer: ethers.JsonRpcSigner,
+  priceUsdt: number
+): Promise<string> {
+  return payForTaskWithSigner(signer, priceUsdt)
 }

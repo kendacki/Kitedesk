@@ -278,38 +278,45 @@ export function useTaskExecution() {
 
       setActiveGoalText(goal.trim())
       setStatus('paying')
-      let paymentTxHash: string
-      try {
-        await requireSignerOnKiteChain(signer)
-        paymentTxHash = await payForTask(signer, budgetUsdt)
-      } catch (payErr: unknown) {
-        if (isWrongNetworkError(payErr)) {
-          setStatus('error')
-          setError(KITE_WRONG_NETWORK_PAY_MESSAGE)
-          setIsGoalFlow(false)
-          setGoalBudgetUsdt(null)
-          setActiveGoalText(null)
-          return
+      const storedSessionKeyId =
+        typeof window !== 'undefined'
+          ? localStorage.getItem(`session-key-${address}`)
+          : null
+      let paymentTxHash: string | undefined
+
+      if (!storedSessionKeyId) {
+        try {
+          await requireSignerOnKiteChain(signer)
+          paymentTxHash = await payForTask(signer, budgetUsdt)
+        } catch (payErr: unknown) {
+          if (isWrongNetworkError(payErr)) {
+            setStatus('error')
+            setError(KITE_WRONG_NETWORK_PAY_MESSAGE)
+            setIsGoalFlow(false)
+            setGoalBudgetUsdt(null)
+            setActiveGoalText(null)
+            return
+          }
+          if (isWalletUserRejected(payErr)) {
+            setStatus('error')
+            setError('Transaction was cancelled in your wallet.')
+            setIsGoalFlow(false)
+            setGoalBudgetUsdt(null)
+            setActiveGoalText(null)
+            return
+          }
+          if (isSignerOrConnectionError(payErr)) {
+            setStatus('error')
+            setError(
+              'Wallet connection was lost. Refresh the page, reconnect MetaMask, and try again.'
+            )
+            setIsGoalFlow(false)
+            setGoalBudgetUsdt(null)
+            setActiveGoalText(null)
+            return
+          }
+          throw payErr
         }
-        if (isWalletUserRejected(payErr)) {
-          setStatus('error')
-          setError('Transaction was cancelled in your wallet.')
-          setIsGoalFlow(false)
-          setGoalBudgetUsdt(null)
-          setActiveGoalText(null)
-          return
-        }
-        if (isSignerOrConnectionError(payErr)) {
-          setStatus('error')
-          setError(
-            'Wallet connection was lost. Refresh the page, reconnect MetaMask, and try again.'
-          )
-          setIsGoalFlow(false)
-          setGoalBudgetUsdt(null)
-          setActiveGoalText(null)
-          return
-        }
-        throw payErr
       }
 
       setSteps([])
@@ -317,10 +324,6 @@ export function useTaskExecution() {
       await new Promise((r) => setTimeout(r, 280))
 
       setStatus('executing')
-      const storedSessionKeyId =
-        typeof window !== 'undefined'
-          ? localStorage.getItem(`session-key-${address}`)
-          : null
       let data: {
         success?: boolean
         taskId?: string
