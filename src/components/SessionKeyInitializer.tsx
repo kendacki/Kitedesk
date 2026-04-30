@@ -22,6 +22,14 @@ export function SessionKeyInitializer() {
   const isInitializing = useRef(false)
 
   useEffect(() => {
+    // Reset initialization tracking when user disconnects so it will re-initialize on reconnect
+    if (!address) {
+      initializationAttempted.current.clear()
+      isInitializing.current = false
+    }
+  }, [address])
+
+  useEffect(() => {
     if (!address || isInitializing.current) {
       return
     }
