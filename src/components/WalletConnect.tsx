@@ -40,24 +40,50 @@ export function WalletConnect({
 
   const refreshBalance = useCallback(async () => {
     if (!provider || !address) {
+      console.debug('[WalletConnect] refreshBalance skipped: missing provider or address', {
+        hasProvider: Boolean(provider),
+        address,
+      })
       setUsdtBalance(null)
       return
     }
     setBalancePending(true)
+    console.debug('[WalletConnect] refreshBalance start', { address })
     try {
       // Try to read the network, but attempt token balance read regardless of reported network.
       // Some providers may report transient chain states; prefer showing a best-effort USDT balance.
       try {
-        await provider.getNetwork()
-      } catch {
+        const net = await provider.getNetwork()
+        console.debug('[WalletConnect] provider.getNetwork success', {
+          chainId: Number(net.chainId),
+          name: net.name,
+        })
+      } catch (networkErr) {
+        const message =
+          networkErr instanceof Error ? networkErr.message : String(networkErr)
+        console.error('[WalletConnect] provider.getNetwork error', {
+          address,
+          error: message,
+        })
         // ignore network read error and proceed to balance check
       }
       const bal = await checkUsdtBalance(provider, address)
+      console.debug('[WalletConnect] checkUsdtBalance result', {
+        address,
+        balance: bal,
+      })
       setUsdtBalance(bal)
-    } catch {
+    } catch (balanceErr) {
+      const message =
+        balanceErr instanceof Error ? balanceErr.message : String(balanceErr)
+      console.error('[WalletConnect] refreshBalance failed', {
+        address,
+        error: message,
+      })
       setUsdtBalance(null)
     } finally {
       setBalancePending(false)
+      console.debug('[WalletConnect] refreshBalance done', { address })
     }
   }, [provider, address])
 
