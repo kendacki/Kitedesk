@@ -7,6 +7,7 @@ type FundingState = {
   status: 'pending' | 'success' | 'failed' | 'skipped' | null
   txHash?: string | null
   error?: string | null
+  note?: string | null
 }
 
 export function SessionKeyFundingStatus({ address }: { address: string | null }) {
@@ -45,13 +46,13 @@ export function SessionKeyFundingStatus({ address }: { address: string | null })
 
   if (!address) return null
 
-  const { status, txHash, error } = state
+  const { status, txHash, error, note } = state
 
   if (!status) return null
 
   return (
     <div className="mt-2 flex w-full items-center gap-2 text-xs text-slate-700 sm:justify-end">
-      {status === 'pending' && <span>Session key funding: Pending…</span>}
+      {status === 'pending' && <span>{note || 'Session key funding: Pending…'}</span>}
       {status === 'success' && (
         <span>
           Session key funded — tx:{' '}
@@ -60,9 +61,9 @@ export function SessionKeyFundingStatus({ address }: { address: string | null })
           </a>
         </span>
       )}
-      {status === 'skipped' && <span>Session key funding skipped (wrong network)</span>}
+      {status === 'skipped' && <span>{note || 'Session key funding skipped (wrong network)'}</span>}
       {status === 'failed' && (
-        <span>Session key funding failed: {String(error ?? 'unknown')}</span>
+        <span>{note || `Session key funding failed: ${String(error ?? 'unknown')}`}</span>
       )}
     </div>
   )

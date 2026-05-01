@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { type JsonRpcSigner, ethers } from 'ethers'
 import { useWallet } from '@/components/WalletProvider'
 import { CONTRACTS, KITE_X402, KITE_CHAIN } from '@/lib/constants'
+import { checkUsdtBalance } from '@/lib/payment'
 
 /**
  * SessionKeyInitializer: Automatically initializes and manages session keys
@@ -22,6 +23,167 @@ export function SessionKeyInitializer() {
   const { address, signer } = useWallet()
   const initializationAttempted = useRef<Set<string>>(new Set())
   const isInitializing = useRef(false)
+  const refuelInFlight = useRef(false)
+  const refuelCooldownBySession = useRef<Map<string, number>>(new Map())
+
+  const storeSessionKeyMeta = (
+    userAddress: string,
+    keyId: string,
+    sessionKeyAddress?: string | null
+  ) => {
+    localStorage.setItem(`session-key-${userAddress}`, keyId)
+    if (sessionKeyAddress && ethers.isAddress(sessionKeyAddress)) {
+      localStorage.setItem(
+        `session-key-address-${userAddress}`,
+        ethers.getAddress(sessionKeyAddress)
+      )
+    }
+  }
+
+  const setFundingStatus = (
+    userAddress: string,
+    payload: {
+      status: 'pending' | 'success' | 'failed' | 'skipped'
+      txHash: string | null
+      error: string | null
+      note?: string | null
+    }
+  ) => {
+    try {
+      localStorage.setItem(`session-key-funding-${userAddress}`, JSON.stringify(payload))
+    } catch {
+      /* ignore storage failures */
+    }
+  }
+
+  const resolveSessionKeyAddress = async (userAddress: string) => {
+    const storedAddress = localStorage.getItem(`session-key-address-${userAddress}`)
+    if (storedAddress && ethers.isAddress(storedAddress)) {
+      return ethers.getAddress(storedAddress)
+    }
+
+    try {
+      const listRes = await fetch(
+        `/api/session-keys/list?wallet=${encodeURIComponent(userAddress)}`
+      )
+      if (listRes.ok) {
+        const listData = await listRes.json()
+        const firstKey = Array.isArray(listData.keys) ? listData.keys[0] : null
+        const sessionKeyAddress =
+          typeof firstKey?.sessionKeyAddress === 'string'
+            ? firstKey.sessionKeyAddress
+            : typeof firstKey?.session_key_address === 'string'
+              ? firstKey.session_key_address
+              : ''
+        const keyId =
+          typeof firstKey?.keyId === 'string'
+            ? firstKey.keyId
+            : typeof firstKey?.key_id === 'string'
+              ? firstKey.key_id
+              : ''
+
+        if (keyId) {
+          localStorage.setItem(`session-key-${userAddress}`, keyId)
+        }
+        if (sessionKeyAddress && ethers.isAddress(sessionKeyAddress)) {
+          const checksum = ethers.getAddress(sessionKeyAddress)
+          localStorage.setItem(`session-key-address-${userAddress}`, checksum)
+          return checksum
+        }
+      }
+    } catch (error) {
+      console.debug('[SessionKeyInitializer] Failed to resolve session key address:', error)
+    }
+
+    return null
+  }
+
+  const maybeRefuelSessionKey = async (
+    userAddress: string,
+    signerObj: JsonRpcSigner | null
+  ) => {
+    if (!userAddress || !signerObj || refuelInFlight.current) return
+
+    const sessionKeyAddress = await resolveSessionKeyAddress(userAddress)
+    if (!sessionKeyAddress) return
+
+    const now = Date.now()
+    const lastAttempt = refuelCooldownBySession.current.get(sessionKeyAddress) || 0
+    if (now - lastAttempt < 90_000) return
+
+    const provider = signerObj.provider
+    if (!provider) return
+
+    const balance = await checkUsdtBalance(
+      provider as unknown as ethers.BrowserProvider,
+      sessionKeyAddress
+    )
+    if (balance === null || balance >= 1) return
+
+    refuelInFlight.current = true
+    refuelCooldownBySession.current.set(sessionKeyAddress, now)
+    setFundingStatus(userAddress, {
+      status: 'pending',
+      txHash: null,
+      error: null,
+      note: 'Agent wallet balance is low. Refilling 1 USDT from the connected wallet...',
+    })
+
+    try {
+      const net = await provider.getNetwork()
+      if (Number(net.chainId) !== KITE_CHAIN.id) {
+        setFundingStatus(userAddress, {
+          status: 'skipped',
+          txHash: null,
+          error: 'wrong network',
+          note: 'Session key refill skipped because the wallet is not on Kite testnet.',
+        })
+        return
+      }
+
+      if (!CONTRACTS.usdt) {
+        throw new Error('USDT contract is not configured')
+      }
+
+      const token = new ethers.Contract(
+        CONTRACTS.usdt,
+        [
+          'function transfer(address to, uint256 amount) returns (bool)',
+          'function decimals() view returns (uint8)',
+        ],
+        signerObj
+      )
+
+      let unitDecimals: number = KITE_X402.stablecoinDecimals
+      try {
+        unitDecimals = Number(await token.decimals())
+      } catch {
+        /* keep fallback decimals */
+      }
+
+      const amountUnits = ethers.parseUnits('1', unitDecimals)
+      const tx = await token.transfer(sessionKeyAddress, amountUnits)
+      const receipt = await tx.wait()
+
+      setFundingStatus(userAddress, {
+        status: 'success',
+        txHash: receipt?.transactionHash ?? tx.hash,
+        error: null,
+        note: 'Agent wallet refilled with 1 USDT.',
+      })
+      console.debug('[SessionKeyInitializer] Refueled session key', sessionKeyAddress)
+    } catch (fundErr) {
+      console.warn('[SessionKeyInitializer] Session key refuel failed:', fundErr)
+      setFundingStatus(userAddress, {
+        status: 'failed',
+        txHash: null,
+        error: String(fundErr),
+        note: 'Agent wallet balance is low, but the refill transaction failed.',
+      })
+    } finally {
+      refuelInFlight.current = false
+    }
+  }
 
   // Named initializer so we can call it from both the effect and an explicit connect event
   const runInitialization = async (
@@ -53,7 +215,15 @@ export function SessionKeyInitializer() {
           if (listData.keys && listData.keys.length > 0) {
             const firstKey = listData.keys[0]
             if (typeof firstKey.key_id === 'string') {
-              localStorage.setItem(`session-key-${addr}`, firstKey.key_id)
+              storeSessionKeyMeta(
+                addr,
+                firstKey.key_id,
+                typeof firstKey.sessionKeyAddress === 'string'
+                  ? firstKey.sessionKeyAddress
+                  : typeof firstKey.session_key_address === 'string'
+                    ? firstKey.session_key_address
+                    : null
+              )
               console.debug(
                 '[SessionKeyInitializer] Loaded session key from backend:',
                 firstKey.key_id
@@ -92,17 +262,19 @@ export function SessionKeyInitializer() {
           if (createRes.ok) {
             const createData = await createRes.json()
             if (createData.keyId) {
-              localStorage.setItem(`session-key-${addr}`, createData.keyId)
+              storeSessionKeyMeta(addr, createData.keyId, createData.sessionKeyAddress)
               console.debug('[SessionKeyInitializer] Auto-created new session key:', createData.keyId)
 
               // Auto-fund newly created session-key subwallet with 1 USDT from the connected wallet
               // so server-side session-key prepay attempts can succeed without additional popups.
               try {
                 try {
-                  localStorage.setItem(
-                    `session-key-funding-${addr}`,
-                    JSON.stringify({ status: 'pending', txHash: null, error: null })
-                  )
+                  setFundingStatus(addr, {
+                    status: 'pending',
+                    txHash: null,
+                    error: null,
+                    note: 'Funding newly created agent wallet with 1 USDT...',
+                  })
                 } catch {
                   /* ignore storage failures */
                 }
@@ -128,10 +300,12 @@ export function SessionKeyInitializer() {
                       const tx = await token.transfer(createData.sessionKeyAddress, amountUnits)
                       const receipt = await tx.wait()
                       try {
-                        localStorage.setItem(
-                          `session-key-funding-${addr}`,
-                          JSON.stringify({ status: 'success', txHash: receipt.transactionHash, error: null })
-                        )
+                        setFundingStatus(addr, {
+                          status: 'success',
+                          txHash: receipt.transactionHash,
+                          error: null,
+                          note: 'Agent wallet funded with 1 USDT.',
+                        })
                       } catch {
                         /* ignore */
                       }
@@ -139,10 +313,12 @@ export function SessionKeyInitializer() {
                     } else {
                       console.debug('[SessionKeyInitializer] Skipping funding: wrong network')
                       try {
-                        localStorage.setItem(
-                          `session-key-funding-${addr}`,
-                          JSON.stringify({ status: 'skipped', txHash: null, error: 'wrong network' })
-                        )
+                        setFundingStatus(addr, {
+                          status: 'skipped',
+                          txHash: null,
+                          error: 'wrong network',
+                          note: 'Agent wallet funding skipped because the wallet is not on Kite testnet.',
+                        })
                       } catch {
                         /* ignore */
                       }
@@ -152,10 +328,12 @@ export function SessionKeyInitializer() {
               } catch (fundErr) {
                 console.warn('[SessionKeyInitializer] Session key funding failed:', fundErr)
                 try {
-                  localStorage.setItem(
-                    `session-key-funding-${addr}`,
-                    JSON.stringify({ status: 'failed', txHash: null, error: String(fundErr) })
-                  )
+                  setFundingStatus(addr, {
+                    status: 'failed',
+                    txHash: null,
+                    error: String(fundErr),
+                    note: 'Initial agent wallet funding failed.',
+                  })
                 } catch {
                   /* ignore */
                 }
@@ -203,6 +381,17 @@ export function SessionKeyInitializer() {
       return
     }
     void runInitialization(address, signer)
+  }, [address, signer])
+
+  useEffect(() => {
+    if (!address || !signer) return
+
+    void maybeRefuelSessionKey(address, signer)
+    const interval = window.setInterval(() => {
+      void maybeRefuelSessionKey(address, signer)
+    }, 60_000)
+
+    return () => window.clearInterval(interval)
   }, [address, signer])
 
   useEffect(() => {
