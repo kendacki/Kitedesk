@@ -241,20 +241,16 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const { taskType, prompt, userAddress, paymentTxHash } = body as {
+    const { taskType, prompt, userAddress, userSmartWallet, paymentTxHash, sessionKeyId } = body as {
       taskType?: string
       prompt?: string
       userAddress?: string
+      userSmartWallet?: string
       paymentTxHash?: string
+      sessionKeyId?: string
     }
 
-    if (
-      !taskType ||
-      prompt === undefined ||
-      prompt === null ||
-      !userAddress ||
-      !paymentTxHash
-    ) {
+    if (!taskType || prompt === undefined || prompt === null || !userAddress) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -272,10 +268,41 @@ export async function POST(req: NextRequest) {
 
     const classicType = taskType as ClassicTaskType
     const expectedAmount = TASK_CONFIG[classicType].priceUsdt
-    await verifyPaymentTransaction(paymentTxHash, userAddress, expectedAmount)
 
-    paymentTxHashForRelease = paymentTxHash
-    await claimPaymentTransaction(paymentTxHash, userAddress)
+    let effectivePaymentTxHash = paymentTxHash || ''
+    if (!effectivePaymentTxHash && userSmartWallet && sessionKeyId) {
+      try {
+        const sessionPrepay = await trySessionKeyPrepay({
+          userAddress,
+          userSmartWallet,
+          sessionKeyId,
+          amountUsdt: expectedAmount,
+        })
+        if (sessionPrepay) {
+          effectivePaymentTxHash = sessionPrepay.txHash
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        console.warn('[API] session-key prepay failed for classic task:', msg)
+      }
+    }
+
+    if (!effectivePaymentTxHash) {
+      return NextResponse.json(
+        {
+          error:
+            'Session key wallet could not prepay this task. The client wallet approval flow has been removed.',
+          code: 'SESSION_KEY_PREPAY_REQUIRED',
+          requiresClientPayment: false,
+        },
+        { status: 409 }
+      )
+    }
+
+    await verifyPaymentTransaction(effectivePaymentTxHash, userAddress, expectedAmount)
+
+    paymentTxHashForRelease = effectivePaymentTxHash
+    await claimPaymentTransaction(effectivePaymentTxHash, userAddress)
 
     try {
       const output = await executeAgentTask(classicType, prompt)
@@ -290,7 +317,7 @@ export async function POST(req: NextRequest) {
 
       const attestationUrl = explorerTxUrl(attestationHash)
 
-      await completePaymentTask(paymentTxHash, {
+      await completePaymentTask(effectivePaymentTxHash, {
         taskId,
         taskType,
         promptPreview: prompt.trim().slice(0, 120),
@@ -308,7 +335,7 @@ export async function POST(req: NextRequest) {
       })
     } catch (rollbackErr: unknown) {
       if (!attestationWritten) {
-        await releasePaymentClaim(paymentTxHash)
+        await releasePaymentClaim(effectivePaymentTxHash)
       }
       throw rollbackErr
     }

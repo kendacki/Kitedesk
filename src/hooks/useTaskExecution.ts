@@ -6,11 +6,9 @@ import axios from 'axios'
 
 const AGENT_REQUEST_MS = 125_000
 import { ethers } from 'ethers'
-import { payForTask } from '@/lib/payment'
 import {
   KITE_CHAIN,
   KITE_WRONG_NETWORK_PAY_MESSAGE,
-  TASK_CONFIG,
 } from '@/lib/constants'
 import type { AgentStep, GoalResult, TaskResult, TaskType } from '@/types'
 
@@ -124,33 +122,7 @@ export function useTaskExecution() {
         return
       }
 
-      const price = TASK_CONFIG[taskType].priceUsdt
-
       setStatus('paying')
-      let paymentTxHash: string
-      try {
-        await requireSignerOnKiteChain(signer)
-        paymentTxHash = await payForTask(signer, price)
-      } catch (payErr: unknown) {
-        if (isWrongNetworkError(payErr)) {
-          setStatus('error')
-          setError(KITE_WRONG_NETWORK_PAY_MESSAGE)
-          return
-        }
-        if (isWalletUserRejected(payErr)) {
-          setStatus('error')
-          setError('Transaction was cancelled in your wallet.')
-          return
-        }
-        if (isSignerOrConnectionError(payErr)) {
-          setStatus('error')
-          setError(
-            'Wallet connection was lost. Refresh the page, reconnect MetaMask, and try again.'
-          )
-          return
-        }
-        throw payErr
-      }
 
       setStatus('executing')
       const storedSessionKeyId =
@@ -174,7 +146,6 @@ export function useTaskExecution() {
             userAddress: address,
             userSmartWallet: address,
             sessionKeyId: storedSessionKeyId || undefined,
-            paymentTxHash,
           },
           { timeout: AGENT_REQUEST_MS }
         )
@@ -198,7 +169,7 @@ export function useTaskExecution() {
       const taskResult: TaskResult = {
         taskId: data.taskId,
         output: data.output,
-        txHash: paymentTxHash,
+        txHash: '',
         attestationHash: data.attestationHash ?? '',
         attestationUrl: data.attestationUrl ?? '',
         completedAt: Date.now(),
@@ -282,46 +253,13 @@ export function useTaskExecution() {
         typeof window !== 'undefined'
           ? localStorage.getItem(`session-key-${address}`)
           : null
-      let paymentTxHash: string
-      try {
-        await requireSignerOnKiteChain(signer)
-        paymentTxHash = await payForTask(signer, budgetUsdt)
-      } catch (payErr: unknown) {
-        if (isWrongNetworkError(payErr)) {
-          setStatus('error')
-          setError(KITE_WRONG_NETWORK_PAY_MESSAGE)
-          setIsGoalFlow(false)
-          setGoalBudgetUsdt(null)
-          setActiveGoalText(null)
-          return
-        }
-        if (isWalletUserRejected(payErr)) {
-          setStatus('error')
-          setError('Transaction was cancelled in your wallet.')
-          setIsGoalFlow(false)
-          setGoalBudgetUsdt(null)
-          setActiveGoalText(null)
-          return
-        }
-        if (isSignerOrConnectionError(payErr)) {
-          setStatus('error')
-          setError(
-            'Wallet connection was lost. Refresh the page, reconnect MetaMask, and try again.'
-          )
-          setIsGoalFlow(false)
-          setGoalBudgetUsdt(null)
-          setActiveGoalText(null)
-          return
-        }
-        throw payErr
-      }
 
       setSteps([])
       setStatus('planning')
       await new Promise((r) => setTimeout(r, 280))
 
       setStatus('executing')
-      const postGoalRun = async (txHash: string) => {
+      const postGoalRun = async () => {
         return axios.post<{
           success?: boolean
           taskId?: string
@@ -338,7 +276,6 @@ export function useTaskExecution() {
             userAddress: address,
             userSmartWallet: address,
             sessionKeyId: storedSessionKeyId || undefined,
-            paymentTxHash: txHash,
           },
           { timeout: AGENT_REQUEST_MS }
         )
@@ -353,7 +290,7 @@ export function useTaskExecution() {
         requiresClientPayment?: boolean
       }
       try {
-        const res = await postGoalRun(paymentTxHash)
+        const res = await postGoalRun()
         data = res.data
       } catch (agentErr: unknown) {
         if (axios.isAxiosError(agentErr) && isWalletUserRejected(agentErr)) {
