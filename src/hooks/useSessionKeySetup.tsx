@@ -67,6 +67,16 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
         // subsequent Goal prepay can use the session key without additional
         // MetaMask popups. This will prompt one transfer confirmation now.
         try {
+          // mark pending in localStorage for UI feedback
+          try {
+            localStorage.setItem(
+              `session-key-funding-${address}`,
+              JSON.stringify({ status: 'pending', txHash: null, error: null })
+            )
+          } catch {
+            /* ignore storage failures */
+          }
+
           if (signer && data.sessionKeyAddress && CONTRACTS.usdt) {
             const provider = signer.provider
             if (provider) {
@@ -89,18 +99,50 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
 
                 const amount = ethers.parseUnits(String(budgetUsdt), unitDecimals)
                 const tx = await token.transfer(data.sessionKeyAddress, amount)
-                await tx.wait()
+                const receipt = await tx.wait()
                 console.debug(
                   '[useSessionKeySetup] Funded session key',
                   data.sessionKeyAddress
                 )
+                try {
+                  localStorage.setItem(
+                    `session-key-funding-${address}`,
+                    JSON.stringify({
+                      status: 'success',
+                      txHash: receipt.transactionHash,
+                      error: null,
+                    })
+                  )
+                } catch {
+                  /* ignore */
+                }
               } else {
                 console.debug('[useSessionKeySetup] Skipping funding: wrong network')
+                try {
+                  localStorage.setItem(
+                    `session-key-funding-${address}`,
+                    JSON.stringify({
+                      status: 'skipped',
+                      txHash: null,
+                      error: 'wrong network',
+                    })
+                  )
+                } catch {
+                  /* ignore */
+                }
               }
             }
           }
         } catch (fundErr) {
           console.warn('[useSessionKeySetup] Session key funding failed:', fundErr)
+          try {
+            localStorage.setItem(
+              `session-key-funding-${address}`,
+              JSON.stringify({ status: 'failed', txHash: null, error: String(fundErr) })
+            )
+          } catch {
+            /* ignore */
+          }
         }
 
         setIsInitializing(false)

@@ -7,6 +7,7 @@ import type { ethers } from 'ethers'
 import { checkUsdtBalance } from '@/lib/payment'
 import { brandEase, brandLinkLight, brandPrimaryButton } from '@/lib/brand'
 import { formatWalletUsdtForDisplay } from '@/lib/formatWalletUsdt'
+import { SessionKeyFundingStatus } from '@/components/SessionKeyFundingStatus'
 
 function truncateAddress(address: string): string {
   if (address.length < 10) return address
@@ -221,6 +222,7 @@ export function WalletConnect({
           Disconnect
         </button>
       </div>
+      <SessionKeyFundingStatus address={address} />
     </div>
   )
 }
