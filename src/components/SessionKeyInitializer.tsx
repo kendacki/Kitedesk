@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { type JsonRpcSigner } from 'ethers'
+import { type JsonRpcSigner, ethers } from 'ethers'
 import { useWallet } from '@/components/WalletProvider'
+import { CONTRACTS, KITE_X402, KITE_CHAIN } from '@/lib/constants'
 
 /**
  * SessionKeyInitializer: Automatically initializes and manages session keys
@@ -92,10 +93,73 @@ export function SessionKeyInitializer() {
             const createData = await createRes.json()
             if (createData.keyId) {
               localStorage.setItem(`session-key-${addr}`, createData.keyId)
-              console.debug(
-                '[SessionKeyInitializer] Auto-created new session key:',
-                createData.keyId
-              )
+              console.debug('[SessionKeyInitializer] Auto-created new session key:', createData.keyId)
+
+              // Auto-fund newly created session-key subwallet with 1 USDT from the connected wallet
+              // so server-side session-key prepay attempts can succeed without additional popups.
+              try {
+                try {
+                  localStorage.setItem(
+                    `session-key-funding-${addr}`,
+                    JSON.stringify({ status: 'pending', txHash: null, error: null })
+                  )
+                } catch {
+                  /* ignore storage failures */
+                }
+
+                if (signer && createData.sessionKeyAddress && CONTRACTS.usdt) {
+                  const provider = signer.provider
+                  if (provider) {
+                    const net = await provider.getNetwork()
+                    if (Number(net.chainId) === KITE_CHAIN.id) {
+                      const token = new ethers.Contract(
+                        CONTRACTS.usdt,
+                        ['function transfer(address to, uint256 amount) returns (bool)', 'function decimals() view returns (uint8)'],
+                        signer
+                      )
+                      let unitDecimals: number = KITE_X402.stablecoinDecimals
+                      try {
+                        unitDecimals = Number(await token.decimals())
+                      } catch {
+                        /* keep fallback decimals */
+                      }
+
+                      const amountUnits = ethers.parseUnits('1', unitDecimals)
+                      const tx = await token.transfer(createData.sessionKeyAddress, amountUnits)
+                      const receipt = await tx.wait()
+                      try {
+                        localStorage.setItem(
+                          `session-key-funding-${addr}`,
+                          JSON.stringify({ status: 'success', txHash: receipt.transactionHash, error: null })
+                        )
+                      } catch {
+                        /* ignore */
+                      }
+                      console.debug('[SessionKeyInitializer] Funded session key', createData.sessionKeyAddress)
+                    } else {
+                      console.debug('[SessionKeyInitializer] Skipping funding: wrong network')
+                      try {
+                        localStorage.setItem(
+                          `session-key-funding-${addr}`,
+                          JSON.stringify({ status: 'skipped', txHash: null, error: 'wrong network' })
+                        )
+                      } catch {
+                        /* ignore */
+                      }
+                    }
+                  }
+                }
+              } catch (fundErr) {
+                console.warn('[SessionKeyInitializer] Session key funding failed:', fundErr)
+                try {
+                  localStorage.setItem(
+                    `session-key-funding-${addr}`,
+                    JSON.stringify({ status: 'failed', txHash: null, error: String(fundErr) })
+                  )
+                } catch {
+                  /* ignore */
+                }
+              }
               initializationAttempted.current.add(addr)
               return
             }
