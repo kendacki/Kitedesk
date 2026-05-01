@@ -241,7 +241,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const { taskType, prompt, userAddress, userSmartWallet, paymentTxHash, sessionKeyId } = body as {
+    const {
+      taskType,
+      prompt,
+      userAddress,
+      userSmartWallet,
+      paymentTxHash,
+      sessionKeyId,
+    } = body as {
       taskType?: string
       prompt?: string
       userAddress?: string

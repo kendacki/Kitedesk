@@ -6,10 +6,7 @@ import axios from 'axios'
 
 const AGENT_REQUEST_MS = 125_000
 import { ethers } from 'ethers'
-import {
-  KITE_CHAIN,
-  KITE_WRONG_NETWORK_PAY_MESSAGE,
-} from '@/lib/constants'
+import { KITE_CHAIN, KITE_WRONG_NETWORK_PAY_MESSAGE } from '@/lib/constants'
 import type { AgentStep, GoalResult, TaskResult, TaskType } from '@/types'
 
 export type ClassicTaskType = Exclude<TaskType, 'goal'>

@@ -50,7 +50,10 @@ export function SessionKeyInitializer() {
     }
   ) => {
     try {
-      localStorage.setItem(`session-key-funding-${userAddress}`, JSON.stringify(payload))
+      localStorage.setItem(
+        `session-key-funding-${userAddress}`,
+        JSON.stringify(payload)
+      )
     } catch {
       /* ignore storage failures */
     }
@@ -103,7 +106,10 @@ export function SessionKeyInitializer() {
         }
       }
     } catch (error) {
-      console.debug('[SessionKeyInitializer] Failed to resolve session key address:', error)
+      console.debug(
+        '[SessionKeyInitializer] Failed to resolve session key address:',
+        error
+      )
     }
 
     return null
@@ -125,7 +131,9 @@ export function SessionKeyInitializer() {
     const provider = signerObj.provider
     if (!provider) return
 
-    const refuelUntilRaw = localStorage.getItem(`session-key-refuel-until-${userAddress}`)
+    const refuelUntilRaw = localStorage.getItem(
+      `session-key-refuel-until-${userAddress}`
+    )
     const refuelUntil = refuelUntilRaw ? Number(refuelUntilRaw) : 0
     if (Number.isFinite(refuelUntil) && refuelUntil > Date.now()) {
       return
@@ -281,7 +289,10 @@ export function SessionKeyInitializer() {
             const createData = await createRes.json()
             if (createData.keyId) {
               storeSessionKeyMeta(addr, createData.keyId, createData.sessionKeyAddress)
-              console.debug('[SessionKeyInitializer] Auto-created new session key:', createData.keyId)
+              console.debug(
+                '[SessionKeyInitializer] Auto-created new session key:',
+                createData.keyId
+              )
 
               // Auto-fund newly created session-key subwallet with 1 USDT from the connected wallet
               // so server-side session-key prepay attempts can succeed without additional popups.
@@ -304,7 +315,10 @@ export function SessionKeyInitializer() {
                     if (Number(net.chainId) === KITE_CHAIN.id) {
                       const token = new ethers.Contract(
                         CONTRACTS.usdt,
-                        ['function transfer(address to, uint256 amount) returns (bool)', 'function decimals() view returns (uint8)'],
+                        [
+                          'function transfer(address to, uint256 amount) returns (bool)',
+                          'function decimals() view returns (uint8)',
+                        ],
                         signer
                       )
                       let unitDecimals: number = KITE_X402.stablecoinDecimals
@@ -315,7 +329,10 @@ export function SessionKeyInitializer() {
                       }
 
                       const amountUnits = ethers.parseUnits('1', unitDecimals)
-                      const tx = await token.transfer(createData.sessionKeyAddress, amountUnits)
+                      const tx = await token.transfer(
+                        createData.sessionKeyAddress,
+                        amountUnits
+                      )
                       const receipt = await tx.wait()
                       try {
                         setFundingStatus(addr, {
@@ -328,9 +345,14 @@ export function SessionKeyInitializer() {
                       } catch {
                         /* ignore */
                       }
-                      console.debug('[SessionKeyInitializer] Funded session key', createData.sessionKeyAddress)
+                      console.debug(
+                        '[SessionKeyInitializer] Funded session key',
+                        createData.sessionKeyAddress
+                      )
                     } else {
-                      console.debug('[SessionKeyInitializer] Skipping funding: wrong network')
+                      console.debug(
+                        '[SessionKeyInitializer] Skipping funding: wrong network'
+                      )
                       try {
                         setFundingStatus(addr, {
                           status: 'skipped',
@@ -345,7 +367,10 @@ export function SessionKeyInitializer() {
                   }
                 }
               } catch (fundErr) {
-                console.warn('[SessionKeyInitializer] Session key funding failed:', fundErr)
+                console.warn(
+                  '[SessionKeyInitializer] Session key funding failed:',
+                  fundErr
+                )
                 try {
                   setFundingStatus(addr, {
                     status: 'failed',

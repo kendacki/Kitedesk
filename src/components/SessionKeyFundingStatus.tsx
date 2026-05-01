@@ -51,12 +51,14 @@ export function SessionKeyFundingStatus({ address }: { address: string | null })
   return (
     <div className="mt-2 flex w-full items-center gap-2 text-xs text-slate-700 sm:justify-end">
       {status === 'pending' && <span>{note || 'Session key funding: Pending…'}</span>}
-      {status === 'success' && (
-        <span>Session key funding complete</span>
+      {status === 'success' && <span>Session key funding complete</span>}
+      {status === 'skipped' && (
+        <span>{note || 'Session key funding skipped (wrong network)'}</span>
       )}
-      {status === 'skipped' && <span>{note || 'Session key funding skipped (wrong network)'}</span>}
       {status === 'failed' && (
-        <span>{note || `Session key funding failed: ${String(error ?? 'unknown')}`}</span>
+        <span>
+          {note || `Session key funding failed: ${String(error ?? 'unknown')}`}
+        </span>
       )}
     </div>
   )

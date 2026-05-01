@@ -25,7 +25,11 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
   const [error, setError] = useState<string | null>(null)
 
   const initializeSessionKey = useCallback(
-    async (budgetUsdt: number, recipients: string[], options?: { autoFund?: boolean }) => {
+    async (
+      budgetUsdt: number,
+      recipients: string[],
+      options?: { autoFund?: boolean }
+    ) => {
       if (!signer || !address) {
         setError('Wallet not connected')
         return null
@@ -72,7 +76,11 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
             try {
               localStorage.setItem(
                 `session-key-funding-${address}`,
-                JSON.stringify({ status: 'skipped', txHash: null, error: 'autoFund disabled' })
+                JSON.stringify({
+                  status: 'skipped',
+                  txHash: null,
+                  error: 'autoFund disabled',
+                })
               )
             } catch {
               /* ignore */
@@ -111,11 +119,18 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
                   const amount = ethers.parseUnits(String(budgetUsdt), unitDecimals)
                   const tx = await token.transfer(data.sessionKeyAddress, amount)
                   const receipt = await tx.wait()
-                  console.debug('[useSessionKeySetup] Funded session key', data.sessionKeyAddress)
+                  console.debug(
+                    '[useSessionKeySetup] Funded session key',
+                    data.sessionKeyAddress
+                  )
                   try {
                     localStorage.setItem(
                       `session-key-funding-${address}`,
-                      JSON.stringify({ status: 'success', txHash: receipt.transactionHash, error: null })
+                      JSON.stringify({
+                        status: 'success',
+                        txHash: receipt.transactionHash,
+                        error: null,
+                      })
                     )
                   } catch {
                     /* ignore */
@@ -125,7 +140,11 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
                   try {
                     localStorage.setItem(
                       `session-key-funding-${address}`,
-                      JSON.stringify({ status: 'skipped', txHash: null, error: 'wrong network' })
+                      JSON.stringify({
+                        status: 'skipped',
+                        txHash: null,
+                        error: 'wrong network',
+                      })
                     )
                   } catch {
                     /* ignore */
