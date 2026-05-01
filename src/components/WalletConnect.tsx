@@ -8,7 +8,6 @@ import { checkUsdtBalance } from '@/lib/payment'
 import { brandEase, brandLinkLight, brandPrimaryButton } from '@/lib/brand'
 import { formatWalletUsdtForDisplay } from '@/lib/formatWalletUsdt'
 import { SessionKeyFundingStatus } from '@/components/SessionKeyFundingStatus'
-import { SessionKeyTopupForm } from '@/components/SessionKeyTopupForm'
 
 function truncateAddress(address: string): string {
   if (address.length < 10) return address
@@ -39,7 +38,6 @@ export function WalletConnect({
   const [usdtBalance, setUsdtBalance] = useState<number | null>(null)
   const [balancePending, setBalancePending] = useState(false)
   const [copyDone, setCopyDone] = useState(false)
-  const [sessionKeyId, setSessionKeyId] = useState<string | null>(null)
 
   const refreshBalance = useCallback(async () => {
     if (!provider || !address) {
@@ -97,14 +95,7 @@ export function WalletConnect({
     void refreshBalance()
   }, [refreshBalance, wrongNetwork])
 
-  useEffect(() => {
-    if (address && typeof window !== 'undefined') {
-      const keyId = localStorage.getItem(`session-key-${address}`)
-      setSessionKeyId(keyId)
-    } else {
-      setSessionKeyId(null)
-    }
-  }, [address])
+  // note: session-key id handled elsewhere; no manual top-up UI here
 
   useEffect(() => {
     if (!provider || !address) return
@@ -234,7 +225,6 @@ export function WalletConnect({
         </button>
       </div>
       <SessionKeyFundingStatus address={address} />
-      <SessionKeyTopupForm address={address} keyId={sessionKeyId} />
     </div>
   )
 }
