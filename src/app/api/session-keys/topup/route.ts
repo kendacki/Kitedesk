@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ethers } from 'ethers'
-import { getSessionKeyByIdForUser } from '@/lib/sessionKeys'
+import { getSessionKeyByIdForUser, recordSessionKeyTopup } from '@/lib/sessionKeys'
 import { HttpError } from '@/lib/httpError'
 import { KITE_CHAIN, CONTRACTS, KITE_X402 } from '@/lib/constants'
 
@@ -100,8 +100,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Persist the verified top-up record
+    const tokenDecimals = Number(KITE_X402.stablecoinDecimals || 6)
+    const transferredUsdt = Number(ethers.formatUnits(totalTransferredUnits, tokenDecimals))
+    try {
+      await recordSessionKeyTopup(userSmartWallet, keyId, txHash, transferredUsdt)
+    } catch (recordErr) {
+      const recordMsg = recordErr instanceof Error ? recordErr.message : String(recordErr)
+      console.warn('[API] Failed to persist top-up record:', recordMsg)
+      // Don't fail the verification; log and continue
+    }
+
     return NextResponse.json(
-      { success: true, message: 'Session key top-up verified' },
+      { success: true, message: 'Session key top-up verified', txHash, amountUsdt: transferredUsdt },
       { status: 200 }
     )
   } catch (err) {

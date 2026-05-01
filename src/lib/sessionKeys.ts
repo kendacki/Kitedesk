@@ -364,3 +364,29 @@ export async function recordSessionKeyUsage(
     used_at: new Date().toISOString(),
   })
 }
+
+export async function recordSessionKeyTopup(
+  userSmartWallet: string,
+  keyId: string,
+  txHash: string,
+  amountUsdt: number
+): Promise<void> {
+  const db = getSupabaseAdmin()
+  if (!db) {
+    throw new HttpError('Database not configured', 503)
+  }
+
+  const checksumAddress = ethers.getAddress(userSmartWallet)
+
+  const { error } = await db.from('session_key_topups').insert({
+    user_smart_wallet: checksumAddress,
+    session_key_id: keyId,
+    tx_hash: txHash,
+    amount_usdt: amountUsdt,
+    verified_at: new Date().toISOString(),
+  })
+
+  if (error) {
+    throw new HttpError(`Failed to record session key top-up: ${error.message}`, 500)
+  }
+}
