@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ethers } from 'ethers'
 import { getSessionKeyByIdForUser } from '@/lib/sessionKeys'
 import { HttpError } from '@/lib/httpError'
-import { KITE_CHAIN, CONTRACTS } from '@/lib/constants'
+import { KITE_CHAIN, CONTRACTS, KITE_X402 } from '@/lib/constants'
 
 export const runtime = 'nodejs'
 
@@ -36,73 +36,68 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Transaction not found' }, { status: 400 })
     }
 
-    if (!tx.from || ethers.getAddress(tx.from) !== ethers.getAddress(userSmartWallet)) {
-      return NextResponse.json(
-        { error: 'Transaction must be sent from the user wallet' },
-        { status: 400 }
-      )
-    }
-
-    // Ensure tx interacts with USDT contract
-    const usdt = CONTRACTS.usdt
-    if (!usdt || !ethers.isAddress(usdt)) {
-      return NextResponse.json(
-        { error: 'USDT contract not configured' },
-        { status: 500 }
-      )
-    }
-
-    if (!tx.to || ethers.getAddress(tx.to) !== ethers.getAddress(usdt)) {
-      return NextResponse.json(
-        { error: 'Transaction must call the USDT contract' },
-        { status: 400 }
-      )
-    }
-
     const receipt = await provider.getTransactionReceipt(txHash)
-    if (!receipt || receipt.status !== 1) {
-      return NextResponse.json(
-        { error: 'Transaction failed or not confirmed' },
-        { status: 400 }
-      )
+    if (!receipt || receipt.status !== 1 || typeof receipt.blockNumber !== 'number') {
+      return NextResponse.json({ error: 'Transaction failed or not confirmed' }, { status: 400 })
     }
 
-    // Parse Transfer logs to check transfer to session key
+    // Parse Transfer logs to check transfer(s) to session key (supports relayers/wrappers)
     const TRANSFER_IFACE = new ethers.Interface([
       'event Transfer(address indexed from, address indexed to, uint256 value)',
     ])
-    let funded = false
+
+    const usdt = CONTRACTS.usdt
+    if (!usdt || !ethers.isAddress(usdt)) {
+      return NextResponse.json({ error: 'USDT contract not configured' }, { status: 500 })
+    }
+
+    // Sum total USDT units transferred to the session key in this receipt
+    let totalTransferredUnits = BigInt(0)
     for (const log of receipt.logs) {
       try {
-        if (!log.address || ethers.getAddress(log.address) !== ethers.getAddress(usdt))
-          continue
-        const parsed = TRANSFER_IFACE.parseLog({
-          topics: log.topics as string[],
-          data: log.data,
-        })
+        if (!log.address) continue
+        if (ethers.getAddress(log.address) !== ethers.getAddress(usdt)) continue
+        const parsed = TRANSFER_IFACE.parseLog({ topics: log.topics as string[], data: log.data })
         if (!parsed) continue
         const from = ethers.getAddress(String(parsed.args.from))
         const to = ethers.getAddress(String(parsed.args.to))
-        if (
-          from === ethers.getAddress(userSmartWallet) &&
-          to === ethers.getAddress(record.session_key_address)
-        ) {
+        if (to === ethers.getAddress(record.session_key_address) && from === ethers.getAddress(userSmartWallet)) {
           const amount = BigInt(String(parsed.args.value))
-          if (amount > BigInt(0)) {
-            funded = true
-            break
-          }
+          totalTransferredUnits += amount
         }
       } catch {
         continue
       }
     }
 
-    if (!funded) {
-      return NextResponse.json(
-        { error: 'No matching USDT transfer to session key found in receipt' },
-        { status: 400 }
-      )
+    if (totalTransferredUnits === BigInt(0)) {
+      return NextResponse.json({ error: 'No matching USDT transfer to session key found in receipt' }, { status: 400 })
+    }
+
+    // Confirmations check to avoid transient reorgs
+    const minConfirmations = Number(process.env.SESSION_KEY_MIN_CONFIRMATIONS || '2')
+    const latestBlock = await provider.getBlockNumber()
+    const confirmations = latestBlock - Number(receipt.blockNumber)
+    if (confirmations < minConfirmations) {
+      return NextResponse.json({ error: 'Transaction has insufficient confirmations' }, { status: 400 })
+    }
+
+    // Amount validation: require at least the configured per-tx max or daily limit
+    const recAmounts = record as unknown as { max_per_tx_usdt?: number; daily_limit_usdt?: number }
+    const requiredUsdt = Number(recAmounts.max_per_tx_usdt || recAmounts.daily_limit_usdt || 0)
+    if (requiredUsdt > 0) {
+      const tokenDecimals = Number(KITE_X402.stablecoinDecimals || 6)
+      const requiredUnits = ethers.parseUnits(String(requiredUsdt), tokenDecimals)
+      // allow small slippage (0.5%)
+      const slippageNumerator = BigInt(995)
+      const slippageDenominator = BigInt(1000)
+      const minAccepted = (BigInt(requiredUnits.toString()) * slippageNumerator) / slippageDenominator
+      if (totalTransferredUnits < minAccepted) {
+        return NextResponse.json({
+          error: 'Transferred amount is less than required funding amount',
+          details: { requiredUsdt, tokenDecimals, totalTransferredUnits: totalTransferredUnits.toString() },
+        }, { status: 400 })
+      }
     }
 
     return NextResponse.json(

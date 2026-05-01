@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { KITE_CHAIN } from '@/lib/constants'
 
 type FundingState = {
   status: 'pending' | 'success' | 'failed' | 'skipped' | null
@@ -54,12 +55,7 @@ export function SessionKeyFundingStatus({ address }: { address: string | null })
       {status === 'success' && (
         <span>
           Session key funded — tx:{' '}
-          <a
-            className="underline"
-            href={`https://testnet.kitescan.ai/tx/${txHash}`}
-            target="_blank"
-            rel="noreferrer"
-          >
+          <a className="underline" href={`${KITE_CHAIN.explorerUrl}/tx/${txHash}`} target="_blank" rel="noreferrer">
             {txHash?.slice(0, 6)}…{txHash?.slice(-4)}
           </a>
         </span>

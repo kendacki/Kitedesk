@@ -10,7 +10,8 @@ interface UseSessionKeySetupReturn {
   error: string | null
   initializeSessionKey: (
     budgetUsdt: number,
-    recipients: string[]
+    recipients: string[],
+    options?: { autoFund?: boolean }
   ) => Promise<{
     keyId: string
     sessionKeyAddress: string
@@ -24,7 +25,7 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
   const [error, setError] = useState<string | null>(null)
 
   const initializeSessionKey = useCallback(
-    async (budgetUsdt: number, recipients: string[]) => {
+    async (budgetUsdt: number, recipients: string[], options?: { autoFund?: boolean }) => {
       if (!signer || !address) {
         setError('Wallet not connected')
         return null
@@ -67,68 +68,68 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
         // subsequent Goal prepay can use the session key without additional
         // MetaMask popups. This will prompt one transfer confirmation now.
         try {
-          // mark pending in localStorage for UI feedback
-          try {
-            localStorage.setItem(
-              `session-key-funding-${address}`,
-              JSON.stringify({ status: 'pending', txHash: null, error: null })
-            )
-          } catch {
-            /* ignore storage failures */
-          }
+          if (options && options.autoFund === false) {
+            try {
+              localStorage.setItem(
+                `session-key-funding-${address}`,
+                JSON.stringify({ status: 'skipped', txHash: null, error: 'autoFund disabled' })
+              )
+            } catch {
+              /* ignore */
+            }
+          } else {
+            // mark pending in localStorage for UI feedback
+            try {
+              localStorage.setItem(
+                `session-key-funding-${address}`,
+                JSON.stringify({ status: 'pending', txHash: null, error: null })
+              )
+            } catch {
+              /* ignore storage failures */
+            }
 
-          if (signer && data.sessionKeyAddress && CONTRACTS.usdt) {
-            const provider = signer.provider
-            if (provider) {
-              const net = await provider.getNetwork()
-              if (Number(net.chainId) === KITE_CHAIN.id) {
-                const token = new ethers.Contract(
-                  CONTRACTS.usdt,
-                  [
-                    'function transfer(address to, uint256 amount) returns (bool)',
-                    'function decimals() view returns (uint8)',
-                  ],
-                  signer
-                )
-                let unitDecimals: number = KITE_X402.stablecoinDecimals
-                try {
-                  unitDecimals = Number(await token.decimals())
-                } catch {
-                  /* keep fallback decimals */
-                }
+            if (signer && data.sessionKeyAddress && CONTRACTS.usdt) {
+              const provider = signer.provider
+              if (provider) {
+                const net = await provider.getNetwork()
+                if (Number(net.chainId) === KITE_CHAIN.id) {
+                  const token = new ethers.Contract(
+                    CONTRACTS.usdt,
+                    [
+                      'function transfer(address to, uint256 amount) returns (bool)',
+                      'function decimals() view returns (uint8)',
+                    ],
+                    signer
+                  )
+                  let unitDecimals: number = KITE_X402.stablecoinDecimals
+                  try {
+                    unitDecimals = Number(await token.decimals())
+                  } catch {
+                    /* keep fallback decimals */
+                  }
 
-                const amount = ethers.parseUnits(String(budgetUsdt), unitDecimals)
-                const tx = await token.transfer(data.sessionKeyAddress, amount)
-                const receipt = await tx.wait()
-                console.debug(
-                  '[useSessionKeySetup] Funded session key',
-                  data.sessionKeyAddress
-                )
-                try {
-                  localStorage.setItem(
-                    `session-key-funding-${address}`,
-                    JSON.stringify({
-                      status: 'success',
-                      txHash: receipt.transactionHash,
-                      error: null,
-                    })
-                  )
-                } catch {
-                  /* ignore */
-                }
-              } else {
-                console.debug('[useSessionKeySetup] Skipping funding: wrong network')
-                try {
-                  localStorage.setItem(
-                    `session-key-funding-${address}`,
-                    JSON.stringify({
-                      status: 'skipped',
-                      txHash: null,
-                      error: 'wrong network',
-                    })
-                  )
-                } catch {
-                  /* ignore */
+                  const amount = ethers.parseUnits(String(budgetUsdt), unitDecimals)
+                  const tx = await token.transfer(data.sessionKeyAddress, amount)
+                  const receipt = await tx.wait()
+                  console.debug('[useSessionKeySetup] Funded session key', data.sessionKeyAddress)
+                  try {
+                    localStorage.setItem(
+                      `session-key-funding-${address}`,
+                      JSON.stringify({ status: 'success', txHash: receipt.transactionHash, error: null })
+                    )
+                  } catch {
+                    /* ignore */
+                  }
+                } else {
+                  console.debug('[useSessionKeySetup] Skipping funding: wrong network')
+                  try {
+                    localStorage.setItem(
+                      `session-key-funding-${address}`,
+                      JSON.stringify({ status: 'skipped', txHash: null, error: 'wrong network' })
+                    )
+                  } catch {
+                    /* ignore */
+                  }
                 }
               }
             }
