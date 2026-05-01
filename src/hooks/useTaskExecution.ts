@@ -324,14 +324,15 @@ export function useTaskExecution() {
       await new Promise((r) => setTimeout(r, 280))
 
       setStatus('executing')
-      let data: {
-        success?: boolean
-        taskId?: string
-        goalResult?: GoalResult
-        error?: string
-      }
-      try {
-        const res = await axios.post<typeof data>(
+      const postGoalRun = async (txHash?: string) => {
+        return axios.post<{
+          success?: boolean
+          taskId?: string
+          goalResult?: GoalResult
+          error?: string
+          code?: string
+          requiresClientPayment?: boolean
+        }>(
           '/api/agent',
           {
             taskType: 'goal',
@@ -340,13 +341,62 @@ export function useTaskExecution() {
             userAddress: address,
             userSmartWallet: address,
             sessionKeyId: storedSessionKeyId || undefined,
-            paymentTxHash,
+            paymentTxHash: txHash,
           },
           { timeout: AGENT_REQUEST_MS }
         )
+      }
+
+      let data: {
+        success?: boolean
+        taskId?: string
+        goalResult?: GoalResult
+        error?: string
+        code?: string
+        requiresClientPayment?: boolean
+      }
+      try {
+        const res = await postGoalRun(paymentTxHash)
         data = res.data
       } catch (agentErr: unknown) {
-        if (axios.isAxiosError(agentErr) && isWalletUserRejected(agentErr)) {
+        const isFallbackRequired =
+          axios.isAxiosError(agentErr) &&
+          (agentErr.response?.status === 409 ||
+            (agentErr.response?.data as { requiresClientPayment?: boolean })
+              ?.requiresClientPayment === true ||
+            (agentErr.response?.data as { code?: string })?.code ===
+              'SESSION_KEY_PREPAY_FALLBACK_REQUIRED')
+
+        if (isFallbackRequired) {
+          let fallbackTxHash: string
+          try {
+            await requireSignerOnKiteChain(signer)
+            fallbackTxHash = await payForTask(signer, budgetUsdt)
+          } catch (payErr: unknown) {
+            if (isWrongNetworkError(payErr)) {
+              setStatus('error')
+              setError(KITE_WRONG_NETWORK_PAY_MESSAGE)
+              setIsGoalFlow(false)
+              setGoalBudgetUsdt(null)
+              setActiveGoalText(null)
+              setSteps([])
+              return
+            }
+            if (isWalletUserRejected(payErr)) {
+              setStatus('error')
+              setError('Transaction was cancelled in your wallet.')
+              setIsGoalFlow(false)
+              setGoalBudgetUsdt(null)
+              setActiveGoalText(null)
+              setSteps([])
+              return
+            }
+            throw payErr
+          }
+
+          const retryRes = await postGoalRun(fallbackTxHash)
+          data = retryRes.data
+        } else if (axios.isAxiosError(agentErr) && isWalletUserRejected(agentErr)) {
           setStatus('error')
           setError('Request was cancelled.')
           setIsGoalFlow(false)
@@ -354,8 +404,9 @@ export function useTaskExecution() {
           setActiveGoalText(null)
           setSteps([])
           return
+        } else {
+          throw agentErr
         }
-        throw agentErr
       }
 
       if (!data || data.error || !data.goalResult?.taskId) {

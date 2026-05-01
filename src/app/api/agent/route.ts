@@ -146,11 +146,23 @@ export async function POST(req: NextRequest) {
             paymentPayerAddress = sessionPrepay.payerAddress
           }
         } catch (err) {
-          console.warn('[API] session-key prepay failed; client payment required', err)
+          const msg = err instanceof Error ? err.message : String(err)
+          console.warn('[API] session-key prepay failed; client payment required', msg)
         }
       }
 
       if (!effectivePaymentTxHash) {
+        if (userSmartWallet && sessionKeyId) {
+          return NextResponse.json(
+            {
+              error:
+                'Session key wallet could not prepay this goal. Fallback to wallet payment is required for this run.',
+              code: 'SESSION_KEY_PREPAY_FALLBACK_REQUIRED',
+              requiresClientPayment: true,
+            },
+            { status: 409 }
+          )
+        }
         return NextResponse.json(
           { error: 'Missing payment transaction hash' },
           { status: 400 }
