@@ -282,41 +282,38 @@ export function useTaskExecution() {
         typeof window !== 'undefined'
           ? localStorage.getItem(`session-key-${address}`)
           : null
-      let paymentTxHash: string | undefined
-
-      if (!storedSessionKeyId) {
-        try {
-          await requireSignerOnKiteChain(signer)
-          paymentTxHash = await payForTask(signer, budgetUsdt)
-        } catch (payErr: unknown) {
-          if (isWrongNetworkError(payErr)) {
-            setStatus('error')
-            setError(KITE_WRONG_NETWORK_PAY_MESSAGE)
-            setIsGoalFlow(false)
-            setGoalBudgetUsdt(null)
-            setActiveGoalText(null)
-            return
-          }
-          if (isWalletUserRejected(payErr)) {
-            setStatus('error')
-            setError('Transaction was cancelled in your wallet.')
-            setIsGoalFlow(false)
-            setGoalBudgetUsdt(null)
-            setActiveGoalText(null)
-            return
-          }
-          if (isSignerOrConnectionError(payErr)) {
-            setStatus('error')
-            setError(
-              'Wallet connection was lost. Refresh the page, reconnect MetaMask, and try again.'
-            )
-            setIsGoalFlow(false)
-            setGoalBudgetUsdt(null)
-            setActiveGoalText(null)
-            return
-          }
-          throw payErr
+      let paymentTxHash: string
+      try {
+        await requireSignerOnKiteChain(signer)
+        paymentTxHash = await payForTask(signer, budgetUsdt)
+      } catch (payErr: unknown) {
+        if (isWrongNetworkError(payErr)) {
+          setStatus('error')
+          setError(KITE_WRONG_NETWORK_PAY_MESSAGE)
+          setIsGoalFlow(false)
+          setGoalBudgetUsdt(null)
+          setActiveGoalText(null)
+          return
         }
+        if (isWalletUserRejected(payErr)) {
+          setStatus('error')
+          setError('Transaction was cancelled in your wallet.')
+          setIsGoalFlow(false)
+          setGoalBudgetUsdt(null)
+          setActiveGoalText(null)
+          return
+        }
+        if (isSignerOrConnectionError(payErr)) {
+          setStatus('error')
+          setError(
+            'Wallet connection was lost. Refresh the page, reconnect MetaMask, and try again.'
+          )
+          setIsGoalFlow(false)
+          setGoalBudgetUsdt(null)
+          setActiveGoalText(null)
+          return
+        }
+        throw payErr
       }
 
       setSteps([])
@@ -324,7 +321,7 @@ export function useTaskExecution() {
       await new Promise((r) => setTimeout(r, 280))
 
       setStatus('executing')
-      const postGoalRun = async (txHash?: string) => {
+      const postGoalRun = async (txHash: string) => {
         return axios.post<{
           success?: boolean
           taskId?: string
@@ -359,44 +356,7 @@ export function useTaskExecution() {
         const res = await postGoalRun(paymentTxHash)
         data = res.data
       } catch (agentErr: unknown) {
-        const isFallbackRequired =
-          axios.isAxiosError(agentErr) &&
-          (agentErr.response?.status === 409 ||
-            (agentErr.response?.data as { requiresClientPayment?: boolean })
-              ?.requiresClientPayment === true ||
-            (agentErr.response?.data as { code?: string })?.code ===
-              'SESSION_KEY_PREPAY_FALLBACK_REQUIRED')
-
-        if (isFallbackRequired) {
-          let fallbackTxHash: string
-          try {
-            await requireSignerOnKiteChain(signer)
-            fallbackTxHash = await payForTask(signer, budgetUsdt)
-          } catch (payErr: unknown) {
-            if (isWrongNetworkError(payErr)) {
-              setStatus('error')
-              setError(KITE_WRONG_NETWORK_PAY_MESSAGE)
-              setIsGoalFlow(false)
-              setGoalBudgetUsdt(null)
-              setActiveGoalText(null)
-              setSteps([])
-              return
-            }
-            if (isWalletUserRejected(payErr)) {
-              setStatus('error')
-              setError('Transaction was cancelled in your wallet.')
-              setIsGoalFlow(false)
-              setGoalBudgetUsdt(null)
-              setActiveGoalText(null)
-              setSteps([])
-              return
-            }
-            throw payErr
-          }
-
-          const retryRes = await postGoalRun(fallbackTxHash)
-          data = retryRes.data
-        } else if (axios.isAxiosError(agentErr) && isWalletUserRejected(agentErr)) {
+        if (axios.isAxiosError(agentErr) && isWalletUserRejected(agentErr)) {
           setStatus('error')
           setError('Request was cancelled.')
           setIsGoalFlow(false)
@@ -404,9 +364,8 @@ export function useTaskExecution() {
           setActiveGoalText(null)
           setSteps([])
           return
-        } else {
-          throw agentErr
         }
+        throw agentErr
       }
 
       if (!data || data.error || !data.goalResult?.taskId) {
