@@ -1,8 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { KITE_CHAIN } from '@/lib/constants'
-
 type FundingState = {
   status: 'pending' | 'success' | 'failed' | 'skipped' | null
   txHash?: string | null
@@ -46,7 +44,7 @@ export function SessionKeyFundingStatus({ address }: { address: string | null })
 
   if (!address) return null
 
-  const { status, txHash, error, note } = state
+  const { status, error, note } = state
 
   if (!status) return null
 
@@ -54,12 +52,7 @@ export function SessionKeyFundingStatus({ address }: { address: string | null })
     <div className="mt-2 flex w-full items-center gap-2 text-xs text-slate-700 sm:justify-end">
       {status === 'pending' && <span>{note || 'Session key funding: Pending…'}</span>}
       {status === 'success' && (
-        <span>
-          Session key funded — tx:{' '}
-          <a className="underline" href={`${KITE_CHAIN.explorerUrl}/tx/${txHash}`} target="_blank" rel="noreferrer">
-            {txHash?.slice(0, 6)}…{txHash?.slice(-4)}
-          </a>
-        </span>
+        <span>Session key funding complete</span>
       )}
       {status === 'skipped' && <span>{note || 'Session key funding skipped (wrong network)'}</span>}
       {status === 'failed' && (

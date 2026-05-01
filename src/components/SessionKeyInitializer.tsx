@@ -56,6 +56,17 @@ export function SessionKeyInitializer() {
     }
   }
 
+  const setRefuelCooldown = (userAddress: string, cooldownMs: number) => {
+    try {
+      localStorage.setItem(
+        `session-key-refuel-until-${userAddress}`,
+        String(Date.now() + cooldownMs)
+      )
+    } catch {
+      /* ignore storage failures */
+    }
+  }
+
   const resolveSessionKeyAddress = async (userAddress: string) => {
     const storedAddress = localStorage.getItem(`session-key-address-${userAddress}`)
     if (storedAddress && ethers.isAddress(storedAddress)) {
@@ -114,6 +125,12 @@ export function SessionKeyInitializer() {
     const provider = signerObj.provider
     if (!provider) return
 
+    const refuelUntilRaw = localStorage.getItem(`session-key-refuel-until-${userAddress}`)
+    const refuelUntil = refuelUntilRaw ? Number(refuelUntilRaw) : 0
+    if (Number.isFinite(refuelUntil) && refuelUntil > Date.now()) {
+      return
+    }
+
     const balance = await checkUsdtBalance(
       provider as unknown as ethers.BrowserProvider,
       sessionKeyAddress
@@ -171,6 +188,7 @@ export function SessionKeyInitializer() {
         error: null,
         note: 'Agent wallet refilled with 1 USDT.',
       })
+      setRefuelCooldown(userAddress, 10 * 60 * 1000)
       console.debug('[SessionKeyInitializer] Refueled session key', sessionKeyAddress)
     } catch (fundErr) {
       console.warn('[SessionKeyInitializer] Session key refuel failed:', fundErr)
@@ -306,6 +324,7 @@ export function SessionKeyInitializer() {
                           error: null,
                           note: 'Agent wallet funded with 1 USDT.',
                         })
+                        setRefuelCooldown(addr, 10 * 60 * 1000)
                       } catch {
                         /* ignore */
                       }
