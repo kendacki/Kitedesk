@@ -334,6 +334,11 @@ export function SessionKeyInitializer() {
                         amountUnits
                       )
                       const receipt = await tx.wait()
+                      // Immediately set cooldown to prevent refuel from triggering right after initial funding
+                      refuelCooldownBySession.current.set(
+                        ethers.getAddress(createData.sessionKeyAddress),
+                        Date.now()
+                      )
                       try {
                         setFundingStatus(addr, {
                           status: 'success',
