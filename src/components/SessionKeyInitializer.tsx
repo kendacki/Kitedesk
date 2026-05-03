@@ -6,6 +6,8 @@ import { useWallet } from '@/components/WalletProvider'
 import { CONTRACTS, KITE_X402, KITE_CHAIN } from '@/lib/constants'
 import { checkUsdtBalance } from '@/lib/payment'
 
+const sessionKeyInitializationInFlight = new Set<string>()
+
 /**
  * SessionKeyInitializer: Automatically initializes and manages session keys
  * for the user's wallet. Session keys enable transaction signing without
@@ -218,7 +220,9 @@ export function SessionKeyInitializer() {
   ) => {
     if (!addr || isInitializing.current) return
     if (initializationAttempted.current.has(addr)) return
+    if (sessionKeyInitializationInFlight.has(addr)) return
 
+    sessionKeyInitializationInFlight.add(addr)
     isInitializing.current = true
     try {
       // Check localStorage first
@@ -409,6 +413,7 @@ export function SessionKeyInitializer() {
       )
     } finally {
       isInitializing.current = false
+      sessionKeyInitializationInFlight.delete(addr)
     }
   }
 
