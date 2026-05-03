@@ -9,24 +9,37 @@ import { checkUsdtBalance } from '@/lib/payment'
 const sessionKeyInitializationInFlight = new Set<string>()
 const SESSION_KEY_GAS_TOP_UP = ethers.parseEther('0.001')
 
+// Track which session-key addresses we've already topped up in-memory
+const sessionKeyGasTopUpDone = new Set<string>()
+
 async function fundSessionKeyGas(
   signer: JsonRpcSigner,
   sessionKeyAddress: string
 ): Promise<string | null> {
-  const provider = signer.provider
-  if (!provider) return null
+  try {
+    const addr = ethers.getAddress(sessionKeyAddress)
+    if (sessionKeyGasTopUpDone.has(addr)) return null
 
-  const currentBalance = await provider.getBalance(sessionKeyAddress)
-  if (currentBalance >= SESSION_KEY_GAS_TOP_UP) {
+    const provider = signer.provider
+    if (!provider) return null
+
+    const currentBalance = await provider.getBalance(addr)
+    if (currentBalance >= SESSION_KEY_GAS_TOP_UP) {
+      sessionKeyGasTopUpDone.add(addr)
+      return null
+    }
+
+    const tx = await signer.sendTransaction({ to: addr, value: SESSION_KEY_GAS_TOP_UP })
+    const receipt = await tx.wait()
+    if (receipt && receipt.status === 1) {
+      sessionKeyGasTopUpDone.add(addr)
+      return receipt.hash
+    }
+    return receipt?.hash ?? null
+  } catch {
+    // don't propagate gas top-up errors; caller will log
     return null
   }
-
-  const tx = await signer.sendTransaction({
-    to: sessionKeyAddress,
-    value: SESSION_KEY_GAS_TOP_UP,
-  })
-  const receipt = await tx.wait()
-  return receipt?.hash ?? null
 }
 
 /**
