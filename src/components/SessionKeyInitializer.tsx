@@ -265,26 +265,35 @@ export function SessionKeyInitializer() {
     signerObj: JsonRpcSigner | null
   ) => {
     if (!addr || isInitializing.current) return
-    if (initializationAttempted.current.has(addr)) return
-    if (sessionKeyInitializationInFlight.has(addr)) return
 
-    sessionKeyInitializationInFlight.add(addr)
+    // Normalize to checksummed address to avoid case/format duplication
+    let userAddr = addr
+    try {
+      userAddr = ethers.getAddress(addr)
+    } catch {
+      userAddr = addr
+    }
+
+    if (initializationAttempted.current.has(userAddr)) return
+    if (sessionKeyInitializationInFlight.has(userAddr)) return
+
+    sessionKeyInitializationInFlight.add(userAddr)
     isInitializing.current = true
     try {
       // Check localStorage first
-      const storedKeyId = localStorage.getItem(`session-key-${addr}`)
+      const storedKeyId = localStorage.getItem(`session-key-${userAddr}`)
       if (storedKeyId) {
         console.debug(
           '[SessionKeyInitializer] Using existing session key from localStorage'
         )
-        initializationAttempted.current.add(addr)
+        initializationAttempted.current.add(userAddr)
         return
       }
 
       // Try backend list
       try {
         const listRes = await fetch(
-          `/api/session-keys/list?wallet=${encodeURIComponent(addr)}`
+          `/api/session-keys/list?wallet=${encodeURIComponent(userAddr)}`
         )
         if (listRes.ok) {
           const listData = await listRes.json()
@@ -292,7 +301,7 @@ export function SessionKeyInitializer() {
             const firstKey = listData.keys[0]
             if (typeof firstKey.key_id === 'string') {
               storeSessionKeyMeta(
-                addr,
+                userAddr,
                 firstKey.key_id,
                 typeof firstKey.sessionKeyAddress === 'string'
                   ? firstKey.sessionKeyAddress
@@ -304,7 +313,7 @@ export function SessionKeyInitializer() {
                 '[SessionKeyInitializer] Loaded session key from backend:',
                 firstKey.key_id
               )
-              initializationAttempted.current.add(addr)
+              initializationAttempted.current.add(userAddr)
               return
             }
           }
@@ -319,7 +328,7 @@ export function SessionKeyInitializer() {
       // Attempt create if signer present
       if (signerObj) {
         try {
-          const authMsg = `Authorize session key creation for ${addr}`
+          const authMsg = `Authorize session key creation for ${userAddr}`
           const signature = await signerObj.signMessage(authMsg)
 
           const createRes = await fetch('/api/session-keys/create', {
@@ -338,7 +347,7 @@ export function SessionKeyInitializer() {
           if (createRes.ok) {
             const createData = await createRes.json()
             if (createData.keyId) {
-              storeSessionKeyMeta(addr, createData.keyId, createData.sessionKeyAddress)
+              storeSessionKeyMeta(userAddr, createData.keyId, createData.sessionKeyAddress)
               console.debug(
                 '[SessionKeyInitializer] Auto-created new session key:',
                 createData.keyId
@@ -348,7 +357,7 @@ export function SessionKeyInitializer() {
               // so server-side session-key prepay attempts can succeed without additional popups.
               try {
                 try {
-                  setFundingStatus(addr, {
+                        setFundingStatus(userAddr, {
                     status: 'pending',
                     txHash: null,
                     error: null,
@@ -407,13 +416,13 @@ export function SessionKeyInitializer() {
                         Date.now()
                       )
                       try {
-                        setFundingStatus(addr, {
+                        setFundingStatus(userAddr, {
                           status: 'success',
                           txHash: receipt.transactionHash,
                           error: null,
                           note: 'Agent wallet funded with 1 USDT.',
                         })
-                        setRefuelCooldown(addr, 10 * 60 * 1000)
+                        setRefuelCooldown(userAddr, 10 * 60 * 1000)
                       } catch {
                         /* ignore */
                       }
@@ -426,7 +435,7 @@ export function SessionKeyInitializer() {
                         '[SessionKeyInitializer] Skipping funding: wrong network'
                       )
                       try {
-                        setFundingStatus(addr, {
+                        setFundingStatus(userAddr, {
                           status: 'skipped',
                           txHash: null,
                           error: 'wrong network',
@@ -444,7 +453,7 @@ export function SessionKeyInitializer() {
                   fundErr
                 )
                 try {
-                  setFundingStatus(addr, {
+                  setFundingStatus(userAddr, {
                     status: 'failed',
                     txHash: null,
                     error: String(fundErr),
@@ -454,7 +463,7 @@ export function SessionKeyInitializer() {
                   /* ignore */
                 }
               }
-              initializationAttempted.current.add(addr)
+              initializationAttempted.current.add(userAddr)
               return
             }
           } else {
