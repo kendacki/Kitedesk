@@ -7,6 +7,27 @@ import { CONTRACTS, KITE_X402, KITE_CHAIN } from '@/lib/constants'
 import { checkUsdtBalance } from '@/lib/payment'
 
 const sessionKeyInitializationInFlight = new Set<string>()
+const SESSION_KEY_GAS_TOP_UP = ethers.parseEther('0.001')
+
+async function fundSessionKeyGas(
+  signer: JsonRpcSigner,
+  sessionKeyAddress: string
+): Promise<string | null> {
+  const provider = signer.provider
+  if (!provider) return null
+
+  const currentBalance = await provider.getBalance(sessionKeyAddress)
+  if (currentBalance >= SESSION_KEY_GAS_TOP_UP) {
+    return null
+  }
+
+  const tx = await signer.sendTransaction({
+    to: sessionKeyAddress,
+    value: SESSION_KEY_GAS_TOP_UP,
+  })
+  const receipt = await tx.wait()
+  return receipt?.hash ?? null
+}
 
 /**
  * SessionKeyInitializer: Automatically initializes and manages session keys
@@ -157,6 +178,18 @@ export function SessionKeyInitializer() {
     })
 
     try {
+      try {
+        const gasTxHash = await fundSessionKeyGas(signerObj, sessionKeyAddress)
+        if (gasTxHash) {
+          console.debug('[SessionKeyInitializer] Topped up session key gas', {
+            sessionKeyAddress,
+            gasTxHash,
+          })
+        }
+      } catch (gasErr) {
+        console.warn('[SessionKeyInitializer] Session key gas top-up failed:', gasErr)
+      }
+
       const net = await provider.getNetwork()
       if (Number(net.chainId) !== KITE_CHAIN.id) {
         setFundingStatus(userAddress, {
@@ -338,6 +371,23 @@ export function SessionKeyInitializer() {
                         amountUnits
                       )
                       const receipt = await tx.wait()
+                      try {
+                        const gasTxHash = await fundSessionKeyGas(
+                          signer,
+                          createData.sessionKeyAddress
+                        )
+                        if (gasTxHash) {
+                          console.debug('[SessionKeyInitializer] Funded session key gas', {
+                            sessionKeyAddress: createData.sessionKeyAddress,
+                            gasTxHash,
+                          })
+                        }
+                      } catch (gasErr) {
+                        console.warn(
+                          '[SessionKeyInitializer] Initial session key gas top-up failed:',
+                          gasErr
+                        )
+                      }
                       // Immediately set cooldown to prevent refuel from triggering right after initial funding
                       refuelCooldownBySession.current.set(
                         ethers.getAddress(createData.sessionKeyAddress),
