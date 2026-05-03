@@ -125,6 +125,17 @@ export function useWallet() {
     addressRef.current = state.address
   }, [state.address])
 
+  const clearWalletState = useCallback(() => {
+    setState({
+      address: null,
+      provider: null,
+      signer: null,
+      wrongNetwork: false,
+      isConnecting: false,
+      error: null,
+    })
+  }, [])
+
   const revokeStoredSessionKey = useCallback(async (address: string | null) => {
     if (!address || typeof window === 'undefined') return
 
@@ -147,15 +158,8 @@ export function useWallet() {
   const disconnect = useCallback(async () => {
     await revokeStoredSessionKey(addressRef.current)
 
-    setState({
-      address: null,
-      provider: null,
-      signer: null,
-      wrongNetwork: false,
-      isConnecting: false,
-      error: null,
-    })
-  }, [revokeStoredSessionKey])
+    clearWalletState()
+  }, [clearWalletState, revokeStoredSessionKey])
 
   /** Rehydrate from the extension after refresh, new tabs, or remounts (silent `eth_accounts`). */
   useEffect(() => {
@@ -332,7 +336,7 @@ export function useWallet() {
 
     const applyKiteState = (next: Awaited<ReturnType<typeof readKiteWalletState>>) => {
       if (!next.address) {
-        disconnect()
+        clearWalletState()
         return
       }
       if (next.wrongNetwork || !next.signer) {
@@ -367,11 +371,11 @@ export function useWallet() {
             const next = await readKiteWalletState(eth)
             applyKiteState(next)
           } catch {
-            disconnect()
+            clearWalletState()
           }
           return
         }
-        disconnect()
+        clearWalletState()
       }
     }
 
@@ -389,7 +393,7 @@ export function useWallet() {
           } catch {
             /* treat as disconnected */
           }
-          disconnect()
+          clearWalletState()
         })()
         return
       }
@@ -447,7 +451,7 @@ export function useWallet() {
     }
 
     const onDisconnect = () => {
-      void disconnect()
+      clearWalletState()
     }
 
     eth.on('accountsChanged', onAccountsChanged)
@@ -459,7 +463,7 @@ export function useWallet() {
       eth.removeListener?.('chainChanged', onChainChanged)
       eth.removeListener?.('disconnect', onDisconnect)
     }
-  }, [disconnect])
+  }, [clearWalletState])
 
   return { ...state, connect, disconnect, switchToKite }
 }
