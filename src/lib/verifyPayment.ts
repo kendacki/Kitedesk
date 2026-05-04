@@ -25,7 +25,7 @@ function amountToUnits(humanAmount: number, decimals: number): bigint {
 
 export async function verifyPaymentTransaction(
   txHash: string,
-  userAddress: string,
+  payerAddress: string,
   expectedAmountHuman: number
 ): Promise<void> {
   if (!Number.isFinite(expectedAmountHuman) || expectedAmountHuman <= 0) {
@@ -54,11 +54,11 @@ export async function verifyPaymentTransaction(
     throw new HttpError('Payment transaction not found', 400)
   }
 
-  const user = ethers.getAddress(userAddress)
+  const payer = ethers.getAddress(payerAddress)
 
-  if (!tx.from || ethers.getAddress(tx.from) !== user) {
+  if (!tx.from || ethers.getAddress(tx.from) !== payer) {
     throw new HttpError(
-      'Payment transaction must be sent from the connected wallet',
+      'Payment transaction must be sent from the approved payer wallet',
       400
     )
   }
@@ -100,7 +100,7 @@ export async function verifyPaymentTransaction(
     const from = ethers.getAddress(String(parsed.args.from))
     const to = ethers.getAddress(String(parsed.args.to))
     const value = BigInt(String(parsed.args.value))
-    if (from === user && to === platform) {
+    if (from === payer && to === platform) {
       paidToPlatform += value
     }
   }

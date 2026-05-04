@@ -277,6 +277,7 @@ export async function POST(req: NextRequest) {
     const expectedAmount = TASK_CONFIG[classicType].priceUsdt
 
     let effectivePaymentTxHash = paymentTxHash || ''
+    let paymentPayerAddress = userAddress
     if (!effectivePaymentTxHash && userSmartWallet && sessionKeyId) {
       try {
         const sessionPrepay = await trySessionKeyPrepay({
@@ -287,6 +288,7 @@ export async function POST(req: NextRequest) {
         })
         if (sessionPrepay) {
           effectivePaymentTxHash = sessionPrepay.txHash
+          paymentPayerAddress = sessionPrepay.payerAddress
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err)
@@ -306,7 +308,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    await verifyPaymentTransaction(effectivePaymentTxHash, userAddress, expectedAmount)
+    await verifyPaymentTransaction(
+      effectivePaymentTxHash,
+      paymentPayerAddress,
+      expectedAmount
+    )
 
     paymentTxHashForRelease = effectivePaymentTxHash
     await claimPaymentTransaction(effectivePaymentTxHash, userAddress)
