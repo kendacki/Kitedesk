@@ -3,7 +3,10 @@ import { ethers } from 'ethers'
 import { KITE_CHAIN, KITE_X402 } from '@/lib/constants'
 import { parseXPaymentHeader } from '@/lib/x402PaymentPayload'
 
-const ERC20_TRANSFER_ABI = ['function transfer(address,uint256) returns(bool)'] as const
+const ERC20_TRANSFER_ABI = [
+  'function transfer(address,uint256) returns(bool)',
+  'function balanceOf(address) view returns(uint256)',
+] as const
 
 function pickTxHash(data: Record<string, unknown>): string | undefined {
   const candidates = ['txHash', 'transactionHash', 'hash', 'tx']

@@ -62,3 +62,5 @@ skills-lock.json
 
 # Optional raw logo for npm run logo:assets (processed output is in public/ + app/)
 scripts/source-logo.png
+temp_auto_push.bat
+temp_interactive_push.bat

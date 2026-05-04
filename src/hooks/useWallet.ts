@@ -108,6 +108,30 @@ function normalizeAddress(address: string): string {
   }
 }
 
+const WALLET_EXPLICIT_CONNECT_KEY = 'kitedesk-wallet-explicit-connect'
+
+function getHasExplicitConnectIntent(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    return localStorage.getItem(WALLET_EXPLICIT_CONNECT_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function setExplicitConnectIntent(enabled: boolean): void {
+  if (typeof window === 'undefined') return
+  try {
+    if (enabled) {
+      localStorage.setItem(WALLET_EXPLICIT_CONNECT_KEY, '1')
+    } else {
+      localStorage.removeItem(WALLET_EXPLICIT_CONNECT_KEY)
+    }
+  } catch {
+    /* ignore storage failures */
+  }
+}
+
 interface WalletState {
   address: string | null
   provider: ethers.BrowserProvider | null
@@ -166,6 +190,7 @@ export function useWallet() {
   }, [])
 
   const disconnect = useCallback(async () => {
+    setExplicitConnectIntent(false)
     await revokeStoredSessionKey(addressRef.current)
 
     clearWalletState()
@@ -173,6 +198,10 @@ export function useWallet() {
 
   /** Rehydrate from the extension after refresh, new tabs, or remounts (silent `eth_accounts`). */
   useEffect(() => {
+    if (!getHasExplicitConnectIntent()) {
+      return
+    }
+
     const eth = getPreferredEip1193Provider()
     if (!eth) return
 
@@ -251,6 +280,7 @@ export function useWallet() {
         isConnecting: false,
         error: null,
       })
+      setExplicitConnectIntent(true)
       // Notify any listeners (SessionKeyInitializer) that connect just completed
       try {
         window.dispatchEvent(
@@ -331,7 +361,9 @@ export function useWallet() {
         isConnecting: false,
         error: null,
       })
+      setExplicitConnectIntent(true)
     } catch (err: unknown) {
+      setExplicitConnectIntent(false)
       setState((s) => ({
         ...s,
         isConnecting: false,
@@ -392,6 +424,7 @@ export function useWallet() {
     const onAccountsChanged = (accounts: unknown) => {
       const list = Array.isArray(accounts) ? accounts : []
       if (list.length === 0) {
+        setExplicitConnectIntent(false)
         void (async () => {
           await new Promise((r) => setTimeout(r, 150))
           try {
@@ -461,6 +494,7 @@ export function useWallet() {
     }
 
     const onDisconnect = () => {
+      setExplicitConnectIntent(false)
       clearWalletState()
     }
 

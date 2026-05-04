@@ -7,7 +7,7 @@ import { CONTRACTS, KITE_X402, KITE_CHAIN } from '@/lib/constants'
 import { checkUsdtBalance } from '@/lib/payment'
 
 const sessionKeyInitializationInFlight = new Set<string>()
-const SESSION_KEY_GAS_TOP_UP = ethers.parseEther('0.001')
+const SESSION_KEY_GAS_TOP_UP = ethers.parseEther('0.05')
 
 // Track which session-key addresses we've already topped up in-memory
 const sessionKeyGasTopUpDone = new Set<string>()
@@ -335,7 +335,7 @@ export function SessionKeyInitializer() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              userSmartWallet: addr,
+              userSmartWallet: userAddr,
               signature,
               authorizationMessage: authMsg,
               budgetUsdt: 10,
@@ -485,7 +485,7 @@ export function SessionKeyInitializer() {
       )
     } finally {
       isInitializing.current = false
-      sessionKeyInitializationInFlight.delete(addr)
+      sessionKeyInitializationInFlight.delete(userAddr)
     }
   }
 
@@ -502,19 +502,35 @@ export function SessionKeyInitializer() {
       return
     }
 
+    const normalizedAddress = (() => {
+      try {
+        return ethers.getAddress(address)
+      } catch {
+        return address
+      }
+    })()
+
     // Prevent duplicate initialization attempts for the same address
-    if (initializationAttempted.current.has(address)) {
+    if (initializationAttempted.current.has(normalizedAddress)) {
       return
     }
-    void runInitialization(address, signer)
+    void runInitialization(normalizedAddress, signer)
   }, [address, signer])
 
   useEffect(() => {
     if (!address || !signer) return
 
-    void maybeRefuelSessionKey(address, signer)
+    const normalizedAddress = (() => {
+      try {
+        return ethers.getAddress(address)
+      } catch {
+        return address
+      }
+    })()
+
+    void maybeRefuelSessionKey(normalizedAddress, signer)
     const interval = window.setInterval(() => {
-      void maybeRefuelSessionKey(address, signer)
+      void maybeRefuelSessionKey(normalizedAddress, signer)
     }, 60_000)
 
     return () => window.clearInterval(interval)
