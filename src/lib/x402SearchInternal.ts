@@ -91,11 +91,12 @@ export async function executeX402SearchInternal(opts: {
     return { status: 400, body: { error: 'query is required' } }
   }
 
-  const settle = await verifyAndSettleInternal(xPay)
+  const paymentRequirements = buildX402Search402Body(resourceBase).accepts
+  const settle = await verifyAndSettleInternal(xPay, paymentRequirements)
   if (!settle.success) {
     let accepts: unknown
     try {
-      accepts = buildX402Search402Body(resourceBase).accepts
+      accepts = paymentRequirements
     } catch {
       accepts = []
     }

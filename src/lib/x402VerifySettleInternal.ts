@@ -16,19 +16,24 @@ function pickTxHash(data: Record<string, unknown>): string | undefined {
 
 async function settleViaFacilitator(
   paymentPayload: string,
-  network: string
+  network: string,
+  paymentRequirements?: unknown
 ): Promise<{ ok: true; txHash?: string } | { ok: false; error: string }> {
   const settleUrl = KITE_X402.settleUrl
   let settleRes: Response
   try {
-    // Send the base64 payload as-is to the facilitator in the paymentPayload field
+    // Send the base64 payload + requirements to the facilitator
+    const body: Record<string, unknown> = {
+      paymentPayload: paymentPayload.trim(),
+      network,
+    }
+    if (paymentRequirements) {
+      body.paymentRequirements = paymentRequirements
+    }
     settleRes = await fetch(settleUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        paymentPayload: paymentPayload.trim(),
-        network,
-      }),
+      body: JSON.stringify(body),
       signal: AbortSignal.timeout(8000),
     })
   } catch (e) {
@@ -201,7 +206,8 @@ export type VerifySettleInternalResult = {
  * PATH C: Both failed — error "Both settlement paths failed" plus facilitatorError and directError.
  */
 export async function verifyAndSettleInternal(
-  xPaymentHeader: string
+  xPaymentHeader: string,
+  paymentRequirements?: unknown
 ): Promise<VerifySettleInternalResult> {
   let parsed: ReturnType<typeof parseXPaymentHeader>
   try {
@@ -211,7 +217,7 @@ export async function verifyAndSettleInternal(
     return { success: false, error: msg, facilitatorError: msg, directError: msg }
   }
 
-  const fac = await settleViaFacilitator(xPaymentHeader, 'kite-testnet')
+  const fac = await settleViaFacilitator(xPaymentHeader, 'kite-testnet', paymentRequirements)
   if (fac.ok) {
     return { success: true, txHash: fac.txHash, path: 'facilitator' }
   }
