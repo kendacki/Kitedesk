@@ -100,6 +100,14 @@ async function readKiteWalletState(eth: BrowserEip1193Provider): Promise<{
   }
 }
 
+function normalizeAddress(address: string): string {
+  try {
+    return ethers.getAddress(address)
+  } catch {
+    return address
+  }
+}
+
 interface WalletState {
   address: string | null
   provider: ethers.BrowserProvider | null
@@ -139,19 +147,21 @@ export function useWallet() {
   const revokeStoredSessionKey = useCallback(async (address: string | null) => {
     if (!address || typeof window === 'undefined') return
 
-    const keyId = localStorage.getItem(`session-key-${address}`)
+    const normalizedAddress = normalizeAddress(address)
+
+    const keyId = localStorage.getItem(`session-key-${normalizedAddress}`)
     if (!keyId) return
 
     try {
       await fetch('/api/session-keys/revoke', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userSmartWallet: address, keyId }),
+        body: JSON.stringify({ userSmartWallet: normalizedAddress, keyId }),
       })
     } catch (err) {
       console.warn('[useWallet] Failed to revoke session key on disconnect', err)
     } finally {
-      localStorage.removeItem(`session-key-${address}`)
+      localStorage.removeItem(`session-key-${normalizedAddress}`)
     }
   }, [])
 

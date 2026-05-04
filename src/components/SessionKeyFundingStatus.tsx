@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ethers } from 'ethers'
 type FundingState = {
   status: 'pending' | 'success' | 'failed' | 'skipped' | null
   txHash?: string | null
@@ -16,7 +17,14 @@ export function SessionKeyFundingStatus({ address }: { address: string | null })
       setState({ status: null })
       return
     }
-    const key = `session-key-funding-${address}`
+    const normalizedAddress = (() => {
+      try {
+        return ethers.getAddress(address)
+      } catch {
+        return address
+      }
+    })()
+    const key = `session-key-funding-${normalizedAddress}`
     try {
       const raw = localStorage.getItem(key)
       if (!raw) {

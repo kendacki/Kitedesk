@@ -35,6 +35,14 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
         return null
       }
 
+      const normalizedAddress = (() => {
+        try {
+          return ethers.getAddress(address)
+        } catch {
+          return address
+        }
+      })()
+
       setIsInitializing(true)
       setError(null)
 
@@ -49,7 +57,7 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userSmartWallet: address,
+            userSmartWallet: normalizedAddress,
             signature,
             authorizationMessage,
             budgetUsdt,
@@ -66,7 +74,7 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
 
         const data = await response.json()
 
-        localStorage.setItem(`session-key-${address}`, data.keyId)
+        localStorage.setItem(`session-key-${normalizedAddress}`, data.keyId)
 
         // Attempt to seed-fund the session key from the connected wallet so
         // subsequent Goal prepay can use the session key without additional
@@ -75,7 +83,7 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
           if (options && options.autoFund === false) {
             try {
               localStorage.setItem(
-                `session-key-funding-${address}`,
+                `session-key-funding-${normalizedAddress}`,
                 JSON.stringify({
                   status: 'skipped',
                   txHash: null,
@@ -89,7 +97,7 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
             // mark pending in localStorage for UI feedback
             try {
               localStorage.setItem(
-                `session-key-funding-${address}`,
+                `session-key-funding-${normalizedAddress}`,
                 JSON.stringify({ status: 'pending', txHash: null, error: null })
               )
             } catch {
@@ -125,7 +133,7 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
                   )
                   try {
                     localStorage.setItem(
-                      `session-key-funding-${address}`,
+                      `session-key-funding-${normalizedAddress}`,
                       JSON.stringify({
                         status: 'success',
                         txHash: receipt.transactionHash,
@@ -139,7 +147,7 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
                   console.debug('[useSessionKeySetup] Skipping funding: wrong network')
                   try {
                     localStorage.setItem(
-                      `session-key-funding-${address}`,
+                      `session-key-funding-${normalizedAddress}`,
                       JSON.stringify({
                         status: 'skipped',
                         txHash: null,
@@ -157,7 +165,7 @@ export function useSessionKeySetup(): UseSessionKeySetupReturn {
           console.warn('[useSessionKeySetup] Session key funding failed:', fundErr)
           try {
             localStorage.setItem(
-              `session-key-funding-${address}`,
+              `session-key-funding-${normalizedAddress}`,
               JSON.stringify({ status: 'failed', txHash: null, error: String(fundErr) })
             )
           } catch {

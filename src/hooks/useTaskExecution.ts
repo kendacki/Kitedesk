@@ -54,6 +54,14 @@ function isWrongNetworkError(err: unknown): boolean {
   return s.toLowerCase().includes('wrong network')
 }
 
+function normalizeAddress(address: string): string {
+  try {
+    return ethers.getAddress(address)
+  } catch {
+    return address
+  }
+}
+
 async function requireSignerOnKiteChain(signer: ethers.JsonRpcSigner): Promise<void> {
   const p = signer.provider
   if (!p) {
@@ -122,9 +130,10 @@ export function useTaskExecution() {
       setStatus('paying')
 
       setStatus('executing')
+      const normalizedAddress = normalizeAddress(address)
       const storedSessionKeyId =
         typeof window !== 'undefined'
-          ? localStorage.getItem(`session-key-${address}`)
+          ? localStorage.getItem(`session-key-${normalizedAddress}`)
           : null
       let data: {
         success?: boolean
@@ -140,8 +149,8 @@ export function useTaskExecution() {
           {
             taskType,
             prompt,
-            userAddress: address,
-            userSmartWallet: address,
+            userAddress: normalizedAddress,
+            userSmartWallet: normalizedAddress,
             sessionKeyId: storedSessionKeyId || undefined,
           },
           { timeout: AGENT_REQUEST_MS }
@@ -246,9 +255,10 @@ export function useTaskExecution() {
 
       setActiveGoalText(goal.trim())
       setStatus('paying')
+      const normalizedAddress = normalizeAddress(address)
       const storedSessionKeyId =
         typeof window !== 'undefined'
-          ? localStorage.getItem(`session-key-${address}`)
+          ? localStorage.getItem(`session-key-${normalizedAddress}`)
           : null
 
       setSteps([])
@@ -270,8 +280,8 @@ export function useTaskExecution() {
             taskType: 'goal',
             goal: goal.trim(),
             budgetUsdt,
-            userAddress: address,
-            userSmartWallet: address,
+            userAddress: normalizedAddress,
+            userSmartWallet: normalizedAddress,
             sessionKeyId: storedSessionKeyId || undefined,
           },
           { timeout: AGENT_REQUEST_MS }
