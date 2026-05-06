@@ -254,6 +254,7 @@ export function useWallet() {
       return
     }
 
+    setExplicitConnectIntent(true)
     setState((s) => ({ ...s, isConnecting: true, error: null }))
 
     try {
@@ -280,7 +281,6 @@ export function useWallet() {
         isConnecting: false,
         error: null,
       })
-      setExplicitConnectIntent(true)
       // Notify any listeners (SessionKeyInitializer) that connect just completed
       try {
         window.dispatchEvent(
@@ -290,6 +290,7 @@ export function useWallet() {
         /* ignore - non-browser or SSR */
       }
     } catch (err: unknown) {
+      setExplicitConnectIntent(false)
       setState((s) => ({
         ...s,
         isConnecting: false,
@@ -309,6 +310,7 @@ export function useWallet() {
       return
     }
 
+    setExplicitConnectIntent(true)
     setState((s) => ({ ...s, isConnecting: true, error: null }))
 
     try {
@@ -361,7 +363,6 @@ export function useWallet() {
         isConnecting: false,
         error: null,
       })
-      setExplicitConnectIntent(true)
     } catch (err: unknown) {
       setExplicitConnectIntent(false)
       setState((s) => ({
@@ -424,7 +425,9 @@ export function useWallet() {
     const onAccountsChanged = (accounts: unknown) => {
       const list = Array.isArray(accounts) ? accounts : []
       if (list.length === 0) {
-        setExplicitConnectIntent(false)
+        if (getHasExplicitConnectIntent()) {
+          return
+        }
         void (async () => {
           await new Promise((r) => setTimeout(r, 150))
           try {
