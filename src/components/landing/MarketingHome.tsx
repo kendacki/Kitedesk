@@ -425,15 +425,15 @@ export function MarketingHome() {
                   key={`${src}-${idx}`}
                   className={
                     slot === 'wide'
-                      ? 'flex h-16 w-56 shrink-0 items-center justify-center sm:h-20 sm:w-72'
-                      : 'flex h-16 w-40 shrink-0 items-center justify-center sm:h-20 sm:w-56'
+                      ? 'flex h-[8rem] w-[22rem] shrink-0 items-center justify-center sm:h-[10rem] sm:w-[28rem]'
+                      : 'flex h-[8rem] w-[20rem] shrink-0 items-center justify-center sm:h-[10rem] sm:w-[24rem]'
                   }
                 >
                   <Image
                     src={src}
                     alt={alt}
-                    width={slot === 'wide' ? 360 : 280}
-                    height={96}
+                    width={slot === 'wide' ? 720 : 560}
+                    height={192}
                     className="max-h-full w-auto max-w-full object-contain object-center"
                   />
                 </div>
