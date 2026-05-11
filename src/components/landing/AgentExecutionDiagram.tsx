@@ -190,19 +190,7 @@ export function AgentExecutionDiagram({ className = '' }: AgentExecutionDiagramP
           {...item(2)}
           className="relative w-full max-w-xs shrink-0 lg:w-40 xl:w-48"
         >
-          <motion.div
-            className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-emerald-200/55 via-emerald-300/50 to-teal-200/50 blur-lg"
-            animate={{
-              opacity: [0.65, 1, 0.65],
-              scale: [1, 1.09, 1],
-            }}
-            transition={{
-              duration: 1.75,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            aria-hidden
-          />
+          {/* animated glow removed per design request */}
           <div className="relative">
             <NodeShell className="shadow-emerald-950/50 ring-white/15">
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white">
