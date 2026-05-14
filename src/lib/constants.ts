@@ -1,10 +1,16 @@
 // KiteDesk | chain config, task pricing, and contract addresses
 
-import { ethers } from 'ethers'
-
 const envOr = (key: string, fallback: string): string => {
   const v = process.env[key]
   return v && v.length > 0 ? v : fallback
+}
+
+function isHexAddress(value: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(value)
+}
+
+function normalizeAddress(value: string): string {
+  return isHexAddress(value) ? value : ''
 }
 
 /** Kite testnet default USDT (PYUSD / test USD) when no contract env is set — same token as x402 default */
@@ -19,11 +25,11 @@ function resolveUsdtTokenAddress(): string {
   ]
   for (const c of candidates) {
     const t = typeof c === 'string' ? c.trim() : ''
-    if (t && ethers.isAddress(t)) {
-      return ethers.getAddress(t)
+    if (t && isHexAddress(t)) {
+      return normalizeAddress(t)
     }
   }
-  return ethers.getAddress(KITE_TESTNET_DEFAULT_USDT)
+  return KITE_TESTNET_DEFAULT_USDT
 }
 
 export const KITE_CHAIN = {
@@ -120,8 +126,8 @@ export const KITE_X402 = {
     const fromEnv =
       process.env.KITE_X402_TOKEN?.trim() ||
       process.env.NEXT_PUBLIC_KITE_X402_TOKEN?.trim()
-    if (fromEnv && ethers.isAddress(fromEnv)) {
-      return ethers.getAddress(fromEnv)
+    if (fromEnv && isHexAddress(fromEnv)) {
+      return normalizeAddress(fromEnv)
     }
     return CONTRACTS.usdt
   },

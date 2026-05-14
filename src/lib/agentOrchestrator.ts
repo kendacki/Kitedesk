@@ -724,6 +724,9 @@ export async function executeGoal(
     skippedTools: skippedFromPlanner,
   } = await runPlanner(g, budgetUsdt)
   const bodyPlan = sortWebSearchFirst(rawPlan)
+  if (process.env.KITE_DEBUG_GOAL_PLAN?.trim() === '1') {
+    console.error('[planner] resolved bodyPlan', JSON.stringify(bodyPlan, null, 2))
+  }
   const skippedTools = [...skippedFromPlanner]
   const steps: AgentStep[] = []
   let accumulated = 0
@@ -750,12 +753,44 @@ export async function executeGoal(
       }
     }
 
-    const toolInput =
-      toolName === 'web_search'
-        ? normalizeSearchQuery(row.inputPrompt)
-        : toolName === 'deep_read'
-          ? row.inputPrompt.trim()
-          : buildContextualInput(row, steps)
+    let toolInput: string
+    if (toolName === 'web_search') {
+      toolInput = normalizeSearchQuery(row.inputPrompt)
+    } else if (toolName === 'deep_read') {
+      // If planner provided a placeholder instead of a concrete URL, try to
+      // extract the top result URL from prior web_search step outputs.
+      const candidate = row.inputPrompt.trim()
+      const hasUrlLike = /https?:\/\//i.test(candidate) || /[a-z0-9.-]+\.[a-z]{2,}/i.test(candidate)
+      if (hasUrlLike) {
+        toolInput = candidate
+      } else {
+        // Look for a previous web_search result and extract its first URL
+        const prevWeb = steps.find((s) => s.toolCall?.toolName === 'web_search')
+        let extracted = ''
+        let prevWebFailed = false
+        if (prevWeb?.toolCall?.output) {
+          try {
+            const parsed = JSON.parse(prevWeb.toolCall.output)
+            // Check if web_search failed (has error key)
+            if (parsed.error || parsed.skipped) {
+              prevWebFailed = true
+            } else if (Array.isArray(parsed.results) && parsed.results.length > 0) {
+              extracted = String(parsed.results[0].url || parsed.results[0].link || '')
+            }
+          } catch {
+            // ignore parse errors
+          }
+        }
+        // If prior web_search failed and we don't have a valid URL, skip deep_read
+        if (prevWebFailed && !extracted) {
+          skippedTools.push('deep_read')
+          continue
+        }
+        toolInput = extracted || candidate
+      }
+    } else {
+      toolInput = buildContextualInput(row, steps)
+    }
     const started = Date.now()
 
     if (toolName === 'web_search') {
@@ -794,7 +829,23 @@ export async function executeGoal(
       }
 
       if (!xr.ok) {
-        throw new HttpError(xr.error, 502)
+        steps.push({
+          stepNumber: steps.length + 1,
+          description: TOOL_REGISTRY.web_search.description,
+          reasoning: row.reasoning,
+          completedAt: Date.now(),
+          stepKind: 'x402_payment',
+          toolCall: {
+            toolName: 'web_search',
+            input: toolInput,
+            output: JSON.stringify({ error: xr.error }),
+            costUsdt: 0,
+            durationMs,
+            paymentStatus: 'budget_exceeded',
+          },
+        })
+        skippedTools.push('web_search')
+        break
       }
 
       accumulated += xr.paidUsdt
@@ -817,23 +868,44 @@ export async function executeGoal(
       continue
     }
 
-    const output = await TOOL_REGISTRY[toolName].execute(toolInput)
-    const durationMs = Date.now() - started
-    accumulated += registryCost
-    steps.push({
-      stepNumber: steps.length + 1,
-      description: TOOL_REGISTRY[toolName].description,
-      reasoning: row.reasoning,
-      completedAt: Date.now(),
-      toolCall: {
-        toolName,
-        input: toolInput,
-        output,
-        costUsdt: registryCost,
-        durationMs,
-        paymentStatus: 'free',
-      },
-    })
+    try {
+      const output = await TOOL_REGISTRY[toolName].execute(toolInput)
+      const durationMs = Date.now() - started
+      accumulated += registryCost
+      steps.push({
+        stepNumber: steps.length + 1,
+        description: TOOL_REGISTRY[toolName].description,
+        reasoning: row.reasoning,
+        completedAt: Date.now(),
+        toolCall: {
+          toolName,
+          input: toolInput,
+          output,
+          costUsdt: registryCost,
+          durationMs,
+          paymentStatus: 'free',
+        },
+      })
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : String(e)
+      const durationMs = Date.now() - started
+      steps.push({
+        stepNumber: steps.length + 1,
+        description: TOOL_REGISTRY[toolName].description,
+        reasoning: row.reasoning,
+        completedAt: Date.now(),
+        toolCall: {
+          toolName,
+          input: toolInput,
+          output: JSON.stringify({ error: errorMessage }),
+          costUsdt: 0,
+          durationMs,
+          paymentStatus: 'free',
+        },
+      })
+      skippedTools.push(toolName)
+      break
+    }
   }
 
   const researchCollected = steps

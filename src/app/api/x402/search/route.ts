@@ -31,11 +31,16 @@ export async function POST(req: NextRequest) {
 
   const query = typeof body.query === 'string' ? body.query.trim() : ''
 
-  const { status, body: out } = await executeX402SearchInternal({
-    query,
-    resourceBase: origin,
-    xPaymentHeader: paymentHeader,
-  })
-
-  return NextResponse.json(out, { status })
+  try {
+    const { status, body: out } = await executeX402SearchInternal({
+      query,
+      resourceBase: origin,
+      xPaymentHeader: paymentHeader,
+    })
+    return NextResponse.json(out, { status })
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    console.error('[api/x402/search] Unhandled error:', e)
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
 }

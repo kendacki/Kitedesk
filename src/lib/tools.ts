@@ -21,7 +21,7 @@ function logToolApi(tool: string, detail: string) {
   console.error(`[KiteDesk|tool] ${tool}`, detail)
 }
 
-function allowOfflineToolFallback(): boolean {
+function allowGoalOfflineFallback(): boolean {
   const v = process.env.KITE_ALLOW_OFFLINE_X402?.trim().toLowerCase()
   return v === '1' || v === 'true' || v === 'yes'
 }
@@ -315,7 +315,7 @@ export const TOOL_REGISTRY: Record<ToolName, Tool> = {
         })
         return completion.choices[0]?.message?.content ?? 'No summary generated'
       } catch (e) {
-        if (allowOfflineToolFallback()) {
+        if (allowGoalOfflineFallback()) {
           const trimmed = input.replace(/\s+/g, ' ').trim().slice(0, 1200)
           const fallback = [
             'Offline summary fallback used because Groq was unreachable.',
