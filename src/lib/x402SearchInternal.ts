@@ -117,13 +117,17 @@ export async function executeX402SearchInternal(opts: {
     return { status: 503, body: { error: 'TAVILY_API_KEY is not configured' } }
   }
 
-  try {
-    const client = tavily({ apiKey })
-    const response = await client.search(query, {
+  const client = tavily({ apiKey })
+  const runSearch = async () => {
+    return client.search(query, {
       searchDepth: 'basic',
       maxResults: 5,
       includeAnswer: true,
     })
+  }
+
+  try {
+    const response = await runSearch()
     const rawResults = response.results ?? []
     const body: SearchOkBody = {
       answer: response.answer ?? '',
@@ -136,8 +140,42 @@ export async function executeX402SearchInternal(opts: {
       settlementTxHash: settle.txHash,
     }
     return { status: 200, body }
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Search failed'
-    return { status: 502, body: { error: msg } }
+  } catch (firstErr) {
+    // One retry for transient upstream failures after payment has already settled.
+    try {
+      const response = await runSearch()
+      const rawResults = response.results ?? []
+      const body: SearchOkBody = {
+        answer: response.answer ?? '',
+        results: rawResults.map((r) => ({
+          title: r.title,
+          url: r.url,
+          content: (r.content ?? '').slice(0, 300),
+          score: r.score,
+        })),
+        settlementTxHash: settle.txHash,
+      }
+      return { status: 200, body }
+    } catch (secondErr) {
+      const msg =
+        secondErr instanceof Error
+          ? secondErr.message
+          : firstErr instanceof Error
+            ? firstErr.message
+            : 'Search failed'
+
+      // Payment was successful; return a degraded success so the goal flow can continue.
+      return {
+        status: 200,
+        body: {
+          answer:
+            'Payment settled successfully, but the upstream search provider is temporarily unavailable. Please retry this query shortly for fresh results.',
+          results: [],
+          settlementTxHash: settle.txHash,
+          degraded: true,
+          warning: msg,
+        },
+      }
+    }
   }
 }

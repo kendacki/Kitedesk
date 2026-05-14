@@ -30,6 +30,20 @@ type ClassicTaskType = Exclude<TaskType, 'goal'>
 
 const CLASSIC_TASK_TYPES: ClassicTaskType[] = ['research', 'code_review', 'content_gen']
 
+type SessionPrepayFailureReason =
+  | 'invalid_user_address'
+  | 'wallet_mismatch'
+  | 'key_not_found'
+  | 'amount_exceeds_limit'
+  | 'recipient_not_whitelisted'
+  | 'wallet_decrypt_failed'
+  | 'payment_failed'
+
+function logSessionPrepay(reason: SessionPrepayFailureReason, detail?: unknown) {
+  const payload = detail === undefined ? {} : { detail }
+  console.warn('[session-prepay]', JSON.stringify({ reason, ...payload }))
+}
+
 async function trySessionKeyPrepay(params: {
   userAddress: string
   userSmartWallet: string
@@ -40,12 +54,20 @@ async function trySessionKeyPrepay(params: {
     !ethers.isAddress(params.userAddress) ||
     !ethers.isAddress(params.userSmartWallet)
   ) {
+    logSessionPrepay('invalid_user_address', {
+      userAddress: params.userAddress,
+      userSmartWallet: params.userSmartWallet,
+    })
     return null
   }
 
   if (
     ethers.getAddress(params.userAddress) !== ethers.getAddress(params.userSmartWallet)
   ) {
+    logSessionPrepay('wallet_mismatch', {
+      userAddress: params.userAddress,
+      userSmartWallet: params.userSmartWallet,
+    })
     return null
   }
 
@@ -58,10 +80,19 @@ async function trySessionKeyPrepay(params: {
     keyRecord = await getSessionKeyForUser(params.userSmartWallet)
   }
   if (!keyRecord) {
+    logSessionPrepay('key_not_found', {
+      userSmartWallet: params.userSmartWallet,
+      sessionKeyId: params.sessionKeyId ?? null,
+    })
     return null
   }
 
   if (params.amountUsdt > keyRecord.max_per_tx_usdt) {
+    logSessionPrepay('amount_exceeds_limit', {
+      amountUsdt: params.amountUsdt,
+      maxPerTxUsdt: keyRecord.max_per_tx_usdt,
+      keyId: keyRecord.key_id,
+    })
     return null
   }
 
@@ -70,6 +101,10 @@ async function trySessionKeyPrepay(params: {
     ethers.getAddress(r)
   )
   if (!allowedRecipients.includes(ethers.getAddress(platform))) {
+    logSessionPrepay('recipient_not_whitelisted', {
+      platform,
+      keyId: keyRecord.key_id,
+    })
     return null
   }
 
@@ -83,10 +118,20 @@ async function trySessionKeyPrepay(params: {
     sessionWallet ||
     (await getDecryptedSessionKeyWallet(params.userSmartWallet, provider))
   if (!recoveredWallet) {
+    logSessionPrepay('wallet_decrypt_failed', {
+      userSmartWallet: params.userSmartWallet,
+      keyId: keyRecord.key_id,
+    })
     return null
   }
 
-  const txHash = await payForTaskWithSigner(recoveredWallet, params.amountUsdt)
+  let txHash: string
+  try {
+    txHash = await payForTaskWithSigner(recoveredWallet, params.amountUsdt)
+  } catch (err) {
+    logSessionPrepay('payment_failed', err instanceof Error ? err.message : String(err))
+    throw err
+  }
   return { txHash, payerAddress: recoveredWallet.address }
 }
 
