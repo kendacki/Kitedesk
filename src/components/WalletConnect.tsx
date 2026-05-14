@@ -8,6 +8,7 @@ import { checkUsdtBalance } from '@/lib/payment'
 import { brandEase, brandLinkLight, brandPrimaryButton } from '@/lib/brand'
 import { formatWalletUsdtForDisplay } from '@/lib/formatWalletUsdt'
 import { SessionKeyFundingStatus } from '@/components/SessionKeyFundingStatus'
+import { SessionKeyDebugStatus } from '@/components/SessionKeyDebugStatus'
 
 function truncateAddress(address: string): string {
   if (address.length < 10) return address
@@ -225,6 +226,7 @@ export function WalletConnect({
         </button>
       </div>
       <SessionKeyFundingStatus address={address} />
+      <SessionKeyDebugStatus address={address} />
     </div>
   )
 }
