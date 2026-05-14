@@ -299,10 +299,16 @@ export function SessionKeyInitializer() {
           const listData = await listRes.json()
           if (listData.keys && listData.keys.length > 0) {
             const firstKey = listData.keys[0]
-            if (typeof firstKey.key_id === 'string') {
+            const keyId =
+              typeof firstKey.keyId === 'string'
+                ? firstKey.keyId
+                : typeof firstKey.key_id === 'string'
+                  ? firstKey.key_id
+                  : ''
+            if (keyId) {
               storeSessionKeyMeta(
                 userAddr,
-                firstKey.key_id,
+                keyId,
                 typeof firstKey.sessionKeyAddress === 'string'
                   ? firstKey.sessionKeyAddress
                   : typeof firstKey.session_key_address === 'string'
@@ -311,7 +317,7 @@ export function SessionKeyInitializer() {
               )
               console.debug(
                 '[SessionKeyInitializer] Loaded session key from backend:',
-                firstKey.key_id
+                keyId
               )
               initializationAttempted.current.add(userAddr)
               return

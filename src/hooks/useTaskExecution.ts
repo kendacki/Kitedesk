@@ -62,6 +62,40 @@ function normalizeAddress(address: string): string {
   }
 }
 
+function isSessionPrepayFallbackError(err: unknown): boolean {
+  if (!axios.isAxiosError(err)) return false
+  if (err.response?.status !== 409) return false
+  const code = (err.response?.data as { code?: string } | undefined)?.code
+  return code === 'SESSION_KEY_PREPAY_REQUIRED' || code === 'SESSION_KEY_PREPAY_FALLBACK_REQUIRED'
+}
+
+async function refreshSessionKeyIdFromBackend(address: string): Promise<string | null> {
+  if (typeof window === 'undefined') return null
+  try {
+    const res = await fetch(`/api/session-keys/list?wallet=${encodeURIComponent(address)}`)
+    if (!res.ok) return null
+    const data = (await res.json()) as {
+      keys?: Array<{ keyId?: string; key_id?: string }>
+      sessionKeys?: Array<{ keyId?: string; key_id?: string }>
+    }
+    const first = (Array.isArray(data.keys) ? data.keys[0] : null) ||
+      (Array.isArray(data.sessionKeys) ? data.sessionKeys[0] : null)
+    const keyId =
+      typeof first?.keyId === 'string'
+        ? first.keyId
+        : typeof first?.key_id === 'string'
+          ? first.key_id
+          : null
+    if (keyId) {
+      localStorage.setItem(`session-key-${address}`, keyId)
+      return keyId
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 async function requireSignerOnKiteChain(signer: ethers.JsonRpcSigner): Promise<void> {
   const p = signer.provider
   if (!p) {
@@ -131,7 +165,7 @@ export function useTaskExecution() {
 
       setStatus('executing')
       const normalizedAddress = normalizeAddress(address)
-      const storedSessionKeyId =
+      let storedSessionKeyId =
         typeof window !== 'undefined'
           ? localStorage.getItem(`session-key-${normalizedAddress}`)
           : null
@@ -143,18 +177,21 @@ export function useTaskExecution() {
         attestationUrl?: string
         error?: string
       }
-      try {
-        const res = await axios.post<typeof data>(
+      const postClassicRun = async (sessionKeyId: string | null | undefined) =>
+        axios.post<typeof data>(
           '/api/agent',
           {
             taskType,
             prompt,
             userAddress: normalizedAddress,
             userSmartWallet: normalizedAddress,
-            sessionKeyId: storedSessionKeyId || undefined,
+            sessionKeyId: sessionKeyId || undefined,
           },
           { timeout: AGENT_REQUEST_MS }
         )
+
+      try {
+        const res = await postClassicRun(storedSessionKeyId)
         data = res.data
       } catch (agentErr: unknown) {
         if (axios.isAxiosError(agentErr) && isWalletUserRejected(agentErr)) {
@@ -162,7 +199,18 @@ export function useTaskExecution() {
           setError('Request was cancelled.')
           return
         }
-        throw agentErr
+        if (isSessionPrepayFallbackError(agentErr)) {
+          const refreshedKey = await refreshSessionKeyIdFromBackend(normalizedAddress)
+          if (refreshedKey && refreshedKey !== storedSessionKeyId) {
+            storedSessionKeyId = refreshedKey
+            const retry = await postClassicRun(storedSessionKeyId)
+            data = retry.data
+          } else {
+            throw agentErr
+          }
+        } else {
+          throw agentErr
+        }
       }
 
       if (!data || data.error || !data.taskId || !data.output) {
@@ -256,7 +304,7 @@ export function useTaskExecution() {
       setActiveGoalText(goal.trim())
       setStatus('paying')
       const normalizedAddress = normalizeAddress(address)
-      const storedSessionKeyId =
+      let storedSessionKeyId =
         typeof window !== 'undefined'
           ? localStorage.getItem(`session-key-${normalizedAddress}`)
           : null
@@ -309,7 +357,36 @@ export function useTaskExecution() {
           setSteps([])
           return
         }
-        throw agentErr
+        if (isSessionPrepayFallbackError(agentErr)) {
+          const refreshedKey = await refreshSessionKeyIdFromBackend(normalizedAddress)
+          if (refreshedKey && refreshedKey !== storedSessionKeyId) {
+            storedSessionKeyId = refreshedKey
+            const res = await axios.post<{
+              success?: boolean
+              taskId?: string
+              goalResult?: GoalResult
+              error?: string
+              code?: string
+              requiresClientPayment?: boolean
+            }>(
+              '/api/agent',
+              {
+                taskType: 'goal',
+                goal: goal.trim(),
+                budgetUsdt,
+                userAddress: normalizedAddress,
+                userSmartWallet: normalizedAddress,
+                sessionKeyId: storedSessionKeyId || undefined,
+              },
+              { timeout: AGENT_REQUEST_MS }
+            )
+            data = res.data
+          } else {
+            throw agentErr
+          }
+        } else {
+          throw agentErr
+        }
       }
 
       if (!data || data.error || !data.goalResult?.taskId) {

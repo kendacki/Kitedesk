@@ -15,7 +15,9 @@ import {
 import { executeGoal } from '@/lib/agentOrchestrator'
 import { payForTaskWithSigner } from '@/lib/payment'
 import {
+  getDecryptedSessionKeyWallet,
   getDecryptedSessionKeyWalletById,
+  getSessionKeyForUser,
   getSessionKeyByIdForUser,
 } from '@/lib/sessionKeys'
 import { getPlatformWalletAddress } from '@/lib/verifyPayment'
@@ -31,7 +33,7 @@ const CLASSIC_TASK_TYPES: ClassicTaskType[] = ['research', 'code_review', 'conte
 async function trySessionKeyPrepay(params: {
   userAddress: string
   userSmartWallet: string
-  sessionKeyId: string
+  sessionKeyId?: string
   amountUsdt: number
 }): Promise<{ txHash: string; payerAddress: string } | null> {
   if (
@@ -47,10 +49,14 @@ async function trySessionKeyPrepay(params: {
     return null
   }
 
-  const keyRecord = await getSessionKeyByIdForUser(
-    params.userSmartWallet,
-    params.sessionKeyId
-  )
+  let keyRecord = params.sessionKeyId
+    ? await getSessionKeyByIdForUser(params.userSmartWallet, params.sessionKeyId)
+    : await getSessionKeyForUser(params.userSmartWallet)
+
+  // Recover from stale localStorage key IDs by falling back to latest active key.
+  if (!keyRecord) {
+    keyRecord = await getSessionKeyForUser(params.userSmartWallet)
+  }
   if (!keyRecord) {
     return null
   }
@@ -70,15 +76,18 @@ async function trySessionKeyPrepay(params: {
   const provider = new ethers.JsonRpcProvider(KITE_CHAIN.rpcUrl)
   const sessionWallet = await getDecryptedSessionKeyWalletById(
     params.userSmartWallet,
-    params.sessionKeyId,
+    keyRecord.key_id,
     provider
   )
-  if (!sessionWallet) {
+  const recoveredWallet =
+    sessionWallet ||
+    (await getDecryptedSessionKeyWallet(params.userSmartWallet, provider))
+  if (!recoveredWallet) {
     return null
   }
 
-  const txHash = await payForTaskWithSigner(sessionWallet, params.amountUsdt)
-  return { txHash, payerAddress: sessionWallet.address }
+  const txHash = await payForTaskWithSigner(recoveredWallet, params.amountUsdt)
+  return { txHash, payerAddress: recoveredWallet.address }
 }
 
 function explorerTxUrl(txHash: string): string {
