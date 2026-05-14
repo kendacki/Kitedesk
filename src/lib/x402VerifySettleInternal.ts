@@ -2,6 +2,7 @@
 import { ethers } from 'ethers'
 import { KITE_CHAIN, KITE_X402 } from '@/lib/constants'
 import { parseXPaymentHeader } from '@/lib/x402PaymentPayload'
+import { getDecryptedSessionKeyWalletBySessionAddress } from '@/lib/sessionKeys'
 
 const ERC20_TRANSFER_ABI = [
   'function transfer(address,uint256) returns(bool)',
@@ -85,20 +86,32 @@ async function settleViaDirectTransfer(
     }
   }
 
-  const pk = process.env.ATTESTATION_SIGNER_PRIVATE_KEY?.trim()
-  if (!pk) {
-    return { ok: false, error: 'ATTESTATION_SIGNER_PRIVATE_KEY is not configured' }
-  }
-
   const provider = new ethers.JsonRpcProvider(KITE_CHAIN.rpcUrl)
-  const wallet = new ethers.Wallet(pk, provider)
   const auth = parsed.authorization
   const fromNorm = ethers.getAddress(auth.from)
   const payTo = ethers.getAddress(auth.to)
-  if (fromNorm.toLowerCase() !== wallet.address.toLowerCase()) {
-    return {
-      ok: false,
-      error: `authorization.from (${fromNorm}) does not match agent wallet (${wallet.address})`,
+
+  // Prefer to use a matching session-key wallet if available (server can decrypt session keys)
+  let wallet: ethers.Wallet | null = null
+  try {
+    const sessionWallet = await getDecryptedSessionKeyWalletBySessionAddress(fromNorm, provider)
+    if (sessionWallet) wallet = sessionWallet
+  } catch (e) {
+    console.warn('[x402] Failed to load session-key wallet for direct settlement:', e)
+  }
+
+  // Fallback to attestation signer if no session key wallet found
+  if (!wallet) {
+    const pk = process.env.ATTESTATION_SIGNER_PRIVATE_KEY?.trim()
+    if (!pk) {
+      return { ok: false, error: 'ATTESTATION_SIGNER_PRIVATE_KEY is not configured' }
+    }
+    wallet = new ethers.Wallet(pk, provider)
+    if (fromNorm.toLowerCase() !== wallet.address.toLowerCase()) {
+      return {
+        ok: false,
+        error: `authorization.from (${fromNorm}) does not match available settlement wallet (${wallet.address})`,
+      }
     }
   }
 
