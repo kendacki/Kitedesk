@@ -172,9 +172,18 @@ export function useWallet() {
     if (!address || typeof window === 'undefined') return
 
     const normalizedAddress = normalizeAddress(address)
+    const keyIdStorageKey = `session-key-${normalizedAddress}`
+    const keyAddressStorageKey = `session-key-address-${normalizedAddress}`
+    const fundingStorageKey = `session-key-funding-${normalizedAddress}`
+    const refuelStorageKey = `session-key-refuel-until-${normalizedAddress}`
 
-    const keyId = localStorage.getItem(`session-key-${normalizedAddress}`)
-    if (!keyId) return
+    const keyId = localStorage.getItem(keyIdStorageKey)
+    if (!keyId) {
+      localStorage.removeItem(keyAddressStorageKey)
+      localStorage.removeItem(fundingStorageKey)
+      localStorage.removeItem(refuelStorageKey)
+      return
+    }
 
     try {
       await fetch('/api/session-keys/revoke', {
@@ -185,7 +194,10 @@ export function useWallet() {
     } catch (err) {
       console.warn('[useWallet] Failed to revoke session key on disconnect', err)
     } finally {
-      localStorage.removeItem(`session-key-${normalizedAddress}`)
+      localStorage.removeItem(keyIdStorageKey)
+      localStorage.removeItem(keyAddressStorageKey)
+      localStorage.removeItem(fundingStorageKey)
+      localStorage.removeItem(refuelStorageKey)
     }
   }, [])
 
@@ -497,7 +509,12 @@ export function useWallet() {
     }
 
     const onDisconnect = () => {
-      setExplicitConnectIntent(false)
+      // Some providers emit transient disconnect events while the account is still connected.
+      // Keep session state unless the user explicitly disconnected via the app button.
+      if (getHasExplicitConnectIntent()) {
+        void refreshFromProvider()
+        return
+      }
       clearWalletState()
     }
 

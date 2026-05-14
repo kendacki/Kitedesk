@@ -328,13 +328,16 @@ export async function listSessionKeysForUser(userSmartWallet: string): Promise<
       'key_id, session_key_address, max_per_tx_usdt, daily_limit_usdt, expires_at, revoked, used_count'
     )
     .eq('user_smart_wallet', checksumAddress)
+    .eq('revoked', false)
     .order('created_at', { ascending: false })
 
   if (error) {
     throw new HttpError(`Failed to list session keys: ${error.message}`, 500)
   }
 
-  return (data || []).map((row) => ({
+  return (data || [])
+    .filter((row) => new Date(String((row as Record<string, unknown>).expires_at)) >= new Date())
+    .map((row) => ({
     keyId: (row as Record<string, unknown>).key_id as string,
     sessionKeyAddress: (row as Record<string, unknown>).session_key_address as string,
     maxPerTxUsdt: (row as Record<string, unknown>).max_per_tx_usdt as number,
@@ -342,7 +345,7 @@ export async function listSessionKeysForUser(userSmartWallet: string): Promise<
     expiresAt: (row as Record<string, unknown>).expires_at as string,
     revoked: (row as Record<string, unknown>).revoked as boolean,
     usedCount: (row as Record<string, unknown>).used_count as number,
-  }))
+    }))
 }
 
 export async function recordSessionKeyUsage(
