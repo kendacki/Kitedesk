@@ -29,6 +29,7 @@ async function settleViaFacilitator(
     const body: Record<string, unknown> = {
       paymentPayload: paymentPayload.trim(),
       network,
+      x402Version: 1,
     }
     if (paymentRequirements) {
       body.paymentRequirements = paymentRequirements

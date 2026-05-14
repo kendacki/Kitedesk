@@ -10,6 +10,11 @@ import type { AgentStep } from '../types'
 config({ path: path.resolve(process.cwd(), '.env') })
 config({ path: path.resolve(process.cwd(), '.env.local'), override: true })
 
+// Allow a quick override for local debugging that bypasses .env.local values.
+if (process.env.OVERRIDE_INTERNAL_API_BASE_URL?.trim()) {
+  process.env.INTERNAL_API_BASE_URL = process.env.OVERRIDE_INTERNAL_API_BASE_URL.trim()
+}
+
 type ExecuteGoalResult = Awaited<ReturnType<typeof executeGoal>>
 
 const REQUIRED_ENV: { key: string; purpose: string }[] = [

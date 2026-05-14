@@ -16,6 +16,11 @@ import type { AgentStep, GoalResult, ToolName } from '@/types'
 
 const DEFAULT_MODEL = 'openai/gpt-oss-120b'
 
+function allowOfflineX402(): boolean {
+  const v = process.env.KITE_ALLOW_OFFLINE_X402?.trim().toLowerCase()
+  return v === '1' || v === 'true' || v === 'yes'
+}
+
 const ERC20_BALANCE_ABI = [
   'function balanceOf(address owner) view returns (uint256)',
 ] as const
@@ -369,32 +374,31 @@ export async function executeX402Tool(
             )
             const normalizedPayTo = ethers.getAddress(payTo)
             if (!normalizedRecipients.includes(normalizedPayTo)) {
-              agentLog(
-                'Session key not whitelisted for payTo — falling back to attestation signer',
-                {
-                  payTo,
-                  sessionKeyAddress: signingWallet.address,
-                }
-              )
-              signingWallet = null
-              usingSessionKey = false
-              sessionKeyId = null
+              agentLog('Session key not whitelisted for payTo — failing (session-key-only)', {
+                payTo,
+                sessionKeyAddress: signingWallet.address,
+              })
+              return {
+                ok: false,
+                error: 'Session key not authorized for this payTo recipient. Goal Agent requires a valid session key.',
+              }
             }
           }
         } catch (err) {
-          console.warn(
-            '[x402] Failed to verify session key whitelist, continuing with session key:',
-            err
-          )
+          console.warn('[x402] Failed to verify session key whitelist, continuing with session key:', err)
         }
       }
     } catch (e) {
-      console.warn('[x402] Session key load failed, fallback to attestation signer:', e)
+      console.warn('[x402] Session key load failed:', e)
+      return { ok: false, error: 'Session key unavailable for x402 payment (session-key-only required)' }
     }
   }
 
   // Fallback to attestation signer if session key unavailable
   if (!signingWallet) {
+    if (ctx?.userSmartWallet) {
+      return { ok: false, error: 'Session key required but not available for x402 payment' }
+    }
     signingWallet = new ethers.Wallet(pk, provider)
   }
 
@@ -406,7 +410,19 @@ export async function executeX402Tool(
     balance = await tokenRead.balanceOf(wallet.address)
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
-    return { ok: false, error: `Could not read agent USDT balance: ${msg}` }
+    if (allowOfflineX402()) {
+      console.warn('[x402] balance read failed; using offline test-mode bypass:', msg)
+      balance = maxWei
+    } else {
+      return { ok: false, error: `Could not read agent USDT balance: ${msg}` }
+    }
+  }
+
+  if (balance < maxWei) {
+    if (allowOfflineX402()) {
+      console.warn('[x402] insufficient balance ignored in offline test mode')
+      balance = maxWei
+    }
   }
 
   if (balance < maxWei) {
@@ -551,15 +567,37 @@ async function runPlanner(
   const model = process.env.GROQ_MODEL?.trim() || DEFAULT_MODEL
   const client = new Groq({ apiKey })
   const userPayload = `Goal:\n${goal.trim()}\n\nBudget (USDT): ${budgetUsdt}\n\nRespond with JSON only.`
-  const completion = await client.chat.completions.create({
-    model,
-    max_tokens: 1024,
-    messages: [
-      { role: 'system', content: PLANNER_SYSTEM_PROMPT },
-      { role: 'user', content: userPayload },
-    ],
-  })
-  const raw = completion.choices[0]?.message?.content
+  let completion:
+    | {
+        choices: Array<{ message?: { content?: string | null } }>
+      }
+    | undefined
+  try {
+    completion = await client.chat.completions.create({
+      model,
+      max_tokens: 1024,
+      messages: [
+        { role: 'system', content: PLANNER_SYSTEM_PROMPT },
+        { role: 'user', content: userPayload },
+      ],
+    })
+  } catch (e) {
+    console.warn('[planner] Groq planner call failed, falling back to minimal local plan:', e instanceof Error ? e.message : String(e))
+    const fallbackPlan: PlanRow[] = [
+      {
+        stepNumber: 1,
+        toolName: 'web_search',
+        inputPrompt: goal.trim(),
+        reasoning: 'Fallback plan: perform a web search to gather initial context',
+      },
+    ]
+    return {
+      bodyPlan: fallbackPlan,
+      planReasoning: 'Fallback plan due to planner connection failure',
+      skippedTools: ['planner_unavailable'],
+    }
+  }
+  const raw = completion?.choices[0]?.message?.content
   const text = normalizeMessageContent(raw).trim()
   if (!text) {
     throw new HttpError('Planner returned no output', 502)
