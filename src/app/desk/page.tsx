@@ -10,9 +10,13 @@ export const metadata: Metadata = {
 
 export default function DeskPage() {
   return (
-    <div className="relative min-h-[100dvh] bg-kite-bg text-foreground">
+    <div className="relative min-h-[100dvh] overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.12)_0%,_transparent_34%),linear-gradient(180deg,_#ffffff_0%,_#f7fbf9_100%)] text-foreground">
       <div
-        className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.1)_0%,_transparent_55%)]"
+        className="pointer-events-none fixed inset-0 bg-[linear-gradient(180deg,_rgba(255,255,255,0.72)_0%,_rgba(255,255,255,0.18)_40%,_transparent_100%)]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none fixed left-1/2 top-10 h-72 w-72 -translate-x-1/2 rounded-full bg-emerald-200/20 blur-3xl"
         aria-hidden
       />
       <KiteDeskApp />

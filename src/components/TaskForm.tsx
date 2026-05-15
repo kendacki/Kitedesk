@@ -103,11 +103,11 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: brandEase }}
       onSubmit={handleSubmit}
-      className="mx-auto w-full max-w-3xl space-y-6"
+      className="mx-auto w-full max-w-3xl space-y-5"
     >
       <div className="w-full">
-        <p className="mb-3 text-center font-sans text-xs font-semibold uppercase tracking-widest text-emerald-800 sm:text-left">
-          Primary mode
+        <p className="mb-3 text-center font-sans text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800 sm:text-left">
+          Choose a mode
         </p>
         <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3 sm:items-stretch">
           <motion.button
@@ -116,7 +116,7 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
             onClick={() => setTaskType('goal')}
             disabled={busy}
             whileTap={{ scale: 0.98 }}
-            className={`col-span-1 w-full rounded-xl border p-4 text-left transition sm:col-span-3 ${
+            className={`col-span-1 w-full rounded-[1.15rem] border p-4 text-left transition sm:col-span-3 ${
               taskType === 'goal'
                 ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-200'
                 : 'border-slate-200 bg-slate-50/80 hover:border-emerald-300'
@@ -142,10 +142,10 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
               </span>
             </div>
             <p className="font-sans text-xs leading-relaxed text-slate-600">
-              Describe any goal. Agent plans, picks tools, and executes autonomously.
+              Describe the outcome. The agent plans, buys tools, and runs it.
             </p>
             <p className="mt-2 font-sans text-xs font-medium text-emerald-800">
-              Fund a budget cap — the agent buys API access via x402 inside that cap
+              Budget cap first. x402 stays inside it.
             </p>
           </motion.button>
 
@@ -181,7 +181,11 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
                   </span>
                 </div>
                 <p className="mt-3 flex-1 font-sans text-xs leading-relaxed text-slate-600">
-                  {cfg.description}
+                  {key === 'research'
+                    ? 'Find answers fast.'
+                    : key === 'code_review'
+                      ? 'Review code with structure.'
+                      : 'Draft clean copy in one pass.'}
                 </p>
                 <p className="mt-3 font-sans text-xs font-medium text-emerald-800">
                   {cfg.priceUsdt.toFixed(2)} USDT
@@ -197,15 +201,15 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
           <div>
             <label
               htmlFor="goal-input"
-              className="mb-2 block text-center font-sans text-xs font-semibold uppercase tracking-widest text-emerald-800 sm:text-left"
+              className="mb-2 block text-center font-sans text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800 sm:text-left"
             >
               Goal
             </label>
-            <div className="mb-3 flex gap-2 rounded-lg border border-emerald-100 bg-emerald-50/60 px-3 py-2.5">
+            <div className="mb-3 flex gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2.5">
               <InfoCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
               <p className="font-sans text-xs leading-relaxed text-slate-700">
-                Core execution path: agent pays APIs via x402 when required; your budget
-                is the hard ceiling.
+                The budget is the hard ceiling. The agent pays APIs through x402 only
+                when needed.
               </p>
             </div>
             <textarea
@@ -213,9 +217,9 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
               value={goalText}
               onChange={(e) => setGoalText(e.target.value)}
               disabled={busy}
-              rows={6}
+              rows={5}
               placeholder={GOAL_PLACEHOLDER}
-              className="min-h-[140px] w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-3 font-sans text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/40 disabled:opacity-60 sm:px-4"
+              className="min-h-[132px] w-full resize-y rounded-[1.15rem] border border-slate-200 bg-white px-3 py-3 font-sans text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/40 disabled:opacity-60 sm:px-4"
             />
           </div>
           <div>
@@ -244,14 +248,14 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
             <p className="mt-1 font-sans text-xs text-slate-500">
               Agent will not exceed this amount
             </p>
-            <p className="mt-2 font-sans text-xs text-slate-500">~3-5 tool calls</p>
+            <p className="mt-2 font-sans text-xs text-slate-500">Usually 3-5 tool calls</p>
           </div>
         </div>
       ) : (
         <div className="w-full">
           <label
             htmlFor="prompt"
-            className="mb-2 block text-center font-sans text-xs font-semibold uppercase tracking-widest text-emerald-800 sm:text-left"
+            className="mb-2 block text-center font-sans text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800 sm:text-left"
           >
             Prompt
           </label>
@@ -260,9 +264,9 @@ export function TaskForm({ canSubmit, busy, onRun, onRunGoal }: TaskFormProps) {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             disabled={busy}
-            rows={6}
+            rows={5}
             placeholder={CLASSIC_PLACEHOLDERS[taskType]}
-            className="min-h-[140px] w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-3 font-sans text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/40 disabled:opacity-60 sm:px-4"
+            className="min-h-[132px] w-full resize-y rounded-[1.15rem] border border-slate-200 bg-white px-3 py-3 font-sans text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/40 disabled:opacity-60 sm:px-4"
           />
         </div>
       )}

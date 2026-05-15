@@ -1,6 +1,7 @@
 // KiteDesk | app shell wiring goal agent + step streaming
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -60,6 +61,31 @@ function x402StatsFromSteps(
     }
   }
   return { x402PaymentsCount, x402TotalPaidUsdt }
+}
+
+function DeskOrbitMark() {
+  return (
+    <svg
+      viewBox="0 0 40 40"
+      className="h-10 w-10 shrink-0"
+      fill="none"
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id="desk-orbit-gradient" x1="8" y1="6" x2="32" y2="34">
+          <stop offset="0%" stopColor="#064e3b" />
+          <stop offset="100%" stopColor="#10b981" />
+        </linearGradient>
+      </defs>
+      <circle cx="20" cy="20" r="14" stroke="url(#desk-orbit-gradient)" strokeWidth="1.5" strokeDasharray="2 3" />
+      <circle cx="20" cy="20" r="8" fill="url(#desk-orbit-gradient)" opacity="0.12" />
+      <path d="M20 10v5" stroke="#047857" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M20 25v5" stroke="#047857" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M10 20h5" stroke="#047857" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M25 20h5" stroke="#047857" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="20" cy="20" r="3.2" fill="#064e3b" />
+    </svg>
+  )
 }
 
 export function KiteDeskApp() {
@@ -135,6 +161,7 @@ export function KiteDeskApp() {
 
   const liveBudget = task.goalBudgetUsdt ?? 0
   const liveSpent = useMemo(() => spentFromSteps(task.steps), [task.steps])
+  const showPreRunHero = !busy && !showResult && !showGoalResult
 
   const handleRun = (taskType: ClassicTaskType, prompt: string) => {
     if (!wallet.signer || !wallet.address) return
@@ -179,7 +206,7 @@ export function KiteDeskApp() {
         initial="hidden"
         animate="show"
         variants={blockShow}
-        className="mb-6 flex flex-col gap-3 border-b border-slate-200 pb-5 sm:mb-8 sm:gap-4 sm:pb-6 md:mb-10"
+        className="mb-5 flex flex-col gap-3 border-b border-slate-200 pb-4 sm:mb-7 sm:gap-4 sm:pb-5 md:mb-9"
       >
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 flex-row items-center justify-start gap-3">
@@ -213,16 +240,13 @@ export function KiteDeskApp() {
             Back to landing
           </Link>
           <h1 className="max-w-2xl font-sans text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
-            AI agents that plan, pay, and execute tasks under budget{' '}
+            What’s on the agenda today?{' '}
             <span className="bg-gradient-to-br from-emerald-900 to-emerald-500 bg-clip-text text-transparent">
-              autonomously
+              Agentic commerce
             </span>
           </h1>
-          <p className="mt-4 max-w-2xl font-sans text-sm leading-relaxed text-slate-600 sm:mt-5 sm:text-base md:mt-6">
-            Set your USDT budget on the Kite testnet, and let the agent handle the rest.
-            It autonomously selects the right tools, clears{' '}
-            <span className="font-semibold text-slate-800">x402</span> API micropayments
-            on the fly, and strictly respects your spending limits.
+          <p className="mt-3 max-w-2xl font-sans text-sm leading-relaxed text-slate-600 sm:mt-4 sm:text-base md:mt-5">
+            One prompt. One budget. The desk plans, pays, and executes on Kite.
           </p>
         </div>
       </motion.header>
@@ -236,8 +260,62 @@ export function KiteDeskApp() {
         className="flex flex-1 flex-col outline-none"
       >
         {!wallet.address ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center font-sans text-sm text-slate-600 shadow-sm sm:p-8">
-            Connect your wallet to fund a task budget (USDT on Kite) and run the agent.
+          <div className="mx-auto w-full max-w-4xl rounded-[1.75rem] border border-slate-200 bg-white/90 p-5 shadow-xl shadow-slate-200/60 backdrop-blur sm:p-6 md:p-7">
+            <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800">
+                  <DeskOrbitMark />
+                  Ready when you are
+                </div>
+                <h2 className="max-w-xl font-sans text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+                  Connect your wallet to unlock the desk.
+                </h2>
+                <p className="max-w-xl font-sans text-sm leading-relaxed text-slate-600">
+                  Once signed in, you can launch a goal, budget a run, and keep every
+                  result verifiable on-chain.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {['Research', 'Review code', 'Create content', 'Launch goal'].map((item) => (
+                    <span
+                      key={item}
+                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 font-sans text-xs font-medium text-slate-700"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="overflow-hidden rounded-[1.5rem] border border-emerald-100 bg-[linear-gradient(180deg,rgba(236,253,245,0.95),rgba(255,255,255,0.98))] p-4 shadow-md shadow-emerald-100/60">
+                <div className="relative aspect-[4/4.1] overflow-hidden rounded-[1.25rem] bg-white">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_45%)]" />
+                  <Image
+                    src="/images/hero-delivery-robot.png"
+                    alt="KiteDesk agent robot"
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 420px"
+                    className="object-contain p-3 drop-shadow-[0_20px_40px_rgba(16,185,129,0.15)]"
+                  />
+                </div>
+                <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                  {[
+                    ['Budget', 'Caps spend'],
+                    ['x402', 'Pays tools'],
+                    ['Proof', 'On-chain'],
+                  ].map(([label, value]) => (
+                    <div
+                      key={label}
+                      className="rounded-xl border border-emerald-100 bg-white px-2 py-3"
+                    >
+                      <div className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-800">
+                        {label}
+                      </div>
+                      <div className="mt-1 font-sans text-xs text-slate-600">{value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         ) : wallet.wrongNetwork ? (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center font-sans text-sm text-amber-950 shadow-sm sm:p-8">
@@ -250,14 +328,48 @@ export function KiteDeskApp() {
           </div>
         ) : (
           <>
-            {!busy && !showResult && !showGoalResult ? (
-              <p className="mb-4 max-w-2xl font-sans text-xs leading-relaxed text-slate-500">
-                The execution timeline below activates when you launch a task — you will
-                see payments, tool steps, and on-chain proof.
-              </p>
+            {showPreRunHero ? (
+              <div className="mb-5 grid gap-4 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+                <div className="rounded-[1.75rem] border border-slate-200 bg-white/90 p-5 shadow-xl shadow-slate-200/60 backdrop-blur sm:p-6 md:p-7">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800">
+                    <DeskOrbitMark />
+                    The desk is ready
+                  </div>
+                  <h2 className="mt-4 max-w-xl font-sans text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+                    Ask once. Get a plan, execution, and proof.
+                  </h2>
+                  <p className="mt-3 max-w-xl font-sans text-sm leading-relaxed text-slate-600">
+                    Use the prompt below to launch a task or goal. The agent stays under
+                    budget and returns with an attestation link.
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {['Goal agent', 'Web research', 'Code review', 'Content'].map((item) => (
+                      <span
+                        key={item}
+                        className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 font-sans text-xs font-medium text-slate-700"
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="overflow-hidden rounded-[1.75rem] border border-emerald-100 bg-[linear-gradient(180deg,rgba(236,253,245,0.95),rgba(255,255,255,0.98))] p-4 shadow-lg shadow-emerald-100/70">
+                  <div className="relative aspect-[4/4.1] overflow-hidden rounded-[1.5rem] bg-white">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_45%)]" />
+                    <Image
+                      src="/images/hero-delivery-robot.png"
+                      alt="KiteDesk agent robot"
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 420px"
+                      className="object-contain p-3 drop-shadow-[0_20px_40px_rgba(16,185,129,0.15)]"
+                    />
+                  </div>
+                </div>
+              </div>
             ) : null}
             {!hideTaskForm && (
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md shadow-slate-200/60 md:p-8">
+              <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-md shadow-slate-200/60 md:p-7">
                 <TaskForm
                   canSubmit={!!wallet.signer && !!wallet.address}
                   busy={busy}
