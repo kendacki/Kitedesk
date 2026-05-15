@@ -2,8 +2,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ethers } from 'ethers'
 import { v4 as uuidv4 } from 'uuid'
+import { createClient } from '@supabase/supabase-js'
 import { executeAgentTask } from '@/lib/agent'
-import { writeAttestation, writeGoalAttestation } from '@/lib/attest'
+import { writeAttestation, writeGoalAttestation, encodeAttestGoalCalldata } from '@/lib/attest'
 import { HttpError } from '@/lib/httpError'
 import { KITE_CHAIN, TASK_CONFIG } from '@/lib/constants'
 import { verifyPaymentTransaction } from '@/lib/verifyPayment'
@@ -143,6 +144,86 @@ function explorerTxUrl(txHash: string): string {
   return `${explorerBase.replace(/\/$/, '')}/tx/${txHash}`
 }
 
+async function tryRelayerAttestation(params: {
+  taskId: string
+  userAddress: string
+  finalOutput: string
+  steps: any[]
+  totalSpentUsdt: number
+  goalPreview: string
+  userSmartWallet?: string
+  sessionKeyId?: string
+}): Promise<{
+  success: boolean
+  txHash?: string
+  error?: string
+}> {
+  if (!params.userSmartWallet || !params.sessionKeyId) {
+    return { success: false, error: 'Session key required for relayer attestation' }
+  }
+
+  try {
+    // Get session key for signing the relayer request
+    const provider = new ethers.JsonRpcProvider(KITE_CHAIN.rpcUrl)
+    const sessionKeyWallet = await getDecryptedSessionKeyWalletById(
+      params.userSmartWallet,
+      params.sessionKeyId,
+      provider
+    )
+
+    if (!sessionKeyWallet) {
+      return { success: false, error: 'Could not decrypt session key' }
+    }
+
+    // Encode the attestGoal calldata
+    const calldata = encodeAttestGoalCalldata(
+      params.taskId,
+      params.userAddress,
+      params.finalOutput,
+      params.steps,
+      params.totalSpentUsdt,
+      params.goalPreview
+    )
+
+    // Sign the calldata with session key
+    const signature = await sessionKeyWallet.signMessage(calldata)
+
+    // Invoke relayer edge function
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return { success: false, error: 'Supabase config missing for relayer' }
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+    const { data, error } = await supabase.functions.invoke('relayer-exec', {
+      body: {
+        data: calldata,
+        sessionKeyAddress: sessionKeyWallet.address,
+        requestSignature: signature,
+      },
+    })
+
+    if (error) {
+      console.warn('[API] relayer attestation failed:', error)
+      return { success: false, error: String(error) }
+    }
+
+    if (!data?.signed) {
+      console.warn('[API] relayer rejected attestation:', data?.error)
+      return { success: false, error: data?.error ?? 'Relayer rejected request' }
+    }
+
+    return { success: true, txHash: data.txHash }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.warn('[API] relayer attestation exception:', msg)
+    return { success: false, error: msg }
+  }
+}
+
 export async function POST(req: NextRequest) {
   let paymentTxHashForRelease: string | null = null
   let attestationWritten = false
@@ -246,17 +327,38 @@ export async function POST(req: NextRequest) {
         let attestationHash = ''
         let attestationUrl = ''
         try {
-          const goalAttestation = await writeGoalAttestation(
+          // Try relayer-based attestation first (uses backend owner key)
+          const relayerResult = await tryRelayerAttestation({
             taskId,
             userAddress,
-            partial.finalOutput,
-            partial.steps,
-            partial.totalSpentUsdt,
-            goalPreview
-          )
-          attestationHash = goalAttestation.attestationHash
-          attestationWritten = true
-          attestationUrl = explorerTxUrl(attestationHash)
+            finalOutput: partial.finalOutput,
+            steps: partial.steps,
+            totalSpentUsdt: partial.totalSpentUsdt,
+            goalPreview,
+            userSmartWallet,
+            sessionKeyId,
+          })
+
+          if (relayerResult.success && relayerResult.txHash) {
+            attestationHash = relayerResult.txHash
+            attestationWritten = true
+            attestationUrl = explorerTxUrl(attestationHash)
+            console.log('[API] goal attestation via relayer succeeded:', attestationHash)
+          } else {
+            // Fall back to direct attestation if relayer not available
+            console.log('[API] relayer attestation unavailable, trying direct call:', relayerResult.error)
+            const goalAttestation = await writeGoalAttestation(
+              taskId,
+              userAddress,
+              partial.finalOutput,
+              partial.steps,
+              partial.totalSpentUsdt,
+              goalPreview
+            )
+            attestationHash = goalAttestation.attestationHash
+            attestationWritten = true
+            attestationUrl = explorerTxUrl(attestationHash)
+          }
         } catch (attestationErr) {
           const msg =
             attestationErr instanceof Error

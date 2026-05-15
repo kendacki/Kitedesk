@@ -10,6 +10,8 @@ const ATTESTATION_ABI = [
   'function owner() view returns (address)',
 ]
 
+const ATTESTATION_IFACE = new ethers.Interface(ATTESTATION_ABI)
+
 async function assertAttestationSignerMatchesOwner(
   contract: ethers.Contract,
   signerAddress: string
@@ -42,6 +44,43 @@ function goalX402StatsFromSteps(steps: AgentStep[]): {
     totalMicro += micro
   }
   return { x402PaymentsCount: count, x402TotalPaidMicro: totalMicro }
+}
+
+export function encodeAttestGoalCalldata(
+  taskId: string,
+  userAddress: string,
+  finalOutput: string,
+  steps: AgentStep[],
+  totalSpentUsdt: number,
+  goalPreview: string
+): string {
+  const resultHash = ethers.keccak256(ethers.toUtf8Bytes(finalOutput))
+  const stepsHash = ethers.keccak256(
+    ethers.toUtf8Bytes(
+      JSON.stringify(
+        steps.map((s) => ({
+          tool: s.toolCall?.toolName,
+          cost: s.toolCall?.costUsdt,
+          reasoning: s.reasoning,
+        }))
+      )
+    )
+  )
+  const totalSpentMicro = BigInt(Math.round(totalSpentUsdt * 1_000_000))
+  const stepCount = steps.length
+  const { x402PaymentsCount, x402TotalPaidMicro } = goalX402StatsFromSteps(steps)
+
+  return ATTESTATION_IFACE.encodeFunctionData('attestGoal', [
+    taskId,
+    userAddress,
+    resultHash,
+    stepsHash,
+    totalSpentMicro,
+    stepCount,
+    goalPreview,
+    x402PaymentsCount,
+    x402TotalPaidMicro,
+  ])
 }
 
 export async function writeAttestation(
