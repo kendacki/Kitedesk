@@ -243,17 +243,27 @@ export async function POST(req: NextRequest) {
         const taskId = uuidv4()
         const goalPreview = goal.trim().slice(0, 80)
 
-        const { attestationHash } = await writeGoalAttestation(
-          taskId,
-          userAddress,
-          partial.finalOutput,
-          partial.steps,
-          partial.totalSpentUsdt,
-          goalPreview
-        )
-        attestationWritten = true
-
-        const attestationUrl = explorerTxUrl(attestationHash)
+        let attestationHash = ''
+        let attestationUrl = ''
+        try {
+          const goalAttestation = await writeGoalAttestation(
+            taskId,
+            userAddress,
+            partial.finalOutput,
+            partial.steps,
+            partial.totalSpentUsdt,
+            goalPreview
+          )
+          attestationHash = goalAttestation.attestationHash
+          attestationWritten = true
+          attestationUrl = explorerTxUrl(attestationHash)
+        } catch (attestationErr) {
+          const msg =
+            attestationErr instanceof Error
+              ? attestationErr.message
+              : String(attestationErr)
+          console.warn('[API] goal attestation skipped:', msg)
+        }
 
         await completePaymentTask(effectivePaymentTxHash, {
           taskId,
@@ -374,15 +384,24 @@ export async function POST(req: NextRequest) {
     try {
       const output = await executeAgentTask(classicType, prompt)
       const taskId = uuidv4()
-      const attestationHash = await writeAttestation(
-        taskId,
-        userAddress,
-        output,
-        taskType
-      )
-      attestationWritten = true
-
-      const attestationUrl = explorerTxUrl(attestationHash)
+      let attestationHash = ''
+      let attestationUrl = ''
+      try {
+        attestationHash = await writeAttestation(
+          taskId,
+          userAddress,
+          output,
+          taskType
+        )
+        attestationWritten = true
+        attestationUrl = explorerTxUrl(attestationHash)
+      } catch (attestationErr) {
+        const msg =
+          attestationErr instanceof Error
+            ? attestationErr.message
+            : String(attestationErr)
+        console.warn('[API] task attestation skipped:', msg)
+      }
 
       await completePaymentTask(effectivePaymentTxHash, {
         taskId,

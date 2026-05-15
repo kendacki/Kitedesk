@@ -7,7 +7,23 @@ import type { AgentStep } from '@/types'
 const ATTESTATION_ABI = [
   'function attestTask(string taskId, address user, bytes32 resultHash, string taskType) external',
   'function attestGoal(string taskId, address user, bytes32 resultHash, bytes32 stepsHash, uint256 totalSpentMicro, uint8 stepCount, string goalPreview, uint256 x402PaymentsCount, uint256 x402TotalPaidMicro) external',
+  'function owner() view returns (address)',
 ]
+
+async function assertAttestationSignerMatchesOwner(
+  contract: ethers.Contract,
+  signerAddress: string
+): Promise<void> {
+  const owner = await contract.owner().catch(() => '')
+  if (!owner || !ethers.isAddress(owner)) return
+
+  if (ethers.getAddress(owner).toLowerCase() !== signerAddress.toLowerCase()) {
+    throw new HttpError(
+      `Attestation contract owner (${ethers.getAddress(owner)}) does not match attestation signer (${signerAddress}). Redeploy the contract with this signer or set ATTESTATION_SIGNER_PRIVATE_KEY to the owner wallet.`,
+      503
+    )
+  }
+}
 
 function goalX402StatsFromSteps(steps: AgentStep[]): {
   x402PaymentsCount: number
@@ -46,6 +62,8 @@ export async function writeAttestation(
   const signer = new ethers.Wallet(pk, provider)
   const contract = new ethers.Contract(CONTRACTS.attestation, ATTESTATION_ABI, signer)
 
+  await assertAttestationSignerMatchesOwner(contract, signer.address)
+
   const resultHash = ethers.keccak256(ethers.toUtf8Bytes(result))
   const tx = await contract.attestTask(taskId, userAddress, resultHash, taskType)
   const receipt = await tx.wait()
@@ -82,6 +100,8 @@ export async function writeGoalAttestation(
   const provider = new ethers.JsonRpcProvider(KITE_CHAIN.rpcUrl)
   const signer = new ethers.Wallet(pk, provider)
   const contract = new ethers.Contract(CONTRACTS.attestation, ATTESTATION_ABI, signer)
+
+  await assertAttestationSignerMatchesOwner(contract, signer.address)
 
   const resultHash = ethers.keccak256(ethers.toUtf8Bytes(finalOutput))
   const stepsHash = ethers.keccak256(
