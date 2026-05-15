@@ -164,9 +164,11 @@ export function ResultPanel({ result, onReset, classicCost }: ResultPanelProps) 
         </div>
       ) : null}
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md shadow-slate-200/50 sm:p-6">
+      <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-md shadow-slate-200/50 sm:p-6">
         <h3 className="mb-3 font-sans text-sm font-semibold text-slate-900">Result</h3>
-        <AgentMarkdown content={result.output} />
+        <div className="min-h-0 flex-1">
+          <AgentMarkdown content={result.output} />
+        </div>
         <motion.button
           type="button"
           onClick={onReset}
