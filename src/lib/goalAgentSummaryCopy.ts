@@ -5,16 +5,16 @@ export const GOAL_AGENT_EXAMPLE_GOAL = 'Find the best GPU under $500'
 
 /** What the autonomous agent does — shown under the “Agent” heading in the trace panel */
 export const GOAL_AGENT_CAPABILITY_LINES = [
-  'searches APIs and data sources',
-  'evaluates cost per call',
+  'finds relevant sources',
+  'checks cost per call',
   'pays via x402',
-  'retrieves specs and evidence',
+  'pulls evidence and specs',
   'stays within budget',
 ] as const
 
 export const GOAL_AGENT_SECTION_LABELS = {
   goal: 'Goal',
   agent: 'Agent',
-  totalSpent: 'Total spent',
+  totalSpent: 'Spent',
   saved: 'Saved',
 } as const

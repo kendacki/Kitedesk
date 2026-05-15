@@ -1,13 +1,11 @@
 // KiteDesk | live agent step trace with tool calls and cost breakdown
 'use client'
 
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { AgentMarkdown } from '@/components/AgentMarkdown'
 import { brandEase, brandLinkLight } from '@/lib/brand'
-import {
-  GOAL_AGENT_CAPABILITY_LINES,
-  GOAL_AGENT_SECTION_LABELS,
-} from '@/lib/goalAgentSummaryCopy'
+import { GOAL_AGENT_SECTION_LABELS } from '@/lib/goalAgentSummaryCopy'
 import type { AgentStep, ToolCall, ToolName } from '@/types'
 
 const KITE_TESTNET_TX_BASE = 'https://testnet.kitescan.ai/tx'
@@ -223,6 +221,13 @@ export function AgentStepsPanel({
   x402PaymentsCount,
   x402TotalPaidUsdt,
 }: AgentStepsPanelProps) {
+  const isCollapsedGoalView = Boolean(finalOutput && !isRunning)
+  const [showProcess, setShowProcess] = useState(!isCollapsedGoalView)
+
+  useEffect(() => {
+    setShowProcess(!isCollapsedGoalView)
+  }, [isCollapsedGoalView])
+
   const budget = Number.isFinite(budgetUsdt) ? budgetUsdt : 0
   const spent = Number.isFinite(totalSpentUsdt) ? totalSpentUsdt : 0
   const pct = budget > 0 ? Math.min(100, Math.round((spent / budget) * 1000) / 10) : 0
@@ -242,252 +247,289 @@ export function AgentStepsPanel({
 
   const trimmedGoal = typeof goalTitle === 'string' ? goalTitle.trim() : ''
   const showGoalSummary = trimmedGoal.length > 0
+  const processButtonLabel = showProcess ? 'Hide process' : 'Show process'
 
   return (
     <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-md shadow-slate-200/50 sm:p-6">
       {showGoalSummary ? (
-        <section
-          className="mx-auto mb-6 max-w-lg border-b border-slate-200 pb-6 text-center"
-          aria-label="Goal agent summary"
-        >
-          <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-800">
-            {GOAL_AGENT_SECTION_LABELS.goal}
-          </p>
-          <p className="mt-2 font-sans text-base font-medium leading-snug text-slate-900 sm:text-lg">
-            <span className="text-slate-400">&ldquo;</span>
-            {trimmedGoal}
-            <span className="text-slate-400">&rdquo;</span>
-          </p>
-          <h4 className="mt-6 font-sans text-xs font-semibold uppercase tracking-widest text-slate-500">
-            {GOAL_AGENT_SECTION_LABELS.agent}
-          </h4>
-          <ul className="mx-auto mt-3 max-w-sm list-none space-y-2 text-left font-sans text-sm leading-relaxed text-slate-600">
-            {GOAL_AGENT_CAPABILITY_LINES.map((line) => (
-              <li key={line} className="flex gap-2">
-                <span
-                  className="mt-2 h-1 w-1 shrink-0 rounded-full bg-emerald-500"
-                  aria-hidden
-                />
-                <span>{line}</span>
-              </li>
-            ))}
-          </ul>
-          <dl className="mx-auto mt-6 grid w-full max-w-sm grid-cols-2 gap-3 sm:gap-4">
-            <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-3 text-center">
+        <section className="border-b border-slate-200 pb-4" aria-label="Goal summary">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-800">
+                {GOAL_AGENT_SECTION_LABELS.goal}
+              </p>
+              <p className="mt-1 max-w-2xl font-sans text-sm font-medium leading-snug text-slate-900 sm:text-base">
+                {trimmedGoal}
+              </p>
+            </div>
+            {isCollapsedGoalView ? (
+              <button
+                type="button"
+                onClick={() => setShowProcess((v) => !v)}
+                className="inline-flex items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 font-sans text-xs font-semibold text-emerald-900 transition hover:border-emerald-300 hover:bg-emerald-100"
+                aria-expanded={showProcess}
+              >
+                {processButtonLabel}
+              </button>
+            ) : null}
+          </div>
+          <dl className="mt-4 grid grid-cols-2 gap-3 sm:max-w-md sm:grid-cols-4">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2 text-center">
+              <dt className="font-sans text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                Steps
+              </dt>
+              <dd className="mt-1 font-sans text-sm font-semibold text-emerald-900">
+                {steps.length}
+              </dd>
+            </div>
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2 text-center">
               <dt className="font-sans text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                 {GOAL_AGENT_SECTION_LABELS.totalSpent}
               </dt>
-              <dd className="mt-1 font-sans text-lg font-semibold tabular-nums text-emerald-900">
+              <dd className="mt-1 font-sans text-sm font-semibold tabular-nums text-emerald-900">
                 ${formatUsdt(spent)}
               </dd>
             </div>
-            <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-3 text-center">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2 text-center">
               <dt className="font-sans text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                 {GOAL_AGENT_SECTION_LABELS.saved}
               </dt>
-              <dd className="mt-1 font-sans text-lg font-semibold tabular-nums text-emerald-900">
+              <dd className="mt-1 font-sans text-sm font-semibold tabular-nums text-emerald-900">
                 ${formatUsdt(savings)}
+              </dd>
+            </div>
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2 text-center">
+              <dt className="font-sans text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                Budget
+              </dt>
+              <dd className="mt-1 font-sans text-sm font-semibold tabular-nums text-emerald-900">
+                ${formatUsdt(budget)}
               </dd>
             </div>
           </dl>
         </section>
       ) : null}
 
-      <div className="mb-6 border-b border-slate-200 pb-4">
-        <h3 className="font-sans text-sm font-semibold text-slate-900">
-          Agent execution timeline
-        </h3>
-        {showX402CommerceBanner ? (
-          <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 font-sans text-xs leading-snug text-emerald-800">
-            Agentic commerce: the agent settles x402 on the execution path — no extra
-            human step between 402 and retry.
-          </p>
-        ) : null}
-        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 font-sans text-xs sm:text-sm">
-            <div className="font-medium uppercase tracking-wide text-slate-500">
-              Total budget
+      {isCollapsedGoalView ? null : (
+        <>
+          <div className="mb-6 border-b border-slate-200 pb-4">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-sans text-sm font-semibold text-slate-900">
+                Process
+              </h3>
+              {isCollapsedGoalView ? null : (
+                <button
+                  type="button"
+                  onClick={() => setShowProcess((v) => !v)}
+                  className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  aria-expanded={showProcess}
+                >
+                  {processButtonLabel}
+                </button>
+              )}
             </div>
-            <div className="mt-0.5 font-semibold text-slate-900">
-              {formatUsdt(budget)} USDT
-            </div>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 font-sans text-xs sm:text-sm">
-            <div className="font-medium uppercase tracking-wide text-slate-500">
-              Total spent
-            </div>
-            <div className="mt-0.5 font-semibold text-slate-900">
-              {formatUsdt(spent)} USDT
-            </div>
-          </div>
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 px-3 py-2 font-sans text-xs sm:text-sm">
-            <div className="font-medium uppercase tracking-wide text-emerald-800">
-              Saved
-            </div>
-            <div className="mt-0.5 font-semibold text-emerald-950">
-              {formatUsdt(savings)} USDT
-            </div>
-          </div>
-        </div>
-        <div className="mt-3">
-          <div className="mb-1 flex justify-between font-sans text-xs text-slate-600 sm:text-sm">
-            <span>
-              Spent {formatUsdt(spent)} USDT of {formatUsdt(budget)} budget
-            </span>
-            <span>{pct}%</span>
-          </div>
-          <div
-            className="h-2 w-full overflow-hidden rounded-full bg-slate-200"
-            role="progressbar"
-            aria-valuenow={pct}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label="Budget used"
-          >
-            <div
-              className="h-full rounded-full bg-emerald-500 transition-[width] duration-500"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {isRunning && steps.length === 0 ? (
-        <div className="mb-6 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-          <span
-            className="inline-flex h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500"
-            aria-hidden
-          />
-          <span className="font-sans text-sm text-slate-600">Agent thinking…</span>
-        </div>
-      ) : null}
-
-      {planReasoning ? (
-        <div className="mb-4 flex gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
-          <BrainIcon className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-          <p className="font-sans text-xs italic leading-relaxed text-slate-500">
-            <span className="font-semibold not-italic text-slate-600">Strategy: </span>
-            {planReasoning}
-          </p>
-        </div>
-      ) : null}
-
-      <motion.ol
-        className="space-y-3"
-        variants={listVariants}
-        initial="hidden"
-        animate="show"
-        key={steps.map((s) => s.stepNumber).join('-') || 'empty'}
-      >
-        {steps.map((step) => {
-          runningCost += safeCost(step.toolCall?.costUsdt)
-          const sources =
-            step.toolCall?.output && step.toolCall.toolName !== 'summarize'
-              ? extractSourceLinks(step.toolCall.output)
-              : null
-          return (
-            <motion.li
-              key={`${step.stepNumber}-${step.completedAt}`}
-              variants={rowVariants}
-              className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4"
-            >
-              <div className="flex flex-wrap items-start gap-2 sm:gap-3">
-                <span className="inline-flex min-w-[2rem] justify-center rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-sans text-xs font-semibold text-slate-700">
-                  {String(step.stepNumber).padStart(2, '0')}
-                </span>
-                {step.toolCall ? (
-                  <span
-                    className={`inline-flex rounded-lg border px-2 py-0.5 font-sans text-xs font-medium ${toolBadgeClass(step.toolCall.toolName)}`}
-                  >
-                    {step.toolCall.toolName}
-                  </span>
-                ) : (
-                  <span className="inline-flex rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-sans text-xs text-slate-600">
-                    —
-                  </span>
-                )}
-                {step.stepKind === 'x402_payment' ? (
-                  <span className="inline-flex rounded-lg border border-cyan-200 bg-cyan-50 px-2 py-0.5 font-sans text-xs font-medium text-cyan-900">
-                    x402 payment
-                  </span>
-                ) : null}
+            {showX402CommerceBanner ? (
+              <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 font-sans text-xs leading-snug text-emerald-800">
+                x402 settles directly on the execution path.
+              </p>
+            ) : null}
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 font-sans text-xs sm:text-sm">
+                <div className="font-medium uppercase tracking-wide text-slate-500">
+                  Budget
+                </div>
+                <div className="mt-0.5 font-semibold text-slate-900">
+                  {formatUsdt(budget)} USDT
+                </div>
               </div>
-              {step.toolCall?.paymentStatus === 'paid_via_x402' ? (
-                <X402FlowSequence />
-              ) : null}
-              {step.toolCall &&
-              (step.toolCall.paymentStatus === 'paid_via_x402' ||
-                step.toolCall.paymentStatus === 'budget_exceeded') ? (
-                <div className="mt-2">
-                  <X402PaymentBadge
-                    paymentStatus={step.toolCall.paymentStatus}
-                    x402TxHash={step.toolCall.x402TxHash}
-                  />
+              <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 font-sans text-xs sm:text-sm">
+                <div className="font-medium uppercase tracking-wide text-slate-500">
+                  Spent
                 </div>
-              ) : null}
-              <p className="mt-2 font-sans text-xs leading-relaxed text-slate-500">
-                {step.reasoning}
-              </p>
-              {step.toolCall ? (
-                <p className="mt-1 font-sans text-xs text-slate-500">
-                  Input: {truncate(step.toolCall.input, 60)}
-                </p>
-              ) : null}
-              {step.toolCall ? (
-                <div className="mt-2 flex flex-wrap gap-3 font-sans text-xs">
-                  <span className="font-medium text-emerald-800">
-                    {formatUsdt(safeCost(step.toolCall.costUsdt))} USDT
-                  </span>
-                  <span className="text-slate-400">
-                    {((step.toolCall.durationMs ?? 0) / 1000).toFixed(1)}s
-                  </span>
+                <div className="mt-0.5 font-semibold text-slate-900">
+                  {formatUsdt(spent)} USDT
                 </div>
-              ) : null}
-              {step.toolCall?.output && step.toolCall.toolName !== 'summarize' ? (
-                <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-slate-200 bg-white p-2 font-sans text-[10px] text-slate-700 sm:text-xs">
-                  {truncate(step.toolCall.output, 600)}
-                </pre>
-              ) : null}
-              {sources && sources.length > 0 ? (
-                <div className="mt-2 border-t border-slate-200/80 pt-2">
-                  <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-                    Sources
-                  </p>
-                  <ul className="flex flex-col gap-1">
-                    {sources.map((s) => (
-                      <li key={s.url}>
-                        <a
-                          href={s.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-sans text-xs text-slate-400 hover:text-slate-600 hover:underline"
-                        >
-                          ↗ {truncate(s.title, 50)}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
+              </div>
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 px-3 py-2 font-sans text-xs sm:text-sm">
+                <div className="font-medium uppercase tracking-wide text-emerald-800">
+                  Saved
                 </div>
-              ) : null}
-              <p className="mt-2 font-sans text-[10px] text-slate-400 sm:text-xs">
-                Running total: {formatUsdt(runningCost)} USDT
-              </p>
-            </motion.li>
-          )
-        })}
-      </motion.ol>
+                <div className="mt-0.5 font-semibold text-emerald-950">
+                  {formatUsdt(savings)} USDT
+                </div>
+              </div>
+            </div>
+            <div className="mt-3">
+              <div className="mb-1 flex justify-between font-sans text-xs text-slate-600 sm:text-sm">
+                <span>
+                  Spent {formatUsdt(spent)} USDT of {formatUsdt(budget)}
+                </span>
+                <span>{pct}%</span>
+              </div>
+              <div
+                className="h-2 w-full overflow-hidden rounded-full bg-slate-200"
+                role="progressbar"
+                aria-valuenow={pct}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Budget used"
+              >
+                <div
+                  className="h-full rounded-full bg-emerald-500 transition-[width] duration-500"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+          </div>
 
-      {skippedTools && skippedTools.length > 0 ? (
-        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 font-sans text-xs text-amber-900">
-          <p className="font-semibold">
-            Agent skipped expensive APIs to stay within budget.
-          </p>
-          <p className="mt-1 text-amber-800/95">
-            Skipped: {skippedTools.join(', ')} — budget savings {formatUsdt(savings)}{' '}
-            USDT
-          </p>
-        </div>
-      ) : null}
+          {isRunning && steps.length === 0 ? (
+            <div className="mb-6 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <span
+                className="inline-flex h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500"
+                aria-hidden
+              />
+              <span className="font-sans text-sm text-slate-600">Thinking…</span>
+            </div>
+          ) : null}
+
+          {planReasoning ? (
+            <div className="mb-4 flex gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
+              <BrainIcon className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+              <p className="font-sans text-xs italic leading-relaxed text-slate-500">
+                <span className="font-semibold not-italic text-slate-600">Plan: </span>
+                {planReasoning}
+              </p>
+            </div>
+          ) : null}
+
+          <motion.ol
+            className="space-y-3"
+            variants={listVariants}
+            initial="hidden"
+            animate="show"
+            key={steps.map((s) => s.stepNumber).join('-') || 'empty'}
+          >
+            {steps.map((step) => {
+              runningCost += safeCost(step.toolCall?.costUsdt)
+              const sources =
+                step.toolCall?.output && step.toolCall.toolName !== 'summarize'
+                  ? extractSourceLinks(step.toolCall.output)
+                  : null
+              return (
+                <motion.li
+                  key={`${step.stepNumber}-${step.completedAt}`}
+                  variants={rowVariants}
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4"
+                >
+                  <div className="flex flex-wrap items-start gap-2 sm:gap-3">
+                    <span className="inline-flex min-w-[2rem] justify-center rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-sans text-xs font-semibold text-slate-700">
+                      {String(step.stepNumber).padStart(2, '0')}
+                    </span>
+                    {step.toolCall ? (
+                      <span
+                        className={`inline-flex rounded-lg border px-2 py-0.5 font-sans text-xs font-medium ${toolBadgeClass(step.toolCall.toolName)}`}
+                      >
+                        {step.toolCall.toolName}
+                      </span>
+                    ) : (
+                      <span className="inline-flex rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-sans text-xs text-slate-600">
+                        —
+                      </span>
+                    )}
+                    {step.stepKind === 'x402_payment' ? (
+                      <span className="inline-flex rounded-lg border border-cyan-200 bg-cyan-50 px-2 py-0.5 font-sans text-xs font-medium text-cyan-900">
+                        x402 payment
+                      </span>
+                    ) : null}
+                  </div>
+                  {step.toolCall?.paymentStatus === 'paid_via_x402' ? (
+                    <X402FlowSequence />
+                  ) : null}
+                  {step.toolCall &&
+                  (step.toolCall.paymentStatus === 'paid_via_x402' ||
+                    step.toolCall.paymentStatus === 'budget_exceeded') ? (
+                    <div className="mt-2">
+                      <X402PaymentBadge
+                        paymentStatus={step.toolCall.paymentStatus}
+                        x402TxHash={step.toolCall.x402TxHash}
+                      />
+                    </div>
+                  ) : null}
+                  <p className="mt-2 font-sans text-xs leading-relaxed text-slate-500">
+                    {step.reasoning}
+                  </p>
+                  {step.toolCall ? (
+                    <p className="mt-1 font-sans text-xs text-slate-500">
+                      Input: {truncate(step.toolCall.input, 60)}
+                    </p>
+                  ) : null}
+                  {step.toolCall ? (
+                    <div className="mt-2 flex flex-wrap gap-3 font-sans text-xs">
+                      <span className="font-medium text-emerald-800">
+                        {formatUsdt(safeCost(step.toolCall.costUsdt))} USDT
+                      </span>
+                      <span className="text-slate-400">
+                        {((step.toolCall.durationMs ?? 0) / 1000).toFixed(1)}s
+                      </span>
+                    </div>
+                  ) : null}
+                  {step.toolCall?.output && step.toolCall.toolName !== 'summarize' ? (
+                    <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-slate-200 bg-white p-2 font-sans text-[10px] text-slate-700 sm:text-xs">
+                      {truncate(step.toolCall.output, 600)}
+                    </pre>
+                  ) : null}
+                  {sources && sources.length > 0 ? (
+                    <div className="mt-2 border-t border-slate-200/80 pt-2">
+                      <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                        Sources
+                      </p>
+                      <ul className="flex flex-col gap-1">
+                        {sources.map((s) => (
+                          <li key={s.url}>
+                            <a
+                              href={s.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-sans text-xs text-slate-400 hover:text-slate-600 hover:underline"
+                            >
+                              ↗ {truncate(s.title, 50)}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  <p className="mt-2 font-sans text-[10px] text-slate-400 sm:text-xs">
+                    Running total: {formatUsdt(runningCost)} USDT
+                  </p>
+                </motion.li>
+              )
+            })}
+          </motion.ol>
+
+          {skippedTools && skippedTools.length > 0 ? (
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 font-sans text-xs text-amber-900">
+              <p className="font-semibold">Skipped expensive APIs to stay on budget.</p>
+              <p className="mt-1 text-amber-800/95">
+                Skipped: {skippedTools.join(', ')} · savings {formatUsdt(savings)} USDT
+              </p>
+            </div>
+          ) : null}
+
+          {rows.length > 0 ? (
+            <p className="mt-3 font-sans text-xs text-slate-500">
+              Tool cost total: ${formatUsdt(tableTotal)}
+            </p>
+          ) : null}
+
+          {typeof x402TotalPaidUsdt === 'number' &&
+          Number.isFinite(x402TotalPaidUsdt) ? (
+            <p className="mt-1 font-sans text-xs text-slate-500">
+              x402 paid: {x402TotalPaidUsdt.toFixed(4)} USDT
+            </p>
+          ) : null}
+        </>
+      )}
 
       {finalOutput ? (
         <div className="mt-6">
@@ -497,11 +539,11 @@ export function AgentStepsPanel({
             <div className="mb-4 rounded-xl border-2 border-emerald-400 bg-gradient-to-br from-emerald-50 to-white px-4 py-3 shadow-sm sm:px-5 sm:py-4">
               <p className="font-sans text-sm font-semibold text-emerald-950">
                 {x402PaymentsCount === 1
-                  ? '1 API access purchase completed without human approval (x402).'
-                  : `${x402PaymentsCount} API access purchases completed without human approval (x402).`}
+                  ? '1 x402 payment completed.'
+                  : `${x402PaymentsCount} x402 payments completed.`}
               </p>
               <p className="mt-1.5 font-sans text-xs leading-relaxed text-emerald-900/90">
-                The agent acted as the buyer: 402 → pay → retry → result.
+                The agent paid, retried, and finished the run.
               </p>
             </div>
           ) : null}
@@ -509,60 +551,6 @@ export function AgentStepsPanel({
             Final output
           </h4>
           <AgentMarkdown content={finalOutput} />
-        </div>
-      ) : null}
-
-      {steps.length > 0 ? (
-        <div className="mt-6 border-t border-slate-200 pt-4">
-          <h4 className="mb-3 font-sans text-xs font-semibold uppercase tracking-widest text-slate-600">
-            Cost breakdown (by tool)
-          </h4>
-          {rows.length > 0 ? (
-            <div className="overflow-x-auto rounded-xl border border-slate-200">
-              <table className="w-full min-w-[280px] border-collapse font-sans text-xs sm:text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-slate-600">
-                    <th className="px-3 py-2 font-semibold">Tool</th>
-                    <th className="px-3 py-2 font-semibold">Calls</th>
-                    <th className="px-3 py-2 font-semibold">Cost</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r) => (
-                    <tr
-                      key={r.tool}
-                      className="border-b border-slate-100 last:border-0"
-                    >
-                      <td className="px-3 py-2 text-slate-900">{r.tool}</td>
-                      <td className="px-3 py-2 text-slate-600">{r.calls}</td>
-                      <td className="px-3 py-2 text-emerald-800">
-                        ${formatUsdt(r.cost)}
-                      </td>
-                    </tr>
-                  ))}
-                  <tr className="bg-slate-50 font-semibold">
-                    <td className="px-3 py-2 text-slate-900">Total</td>
-                    <td className="px-3 py-2 text-slate-600" />
-                    <td className="px-3 py-2 text-emerald-900">
-                      ${formatUsdt(tableTotal)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          ) : null}
-          {typeof x402PaymentsCount === 'number' &&
-          typeof x402TotalPaidUsdt === 'number' &&
-          Number.isFinite(x402PaymentsCount) &&
-          Number.isFinite(x402TotalPaidUsdt) ? (
-            <p className="mt-3 font-sans text-sm text-slate-700">
-              x402 payments: {x402PaymentsCount} calls, {x402TotalPaidUsdt.toFixed(4)}{' '}
-              USDT paid autonomously
-            </p>
-          ) : null}
-          <p className="mt-3 font-sans text-sm text-slate-600">
-            Saved {formatUsdt(saved)} USDT from your budget
-          </p>
         </div>
       ) : null}
 

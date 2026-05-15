@@ -152,8 +152,7 @@ export function AgentExecutionTimeline({
             Agent execution timeline
           </h2>
           <p className="font-sans text-xs text-slate-500">
-            Agent pays APIs via x402 when required; every step checked against your
-            budget
+            Agent pays via x402 when needed and stays within budget
           </p>
         </div>
       </div>
@@ -169,7 +168,7 @@ export function AgentExecutionTimeline({
               status === 'paying' ? 'animate-pulse bg-emerald-500' : 'bg-emerald-600'
             }`}
           />
-          [0] Budget envelope funded — USDT on Kite testnet (your cap for this run)
+          [0] Budget funded on Kite testnet
         </li>
         <li
           className={`flex gap-3 font-sans text-sm ${
@@ -185,7 +184,7 @@ export function AgentExecutionTimeline({
                   : 'bg-slate-300'
             }`}
           />
-          Agent is planning… (tool choice and quoted costs)
+          Agent is planning
         </li>
         <li
           className={`flex gap-3 font-sans text-sm ${
@@ -201,8 +200,7 @@ export function AgentExecutionTimeline({
                   : 'bg-slate-300'
             }`}
           />
-          Agent is executing… (evaluates each API cost vs remaining budget before
-          paying)
+          Agent is executing
         </li>
         <li
           className={`flex gap-3 font-sans text-sm ${
@@ -214,14 +212,14 @@ export function AgentExecutionTimeline({
               status === 'attesting' ? 'animate-pulse bg-emerald-500' : 'bg-slate-300'
             }`}
           />
-          Recording verifiable proof on Kite chain
+          Recording proof on Kite chain
         </li>
       </ol>
 
       {showNarrative ? (
         <div>
           <p className="mb-2 font-sans text-[10px] font-semibold uppercase tracking-widest text-emerald-800">
-            Typical x402 tool loop (live steps appear below when tools run)
+            x402 tool loop
           </p>
           <ol className="space-y-2">
             {GOAL_NARRATIVE.map((label, i) => (
@@ -240,7 +238,7 @@ export function AgentExecutionTimeline({
       ) : steps.length > 0 ? (
         <div>
           <p className="mb-2 font-sans text-[10px] font-semibold uppercase tracking-widest text-emerald-800">
-            Live tool trace ({steps.length} steps)
+            Live steps ({steps.length})
           </p>
           <ul className="space-y-3">
             {tail.map((s, i) => {
@@ -264,15 +262,14 @@ export function AgentExecutionTimeline({
                 >
                   {showEval ? (
                     <p className="mb-1.5 rounded-md bg-emerald-50/90 px-2 py-1.5 font-mono text-[11px] leading-snug text-emerald-950 sm:text-xs">
-                      Evaluating: cost {cost.toFixed(2)} USDT ≤ remaining budget{' '}
-                      {remaining.toFixed(2)} USDT → approved
+                      Cost {cost.toFixed(2)} USDT ≤ remaining budget {remaining.toFixed(2)} USDT
                     </p>
                   ) : null}
                   <p className="font-sans text-xs text-slate-700">
                     <span className="font-mono text-slate-500">#{s.stepNumber}</span>{' '}
                     {s.description || s.reasoning || tc?.toolName || 'Step'}
                     {isX402Paid ? (
-                      <span className="ml-2 text-emerald-700">— paid via x402</span>
+                      <span className="ml-2 text-emerald-700">— x402</span>
                     ) : null}
                   </p>
                 </li>
