@@ -22,7 +22,7 @@ import {
   getSessionKeyByIdForUser,
 } from '@/lib/sessionKeys'
 import { getPlatformWalletAddress } from '@/lib/verifyPayment'
-import type { GoalResult, TaskType } from '@/types'
+import type { GoalResult, TaskType, AgentStep } from '@/types'
 
 export const runtime = 'nodejs'
 export const maxDuration = 120
@@ -148,7 +148,7 @@ async function tryRelayerAttestation(params: {
   taskId: string
   userAddress: string
   finalOutput: string
-  steps: any[]
+  steps: AgentStep[]
   totalSpentUsdt: number
   goalPreview: string
   userSmartWallet?: string
