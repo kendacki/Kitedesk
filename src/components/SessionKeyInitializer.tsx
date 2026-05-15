@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { type JsonRpcSigner, ethers } from 'ethers'
 import { useWallet } from '@/components/WalletProvider'
 import { CONTRACTS, KITE_X402, KITE_CHAIN } from '@/lib/constants'
@@ -42,6 +42,83 @@ async function fundSessionKeyGas(
   }
 }
 
+function storeSessionKeyMeta(userAddress: string, keyId: string, sessionKeyAddress?: string | null) {
+  localStorage.setItem(`session-key-${userAddress}`, keyId)
+  if (sessionKeyAddress && ethers.isAddress(sessionKeyAddress)) {
+    localStorage.setItem(
+      `session-key-address-${userAddress}`,
+      ethers.getAddress(sessionKeyAddress)
+    )
+  }
+}
+
+function setFundingStatus(
+  userAddress: string,
+  payload: {
+    status: 'pending' | 'success' | 'failed' | 'skipped'
+    txHash: string | null
+    error: string | null
+    note?: string | null
+  }
+) {
+  try {
+    localStorage.setItem(`session-key-funding-${userAddress}`, JSON.stringify(payload))
+  } catch {
+    /* ignore storage failures */
+  }
+}
+
+function setRefuelCooldown(userAddress: string, cooldownMs: number) {
+  try {
+    localStorage.setItem(
+      `session-key-refuel-until-${userAddress}`,
+      String(Date.now() + cooldownMs)
+    )
+  } catch {
+    /* ignore storage failures */
+  }
+}
+
+async function resolveSessionKeyAddress(userAddress: string) {
+  const storedAddress = localStorage.getItem(`session-key-address-${userAddress}`)
+  if (storedAddress && ethers.isAddress(storedAddress)) {
+    return ethers.getAddress(storedAddress)
+  }
+
+  try {
+    const listRes = await fetch(`/api/session-keys/list?wallet=${encodeURIComponent(userAddress)}`)
+    if (listRes.ok) {
+      const listData = await listRes.json()
+      const firstKey = Array.isArray(listData.keys) ? listData.keys[0] : null
+      const sessionKeyAddress =
+        typeof firstKey?.sessionKeyAddress === 'string'
+          ? firstKey.sessionKeyAddress
+          : typeof firstKey?.session_key_address === 'string'
+            ? firstKey.session_key_address
+            : ''
+      const keyId =
+        typeof firstKey?.keyId === 'string'
+          ? firstKey.keyId
+          : typeof firstKey?.key_id === 'string'
+            ? firstKey.key_id
+            : ''
+
+      if (keyId) {
+        localStorage.setItem(`session-key-${userAddress}`, keyId)
+      }
+      if (sessionKeyAddress && ethers.isAddress(sessionKeyAddress)) {
+        const checksum = ethers.getAddress(sessionKeyAddress)
+        localStorage.setItem(`session-key-address-${userAddress}`, checksum)
+        return checksum
+      }
+    }
+  } catch (error) {
+    console.debug('[SessionKeyInitializer] Failed to resolve session key address:', error)
+  }
+
+  return null
+}
+
 /**
  * SessionKeyInitializer: Automatically initializes and manages session keys
  * for the user's wallet. Session keys enable transaction signing without
@@ -62,96 +139,7 @@ export function SessionKeyInitializer() {
   const refuelInFlight = useRef(false)
   const refuelCooldownBySession = useRef<Map<string, number>>(new Map())
 
-  const storeSessionKeyMeta = (
-    userAddress: string,
-    keyId: string,
-    sessionKeyAddress?: string | null
-  ) => {
-    localStorage.setItem(`session-key-${userAddress}`, keyId)
-    if (sessionKeyAddress && ethers.isAddress(sessionKeyAddress)) {
-      localStorage.setItem(
-        `session-key-address-${userAddress}`,
-        ethers.getAddress(sessionKeyAddress)
-      )
-    }
-  }
-
-  const setFundingStatus = (
-    userAddress: string,
-    payload: {
-      status: 'pending' | 'success' | 'failed' | 'skipped'
-      txHash: string | null
-      error: string | null
-      note?: string | null
-    }
-  ) => {
-    try {
-      localStorage.setItem(
-        `session-key-funding-${userAddress}`,
-        JSON.stringify(payload)
-      )
-    } catch {
-      /* ignore storage failures */
-    }
-  }
-
-  const setRefuelCooldown = (userAddress: string, cooldownMs: number) => {
-    try {
-      localStorage.setItem(
-        `session-key-refuel-until-${userAddress}`,
-        String(Date.now() + cooldownMs)
-      )
-    } catch {
-      /* ignore storage failures */
-    }
-  }
-
-  const resolveSessionKeyAddress = async (userAddress: string) => {
-    const storedAddress = localStorage.getItem(`session-key-address-${userAddress}`)
-    if (storedAddress && ethers.isAddress(storedAddress)) {
-      return ethers.getAddress(storedAddress)
-    }
-
-    try {
-      const listRes = await fetch(
-        `/api/session-keys/list?wallet=${encodeURIComponent(userAddress)}`
-      )
-      if (listRes.ok) {
-        const listData = await listRes.json()
-        const firstKey = Array.isArray(listData.keys) ? listData.keys[0] : null
-        const sessionKeyAddress =
-          typeof firstKey?.sessionKeyAddress === 'string'
-            ? firstKey.sessionKeyAddress
-            : typeof firstKey?.session_key_address === 'string'
-              ? firstKey.session_key_address
-              : ''
-        const keyId =
-          typeof firstKey?.keyId === 'string'
-            ? firstKey.keyId
-            : typeof firstKey?.key_id === 'string'
-              ? firstKey.key_id
-              : ''
-
-        if (keyId) {
-          localStorage.setItem(`session-key-${userAddress}`, keyId)
-        }
-        if (sessionKeyAddress && ethers.isAddress(sessionKeyAddress)) {
-          const checksum = ethers.getAddress(sessionKeyAddress)
-          localStorage.setItem(`session-key-address-${userAddress}`, checksum)
-          return checksum
-        }
-      }
-    } catch (error) {
-      console.debug(
-        '[SessionKeyInitializer] Failed to resolve session key address:',
-        error
-      )
-    }
-
-    return null
-  }
-
-  const maybeRefuelSessionKey = async (
+  const maybeRefuelSessionKey = useCallback(async (
     userAddress: string,
     signerObj: JsonRpcSigner | null
   ) => {
@@ -257,10 +245,10 @@ export function SessionKeyInitializer() {
     } finally {
       refuelInFlight.current = false
     }
-  }
+  }, [])
 
   // Named initializer so we can call it from both the effect and an explicit connect event
-  const runInitialization = async (
+  const runInitialization = useCallback(async (
     addr: string | null,
     signerObj: JsonRpcSigner | null
   ) => {
@@ -373,8 +361,8 @@ export function SessionKeyInitializer() {
                   /* ignore storage failures */
                 }
 
-                if (signer && createData.sessionKeyAddress && CONTRACTS.usdt) {
-                  const provider = signer.provider
+                if (signerObj && createData.sessionKeyAddress && CONTRACTS.usdt) {
+                  const provider = signerObj.provider
                   if (provider) {
                     const net = await provider.getNetwork()
                     if (Number(net.chainId) === KITE_CHAIN.id) {
@@ -384,7 +372,7 @@ export function SessionKeyInitializer() {
                           'function transfer(address to, uint256 amount) returns (bool)',
                           'function decimals() view returns (uint8)',
                         ],
-                        signer
+                        signerObj
                       )
                       let unitDecimals: number = KITE_X402.stablecoinDecimals
                       try {
@@ -401,7 +389,7 @@ export function SessionKeyInitializer() {
                       const receipt = await tx.wait()
                       try {
                         const gasTxHash = await fundSessionKeyGas(
-                          signer,
+                          signerObj,
                           createData.sessionKeyAddress
                         )
                         if (gasTxHash) {
@@ -493,7 +481,7 @@ export function SessionKeyInitializer() {
       isInitializing.current = false
       sessionKeyInitializationInFlight.delete(userAddr)
     }
-  }
+  }, [])
 
   useEffect(() => {
     // Reset initialization tracking when user disconnects so it will re-initialize on reconnect
