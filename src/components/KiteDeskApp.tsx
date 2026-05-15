@@ -128,6 +128,7 @@ export function KiteDeskApp() {
         taskType: 'goal',
         promptPreview: g.length > 120 ? `${g.slice(0, 119)}…` : g,
         attestationUrl: task.goalResult.attestationUrl,
+        attestationHash: task.goalResult.attestationHash,
         completedAt: task.goalResult.completedAt,
       })
       return
@@ -142,6 +143,7 @@ export function KiteDeskApp() {
         taskType: p?.taskType ?? 'research',
         promptPreview: preview.length > 120 ? `${preview.slice(0, 119)}…` : preview,
         attestationUrl: task.result.attestationUrl,
+        attestationHash: task.result.attestationHash,
         completedAt: task.result.completedAt,
       })
     }

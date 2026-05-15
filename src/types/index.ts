@@ -34,6 +34,7 @@ export interface TaskHistoryEntry {
   taskType: TaskType
   promptPreview: string
   attestationUrl: string
+  attestationHash?: string
   completedAt: number
 }
 

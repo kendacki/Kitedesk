@@ -8,6 +8,7 @@ import {
   isKnownTaskType,
   mergeTaskHistoryEntries,
   readLocalTaskHistory,
+  resolveTaskAttestationUrl,
 } from '@/lib/taskHistoryLocal'
 import type { TaskHistoryEntry, TaskType } from '@/types'
 
@@ -23,17 +24,6 @@ function badgeClass(taskType: TaskType): string {
       return 'border-violet-200 bg-violet-50 text-violet-900'
     default:
       return 'border-slate-200 bg-slate-100 text-slate-800'
-  }
-}
-
-function isSafeExplorerUrl(url: string): boolean {
-  const t = url.trim()
-  if (!t) return false
-  try {
-    const u = new URL(t)
-    return u.protocol === 'https:' || u.protocol === 'http:'
-  } catch {
-    return false
   }
 }
 
@@ -144,6 +134,9 @@ export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps
       ) : null}
       <ul className="space-y-2">
         {entries.map((e) => (
+          (() => {
+            const attestationHref = resolveTaskAttestationUrl(e)
+            return (
           <li
             key={e.taskId}
             className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm sm:flex-row sm:items-center sm:justify-between"
@@ -165,9 +158,9 @@ export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps
                   timeStyle: 'short',
                 })}
               </span>
-              {isSafeExplorerUrl(e.attestationUrl) ? (
+              {attestationHref ? (
                 <a
-                  href={e.attestationUrl.trim()}
+                  href={attestationHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-medium text-emerald-800 transition hover:text-emerald-900 hover:underline"
@@ -184,6 +177,8 @@ export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps
               )}
             </div>
           </li>
+            )
+          })()
         ))}
       </ul>
     </div>

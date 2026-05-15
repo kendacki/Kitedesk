@@ -1,5 +1,6 @@
 // KiteDesk | browser-local task history backup when Supabase is missing or empty
 import type { TaskHistoryEntry, TaskType } from '@/types'
+import { KITE_CHAIN } from '@/lib/constants'
 
 const STORAGE_KEY = 'kitedesk_task_history_v1'
 const MAX_PER_USER = 15
@@ -16,6 +17,21 @@ function isSafeHttpUrl(url: string): boolean {
   } catch {
     return false
   }
+}
+
+export function resolveTaskAttestationUrl(entry: {
+  attestationUrl?: string
+  attestationHash?: string
+}): string {
+  const trimmedUrl = typeof entry.attestationUrl === 'string' ? entry.attestationUrl.trim() : ''
+  if (isSafeHttpUrl(trimmedUrl)) return trimmedUrl
+
+  const trimmedHash = typeof entry.attestationHash === 'string' ? entry.attestationHash.trim() : ''
+  if (trimmedHash) {
+    return `${KITE_CHAIN.explorerUrl.replace(/\/$/, '')}/tx/${trimmedHash}`
+  }
+
+  return ''
 }
 
 export function isKnownTaskType(t: string): t is TaskType {
@@ -45,6 +61,7 @@ function isValidEntry(e: unknown): e is TaskHistoryEntry {
     isKnownTaskType(o.taskType) &&
     typeof o.promptPreview === 'string' &&
     typeof o.attestationUrl === 'string' &&
+    (typeof o.attestationHash === 'undefined' || typeof o.attestationHash === 'string') &&
     typeof o.completedAt === 'number' &&
     Number.isFinite(o.completedAt)
   )
@@ -90,7 +107,10 @@ export function mergeTaskHistoryEntries(
       byId.set(e.taskId, e)
       continue
     }
-    if (!isSafeHttpUrl(current.attestationUrl) && isSafeHttpUrl(e.attestationUrl)) {
+    if (
+      !isSafeHttpUrl(resolveTaskAttestationUrl(current)) &&
+      isSafeHttpUrl(resolveTaskAttestationUrl(e))
+    ) {
       byId.set(e.taskId, e)
     }
   }
