@@ -62,6 +62,35 @@ function normalizeAddress(address: string): string {
   }
 }
 
+function attestationExplorerUrl(attestationHash: string): string {
+  const explorerBase = KITE_CHAIN.explorerUrl.replace(/\/$/, '')
+  return `${explorerBase}/tx/${attestationHash}`
+}
+
+function normalizeAttestationUrl(
+  attestationHash?: string,
+  attestationUrl?: string
+): string {
+  const trimmedUrl = typeof attestationUrl === 'string' ? attestationUrl.trim() : ''
+  if (trimmedUrl) {
+    try {
+      const parsed = new URL(trimmedUrl)
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        return trimmedUrl
+      }
+    } catch {
+      /* fall through to hash-based URL */
+    }
+  }
+
+  const trimmedHash = typeof attestationHash === 'string' ? attestationHash.trim() : ''
+  if (trimmedHash) {
+    return attestationExplorerUrl(trimmedHash)
+  }
+
+  return ''
+}
+
 function isSessionPrepayFallbackError(err: unknown): boolean {
   if (!axios.isAxiosError(err)) return false
   if (err.response?.status !== 409) return false
@@ -225,7 +254,10 @@ export function useTaskExecution() {
         output: data.output,
         txHash: '',
         attestationHash: data.attestationHash ?? '',
-        attestationUrl: data.attestationUrl ?? '',
+        attestationUrl: normalizeAttestationUrl(
+          data.attestationHash,
+          data.attestationUrl
+        ),
         completedAt: Date.now(),
       }
 
@@ -404,7 +436,12 @@ export function useTaskExecution() {
         typeof gr.finalOutput === 'string'
           ? gr.finalOutput
           : String(gr.finalOutput ?? '')
-      setGoalResult({ ...gr, steps: stepsNorm, finalOutput })
+      setGoalResult({
+        ...gr,
+        steps: stepsNorm,
+        finalOutput,
+        attestationUrl: normalizeAttestationUrl(gr.attestationHash, gr.attestationUrl),
+      })
       setActiveGoalText(null)
       setIsGoalFlow(false)
       setStatus('done')

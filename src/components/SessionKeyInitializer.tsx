@@ -8,6 +8,7 @@ import { checkUsdtBalance } from '@/lib/payment'
 
 const sessionKeyInitializationInFlight = new Set<string>()
 const SESSION_KEY_GAS_TOP_UP = ethers.parseEther('0.05')
+const SESSION_KEY_REFUEL_THRESHOLD_USDT = 0.25
 
 // Track which session-key addresses we've already topped up in-memory
 const sessionKeyGasTopUpDone = new Set<string>()
@@ -167,7 +168,7 @@ export function SessionKeyInitializer() {
       provider as unknown as ethers.BrowserProvider,
       sessionKeyAddress
     )
-    if (balance === null || balance >= 1) return
+    if (balance === null || balance >= SESSION_KEY_REFUEL_THRESHOLD_USDT) return
 
     refuelInFlight.current = true
     refuelCooldownBySession.current.set(sessionKeyAddress, now)

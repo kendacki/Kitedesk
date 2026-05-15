@@ -7,6 +7,17 @@ const MAX_PER_USER = 15
 const KNOWN_TASK_TYPES: TaskType[] = ['research', 'code_review', 'content_gen', 'goal']
 const KNOWN_SET = new Set<string>(KNOWN_TASK_TYPES)
 
+function isSafeHttpUrl(url: string): boolean {
+  const trimmed = url.trim()
+  if (!trimmed) return false
+  try {
+    const parsed = new URL(trimmed)
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:'
+  } catch {
+    return false
+  }
+}
+
 export function isKnownTaskType(t: string): t is TaskType {
   return KNOWN_SET.has(t)
 }
@@ -73,7 +84,13 @@ export function mergeTaskHistoryEntries(
     if (e?.taskId && isKnownTaskType(e.taskType)) byId.set(e.taskId, e)
   }
   for (const e of local) {
-    if (e?.taskId && isKnownTaskType(e.taskType) && !byId.has(e.taskId)) {
+    if (!e?.taskId || !isKnownTaskType(e.taskType)) continue
+    const current = byId.get(e.taskId)
+    if (!current) {
+      byId.set(e.taskId, e)
+      continue
+    }
+    if (!isSafeHttpUrl(current.attestationUrl) && isSafeHttpUrl(e.attestationUrl)) {
       byId.set(e.taskId, e)
     }
   }
