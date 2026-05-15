@@ -521,7 +521,7 @@ export function SessionKeyInitializer() {
       return
     }
     void runInitialization(normalizedAddress, signer)
-  }, [address, signer])
+  }, [address, signer, runInitialization])
 
   useEffect(() => {
     if (!address || !signer) return
@@ -540,7 +540,7 @@ export function SessionKeyInitializer() {
     }, 60_000)
 
     return () => window.clearInterval(interval)
-  }, [address, signer])
+  }, [address, signer, maybeRefuelSessionKey])
 
   useEffect(() => {
     const onConnect = (ev: Event) => {
@@ -555,7 +555,7 @@ export function SessionKeyInitializer() {
 
     window.addEventListener('kitedesk:connect', onConnect)
     return () => window.removeEventListener('kitedesk:connect', onConnect)
-  }, [address, signer])
+  }, [address, signer, runInitialization])
 
   // This component doesn't render anything visible - it just manages initialization side effects
   return null
