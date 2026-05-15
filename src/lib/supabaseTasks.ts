@@ -11,6 +11,7 @@ export type TaskHistoryRow = {
   task_type: string
   prompt_preview: string
   attestation_url: string
+  attestation_hash?: string
   completed_at: string
 }
 
@@ -163,7 +164,7 @@ export async function fetchCompletedTasksForUser(
   }
   const { data, error } = await supabase
     .from('kitedesk_tasks')
-    .select('task_id, task_type, prompt_preview, attestation_url, completed_at')
+    .select('task_id, task_type, prompt_preview, attestation_url, attestation_hash, completed_at')
     .eq('user_address', userAddress.toLowerCase())
     .eq('status', 'completed')
     .order('completed_at', { ascending: false })

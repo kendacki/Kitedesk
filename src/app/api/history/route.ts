@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
       taskType: r.task_type as TaskType,
       promptPreview: r.prompt_preview,
       attestationUrl: r.attestation_url,
+      attestationHash: r.attestation_hash ?? undefined,
       completedAt: new Date(r.completed_at).getTime(),
     }))
     .filter((e) => Number.isFinite(e.completedAt))
