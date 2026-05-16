@@ -310,23 +310,21 @@ export function AgentStepsPanel({
         </section>
       ) : null}
 
-      {isCollapsedGoalView ? null : (
+      {showProcess ? (
         <>
           <div className="mb-6 border-b border-slate-200 pb-4">
             <div className="flex items-center justify-between gap-3">
               <h3 className="font-sans text-sm font-semibold text-slate-900">
                 Process
               </h3>
-              {isCollapsedGoalView ? null : (
-                <button
-                  type="button"
-                  onClick={() => setShowProcess((v) => !v)}
-                  className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-                  aria-expanded={showProcess}
-                >
-                  {processButtonLabel}
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setShowProcess((v) => !v)}
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                aria-expanded={showProcess}
+              >
+                {processButtonLabel}
+              </button>
             </div>
             {showX402CommerceBanner ? (
               <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 font-sans text-xs leading-snug text-emerald-800">
@@ -511,7 +509,7 @@ export function AgentStepsPanel({
             <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 font-sans text-xs text-amber-900">
               <p className="font-semibold">Skipped expensive APIs to stay on budget.</p>
               <p className="mt-1 text-amber-800/95">
-                Skipped: {skippedTools.join(', ')} · savings {formatUsdt(savings)} USDT
+                Skipped: {skippedTools.join(', ')} - savings {formatUsdt(savings)} USDT
               </p>
             </div>
           ) : null}
@@ -529,7 +527,7 @@ export function AgentStepsPanel({
             </p>
           ) : null}
         </>
-      )}
+      ) : null}
 
       {finalOutput ? (
         <div className="mt-6">

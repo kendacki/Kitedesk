@@ -57,6 +57,7 @@ function completePaymentTaskMemory(
     taskType: string
     promptPreview: string
     attestationUrl: string
+    attestationHash?: string
   }
 ): void {
   const hash = normalizeHash(paymentTxHash)
@@ -72,6 +73,7 @@ function completePaymentTaskMemory(
     task_type: row.taskType,
     prompt_preview: row.promptPreview,
     attestation_url: row.attestationUrl,
+    attestation_hash: row.attestationHash,
     completed_at: completedAt,
   }
   const list = memoryCompletedRowsByUser.get(user) ?? []
@@ -123,6 +125,7 @@ export async function completePaymentTask(
     taskType: string
     promptPreview: string
     attestationUrl: string
+    attestationHash?: string
   }
 ): Promise<void> {
   const supabase = getSupabaseAdmin()
@@ -139,6 +142,7 @@ export async function completePaymentTask(
       task_type: row.taskType,
       prompt_preview: row.promptPreview,
       attestation_url: row.attestationUrl,
+      attestation_hash: row.attestationHash ?? null,
       completed_at: new Date().toISOString(),
     })
     .eq('payment_tx_hash', hash)

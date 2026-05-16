@@ -372,6 +372,7 @@ export async function POST(req: NextRequest) {
           taskType: 'goal',
           promptPreview: goal.trim().slice(0, 120),
           attestationUrl,
+          attestationHash,
         })
 
         paymentTxHashForRelease = null
@@ -510,6 +511,7 @@ export async function POST(req: NextRequest) {
         taskType,
         promptPreview: prompt.trim().slice(0, 120),
         attestationUrl,
+        attestationHash,
       })
 
       paymentTxHashForRelease = null
