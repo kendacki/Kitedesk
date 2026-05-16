@@ -1,7 +1,7 @@
 // KiteDesk | recent tasks from Supabase API + browser-local fallback
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
 import { TASK_CONFIG } from '@/lib/constants'
 import {
@@ -47,7 +47,11 @@ type TaskHistoryProps = {
   refreshSignal?: number
 }
 
+const DEFAULT_VISIBLE_TASKS = 10
+
 export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps) {
+  const [showAll, setShowAll] = useState(false)
+
   const key = userAddress
     ? `/api/history?address=${encodeURIComponent(userAddress)}`
     : null
@@ -77,6 +81,10 @@ export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps
     mergedEntries.length > 0 &&
     localEntries.length > 0 &&
     (error || (Array.isArray(data?.entries) && data.entries.length === 0))
+
+  useEffect(() => {
+    setShowAll(false)
+  }, [userAddress, refreshSignal])
 
   if (!userAddress) {
     return null
@@ -110,6 +118,8 @@ export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps
   }
 
   const entries = mergedEntries.filter((e) => isKnownTaskType(e.taskType))
+  const visibleEntries = showAll ? entries : entries.slice(0, DEFAULT_VISIBLE_TASKS)
+  const hiddenCount = Math.max(0, entries.length - DEFAULT_VISIBLE_TASKS)
 
   if (entries.length === 0) {
     return (
@@ -133,7 +143,7 @@ export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps
         </p>
       ) : null}
       <ul className="space-y-2">
-        {entries.map((e) => (
+        {visibleEntries.map((e) => (
           (() => {
             const attestationHref = resolveTaskAttestationUrl(e)
             return (
@@ -181,6 +191,16 @@ export function TaskHistory({ userAddress, refreshSignal = 0 }: TaskHistoryProps
           })()
         ))}
       </ul>
+      {entries.length > DEFAULT_VISIBLE_TASKS ? (
+        <button
+          type="button"
+          onClick={() => setShowAll((v) => !v)}
+          className="mt-3 font-sans text-xs font-semibold text-emerald-800 transition hover:text-emerald-900 hover:underline"
+          aria-expanded={showAll}
+        >
+          {showAll ? 'Show fewer' : `Load more (${hiddenCount})`}
+        </button>
+      ) : null}
     </div>
   )
 }
