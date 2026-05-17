@@ -6,6 +6,17 @@ function normalizeHash(hash: string): string {
   return hash.trim().toLowerCase()
 }
 
+function isMissingAttestationHashColumnError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const e = error as { code?: string; message?: string }
+  const msg = (e.message || '').toLowerCase()
+  return (
+    e.code === 'PGRST204' ||
+    (msg.includes('attestation_hash') &&
+      (msg.includes('schema cache') || msg.includes('column')))
+  )
+}
+
 export type TaskHistoryRow = {
   task_id: string
   task_type: string
@@ -134,20 +145,36 @@ export async function completePaymentTask(
     return
   }
   const hash = normalizeHash(paymentTxHash)
-  const { data, error } = await supabase
+  const baseUpdate = {
+    status: 'completed',
+    task_id: row.taskId,
+    task_type: row.taskType,
+    prompt_preview: row.promptPreview,
+    attestation_url: row.attestationUrl,
+    completed_at: new Date().toISOString(),
+  }
+
+  let data: { payment_tx_hash: string }[] | null = null
+  let error: { code?: string; message?: string } | null = null
+
+  ;({ data, error } = await supabase
     .from('kitedesk_tasks')
     .update({
-      status: 'completed',
-      task_id: row.taskId,
-      task_type: row.taskType,
-      prompt_preview: row.promptPreview,
-      attestation_url: row.attestationUrl,
+      ...baseUpdate,
       attestation_hash: row.attestationHash ?? null,
-      completed_at: new Date().toISOString(),
     })
     .eq('payment_tx_hash', hash)
     .eq('status', 'pending')
-    .select('payment_tx_hash')
+    .select('payment_tx_hash'))
+
+  if (error && isMissingAttestationHashColumnError(error)) {
+    ;({ data, error } = await supabase
+      .from('kitedesk_tasks')
+      .update(baseUpdate)
+      .eq('payment_tx_hash', hash)
+      .eq('status', 'pending')
+      .select('payment_tx_hash'))
+  }
 
   if (error) {
     throw new HttpError(error.message || 'Failed to save completed task', 500)
@@ -166,13 +193,29 @@ export async function fetchCompletedTasksForUser(
     const rows = memoryCompletedRowsByUser.get(userAddress.toLowerCase()) ?? []
     return rows.slice(0, limit)
   }
-  const { data, error } = await supabase
+
+  let data: TaskHistoryRow[] | null = null
+  let error: { code?: string; message?: string } | null = null
+
+  ;({ data, error } = await supabase
     .from('kitedesk_tasks')
-    .select('task_id, task_type, prompt_preview, attestation_url, attestation_hash, completed_at')
+    .select(
+      'task_id, task_type, prompt_preview, attestation_url, attestation_hash, completed_at'
+    )
     .eq('user_address', userAddress.toLowerCase())
     .eq('status', 'completed')
     .order('completed_at', { ascending: false })
-    .limit(limit)
+    .limit(limit))
+
+  if (error && isMissingAttestationHashColumnError(error)) {
+    ;({ data, error } = await supabase
+      .from('kitedesk_tasks')
+      .select('task_id, task_type, prompt_preview, attestation_url, completed_at')
+      .eq('user_address', userAddress.toLowerCase())
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false })
+      .limit(limit))
+  }
 
   if (error || !data) return []
   return data as TaskHistoryRow[]
