@@ -248,6 +248,7 @@ export function AgentStepsPanel({
   const trimmedGoal = typeof goalTitle === 'string' ? goalTitle.trim() : ''
   const showGoalSummary = trimmedGoal.length > 0
   const processButtonLabel = showProcess ? 'Hide process' : 'Show process'
+  const canToggleProcess = steps.length > 0 || Boolean(planReasoning) || isRunning
 
   return (
     <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-md shadow-slate-200/50 sm:p-6">
@@ -262,7 +263,7 @@ export function AgentStepsPanel({
                 {trimmedGoal}
               </p>
             </div>
-            {isCollapsedGoalView ? (
+            {canToggleProcess ? (
               <button
                 type="button"
                 onClick={() => setShowProcess((v) => !v)}
@@ -313,19 +314,7 @@ export function AgentStepsPanel({
       {showProcess ? (
         <>
           <div className="mb-6 border-b border-slate-200 pb-4">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="font-sans text-sm font-semibold text-slate-900">
-                Process
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowProcess((v) => !v)}
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-                aria-expanded={showProcess}
-              >
-                {processButtonLabel}
-              </button>
-            </div>
+            <h3 className="font-sans text-sm font-semibold text-slate-900">Process</h3>
             {showX402CommerceBanner ? (
               <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 font-sans text-xs leading-snug text-emerald-800">
                 x402 settles directly on the execution path.
