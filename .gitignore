@@ -17,8 +17,6 @@ coverage/
 testsprite_tests/tmp/
 
 # Env and secrets (never commit keys — use .env.example as template)
-.env
-.env.*
 !.env.example
 
 # Local scratch / exports (do not ship)
@@ -42,7 +40,6 @@ typechain-types/
 
 # IDE / OS
 .idea/
-.vscode/
 *.swp
 *.swo
 
@@ -64,3 +61,5 @@ skills-lock.json
 scripts/source-logo.png
 temp_auto_push.bat
 temp_interactive_push.bat
+branch_structure.json
+config.bat
