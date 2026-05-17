@@ -6,11 +6,11 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "node api.js && next dev",
     "clean:next": "node scripts/clean-next.cjs",
     "dev:clean": "node scripts/clean-next.cjs && next dev",
-    "build": "next build",
-    "start": "next start",
+    "build": "node api.js && next build",
+    "start": "node api.js && next start",
     "lint": "next lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

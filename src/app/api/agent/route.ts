@@ -367,11 +367,14 @@ export async function POST(req: NextRequest) {
           console.warn('[API] goal attestation skipped:', msg)
         }
 
+        const resolvedAttestationUrl =
+          attestationUrl || (attestationHash ? explorerTxUrl(attestationHash) : '')
+
         await completePaymentTask(effectivePaymentTxHash, {
           taskId,
           taskType: 'goal',
           promptPreview: goal.trim().slice(0, 120),
-          attestationUrl,
+          attestationUrl: resolvedAttestationUrl,
           attestationHash,
         })
 
@@ -387,7 +390,7 @@ export async function POST(req: NextRequest) {
           finalOutput: partial.finalOutput,
           txHash: effectivePaymentTxHash,
           attestationHash,
-          attestationUrl,
+          attestationUrl: resolvedAttestationUrl,
           completedAt: partial.completedAt,
           planReasoning: partial.planReasoning,
           skippedTools: partial.skippedTools,
@@ -506,11 +509,14 @@ export async function POST(req: NextRequest) {
         console.warn('[API] task attestation skipped:', msg)
       }
 
+      const resolvedAttestationUrl =
+        attestationUrl || (attestationHash ? explorerTxUrl(attestationHash) : '')
+
       await completePaymentTask(effectivePaymentTxHash, {
         taskId,
         taskType,
         promptPreview: prompt.trim().slice(0, 120),
-        attestationUrl,
+        attestationUrl: resolvedAttestationUrl,
         attestationHash,
       })
 
@@ -521,7 +527,7 @@ export async function POST(req: NextRequest) {
         taskId,
         output,
         attestationHash,
-        attestationUrl,
+        attestationUrl: resolvedAttestationUrl,
       })
     } catch (rollbackErr: unknown) {
       if (!attestationWritten) {
